@@ -35,7 +35,7 @@
     },
     {
       "benchmark_name": "coupled_duffing",
-      "has_ground_truth_gfrf": true,
+      "has_ground_truth_gfrf": false,
       "can_derive_from_kernel": false,
       "gfrf_reference": "nonlinear://truth/coupled_duffing/gfrf/v1",
       "registration": {

@@ -8,13 +8,11 @@
     "window_length": 128,
     "horizon": 1,
     "split_protocol": "nonlinear_temporal_grouped_holdout_v1",
-    "has_ground_truth_kernel": true,
-    "has_ground_truth_gfrf": true,
+    "has_ground_truth_kernel": false,
+    "has_ground_truth_gfrf": false,
     "extras": {
       "task_usage": [
-        "prediction",
-        "kernel_recovery",
-        "gfrf_consistency"
+        "prediction"
       ],
       "input_channels": [
         "u"
@@ -124,14 +122,10 @@
     }
   },
   "bundle_artifacts": {
-    "truth_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/truth/coupled_duffing_kernel_reference.json",
+    "truth_file": null,
     "grouping_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/splits/nonlinear/coupled_duffing_split_manifest.json",
     "protocol_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
     "extra": {
-      "kernel_reference": "nonlinear://truth/coupled_duffing/kernel/v1",
-      "kernel_reference_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/truth/coupled_duffing_kernel_reference.json",
-      "gfrf_reference": "nonlinear://truth/coupled_duffing/gfrf/v1",
-      "gfrf_reference_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/truth/coupled_duffing_gfrf_reference.json",
       "input_dim": 1,
       "output_dim": 1,
       "raw_sources": {

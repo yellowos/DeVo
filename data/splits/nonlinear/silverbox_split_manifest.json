@@ -91661,7 +91661,9 @@
       91656,
       91657,
       91658,
-      91659,
+      91659
+    ],
+    "val": [
       91660,
       91661,
       91662,
@@ -111302,7 +111304,9 @@
       111297,
       111298,
       111299,
-      111300,
+      111300
+    ],
+    "test": [
       111301,
       111302,
       111303,
@@ -130944,21 +130948,16 @@
       130939,
       130940,
       130941,
-      130942
-    ],
-    "val": [
-      130943
-    ],
-    "test": [
+      130942,
       130943
     ]
   },
   "grouped": true,
   "num_samples": {
     "all": 130944,
-    "train": 130943,
-    "val": 1,
-    "test": 1
+    "train": 91660,
+    "val": 19641,
+    "test": 19643
   },
   "description": "Time-preserving split protocol with grouped trajectories and leakage-safe holdout.",
   "split": {

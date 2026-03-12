@@ -1,0 +1,48 @@
+{
+  "dataset_name": "tep",
+  "generated_at": "2026-03-12T12:24:51.832551Z",
+  "window_length": 128,
+  "horizon": 1,
+  "normal_splits": {
+    "train": {
+      "window_count": 28292,
+      "run_keys": [
+        "M1_d00",
+        "M2_d00",
+        "M3_d00",
+        "M4_d00"
+      ],
+      "per_run_window_counts": {
+        "M1_d00": 7073,
+        "M2_d00": 7073,
+        "M3_d00": 7073,
+        "M4_d00": 7073
+      }
+    },
+    "val": {
+      "window_count": 7073,
+      "run_keys": [
+        "M5_d00"
+      ],
+      "per_run_window_counts": {
+        "M5_d00": 7073
+      }
+    },
+    "test": {
+      "window_count": 7073,
+      "run_keys": [
+        "M6_d00"
+      ],
+      "per_run_window_counts": {
+        "M6_d00": 7073
+      }
+    }
+  },
+  "fault_eval": {
+    "manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_fault_eval_manifest.json",
+    "run_count": 168,
+    "window_count": 1131841
+  },
+  "main_eval_subset_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_main_eval_subset_manifest.json",
+  "propagation_subset_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_propagation_subset_manifest.json"
+}

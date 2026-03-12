@@ -320,8 +320,17 @@ def build_split(
     run_id = np.asarray(window_payload.get("run_id", []), dtype=object)
 
     indices = _protocol_split_indices(len(x), protocol)
-    # trajectory-aware fallback for non-empty run_id
-    if len(run_id) == len(x) and run_id.size > 0 and "trajectory" in str(protocol.get("grouping", {}).get("level", "")):
+    # trajectory-aware split only when run IDs are explicitly available
+    can_group = (
+        len(run_id) == len(x)
+        and run_id.size > 0
+        and "trajectory" in str(protocol.get("grouping", {}).get("level", ""))
+    )
+    if can_group:
+        nonempty_runs = [str(r) for r in run_id if r is not None and str(r).strip() != ""]
+        can_group = len(set(nonempty_runs)) > 1
+
+    if can_group:
         unique_runs = []
         positions = []
         current_run = run_id[0]
@@ -347,31 +356,29 @@ def build_split(
         if abs(s - 1.0) > 1e-8:
             tr, va, te = tr / s, va / s, te / s
         group_total = len(positions)
-        gtr = max(1, int(group_total * tr))
-        gva = max(0, int(group_total * va))
-        gte = max(0, group_total - gtr - gva)
-        if gtr + gva + gte < group_total:
-            gte = group_total - gtr - gva
-        if gtr == 0:
+        gtr = int(group_total * tr)
+        gva = int(group_total * va)
+        if gtr <= 0:
             gtr = 1
+        if gtr >= group_total:
+            gtr = group_total - 1
+        gva_start = gtr
+        gva_end = gtr + gva
+        if va > 0 and gva <= 0 and gva_start < group_total:
+            gva_end = gva_start + 1
+        if gva_end < gva_start:
+            gva_end = gva_start
+        if gva_end > group_total:
+            gva_end = group_total
         split_run = {
             "train": positions[:gtr],
-            "val": positions[gtr : gtr + gva],
-            "test": positions[gtr + gva : gtr + gva + gte],
+            "val": positions[gva_start:gva_end],
+            "test": positions[gva_end:],
         }
         indices = {
             k: np.array([item for sub in v for item in sub], dtype=int)
             for k, v in split_run.items()
         }
-        # guarantee at least one in each split
-        if len(indices["test"]) == 0:
-            indices["test"] = indices["val"][-1:].copy() if len(indices["val"]) else indices["train"][-1:].copy()
-            if len(indices["test"]):
-                indices["val"] = indices["val"][:-1]
-        if len(indices["val"]) == 0:
-            indices["val"] = indices["train"][-1:].copy() if len(indices["train"]) else np.array([indices["test"][0]])
-            if len(indices["val"]):
-                indices["train"] = indices["train"][:-1]
 
     split_payload = {
         "protocol_name": protocol.get("protocol_name"),

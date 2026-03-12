@@ -6,9 +6,17 @@
     {
       "benchmark_name": "duffing",
       "system_type": "single_oscillator",
-      "task_usage": ["prediction", "kernel_recovery", "gfrf_consistency"],
-      "input_channels": ["u"],
-      "output_channels": ["y"],
+      "task_usage": [
+        "prediction",
+        "kernel_recovery",
+        "gfrf_consistency"
+      ],
+      "input_channels": [
+        "u"
+      ],
+      "output_channels": [
+        "y"
+      ],
       "default_window_length": 128,
       "default_horizon": 1,
       "has_ground_truth_kernel": true,
@@ -29,9 +37,15 @@
     {
       "benchmark_name": "silverbox",
       "system_type": "physical_wiener_hammerstein_like",
-      "task_usage": ["prediction"],
-      "input_channels": ["u"],
-      "output_channels": ["y"],
+      "task_usage": [
+        "prediction"
+      ],
+      "input_channels": [
+        "u"
+      ],
+      "output_channels": [
+        "y"
+      ],
       "default_window_length": 128,
       "default_horizon": 1,
       "has_ground_truth_kernel": false,
@@ -52,9 +66,17 @@
     {
       "benchmark_name": "volterra_wiener",
       "system_type": "volterra_wiener",
-      "task_usage": ["prediction", "kernel_recovery", "gfrf_consistency"],
-      "input_channels": ["u"],
-      "output_channels": ["y"],
+      "task_usage": [
+        "prediction",
+        "kernel_recovery",
+        "gfrf_consistency"
+      ],
+      "input_channels": [
+        "u"
+      ],
+      "output_channels": [
+        "y"
+      ],
       "default_window_length": 128,
       "default_horizon": 1,
       "has_ground_truth_kernel": true,
@@ -75,13 +97,19 @@
     {
       "benchmark_name": "coupled_duffing",
       "system_type": "coupled_oscillators",
-      "task_usage": ["prediction", "kernel_recovery", "gfrf_consistency"],
-      "input_channels": ["u"],
-      "output_channels": ["y"],
+      "task_usage": [
+        "prediction"
+      ],
+      "input_channels": [
+        "u"
+      ],
+      "output_channels": [
+        "y"
+      ],
       "default_window_length": 128,
       "default_horizon": 1,
-      "has_ground_truth_kernel": true,
-      "has_ground_truth_gfrf": true,
+      "has_ground_truth_kernel": false,
+      "has_ground_truth_gfrf": false,
       "recommended_split_protocol": "nonlinear_temporal_grouped_holdout_v1",
       "artifacts": {
         "kernel_reference": "nonlinear://truth/coupled_duffing/kernel/v1",
@@ -162,9 +190,15 @@
     {
       "benchmark_name": "cascaded_tanks",
       "system_type": "cascaded_tanks_process",
-      "task_usage": ["prediction"],
-      "input_channels": ["u"],
-      "output_channels": ["y"],
+      "task_usage": [
+        "prediction"
+      ],
+      "input_channels": [
+        "u"
+      ],
+      "output_channels": [
+        "y"
+      ],
       "default_window_length": 128,
       "default_horizon": 1,
       "has_ground_truth_kernel": false,

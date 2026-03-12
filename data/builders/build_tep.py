@@ -1,24 +1,28 @@
-"""Build Tennessee Eastman Process (TEP) dataset bundle.
+"""Build Tennessee Eastman Process (TEP) multimode dataset artifacts.
 
-Scope:
-- data layer only: raw -> interim -> processed
-- unified dataset bundle for TEP adapter
-- mode-holdout split + five-unit/fault truth metadata protocol
+This builder operates on the multimode directory layout:
+- data/raw/tep/M1 ... data/raw/tep/M6
+- each mode contains mXd00.mat and mXd01.mat ... mXd28.mat
 
-No model, training, metric, or experiment-runner logic is implemented here.
+The data layer keeps run-level canonical arrays for every run and materializes
+normal mode-holdout windows for train/val/test. Fault runs remain variable-length
+run-level artifacts plus lightweight window-count manifests to avoid fabricating
+fixed-length fault tensors.
 """
 
 from __future__ import annotations
 
 import argparse
-import csv
 import json
+import re
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Sequence
 
 import numpy as np
+from numpy.lib.format import open_memmap
+from numpy.lib.stride_tricks import sliding_window_view
 
 from data.adapters.base import DataProtocolError, DatasetBundle
 from data.adapters.tep_adapter import TEPAdapter
@@ -32,22 +36,23 @@ class TEPBuilderError(DataProtocolError):
 @dataclass(frozen=True)
 class TEPBuilderConfig:
     dataset_name: str = "tep"
-    raw_file_candidates: Tuple[str, ...] = (
-        "tep.mat",
-        "tep_raw.npz",
-        "tep_processed.npz",
-        "tep.csv",
-        "tep.txt",
-    )
     window_length: int = 128
     horizon: int = 1
-    split_protocol: str = "tep_mode_holdout_v1"
+    split_protocol: str = "tep_multimode_mode_holdout_v2"
+    expected_modes: tuple[str, ...] = ("M1", "M2", "M3", "M4", "M5", "M6")
 
     def validate(self) -> None:
         if self.window_length <= 0:
             raise TEPBuilderError("window_length must be > 0")
         if self.horizon <= 0:
             raise TEPBuilderError("horizon must be > 0")
+
+
+RUN_PATTERN = re.compile(r"^m(?P<mode>[1-6])(?P<scenario>d\d{2})$")
+
+
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
@@ -61,493 +66,577 @@ def _load_json(path: Path) -> Mapping[str, Any]:
         return json.load(f)
 
 
-def _to_float2d(value: Any, name: str) -> np.ndarray:
-    arr = np.asarray(value)
-    if arr.ndim == 1:
-        arr = arr.reshape(-1, 1)
-    if arr.ndim != 2:
-        raise TEPBuilderError(f"{name} must be a 2D numeric array.")
-    if not np.issubdtype(arr.dtype, np.number):
-        try:
-            arr = arr.astype(np.float64)
-        except Exception as exc:
-            raise TEPBuilderError(f"{name} must be numeric.") from exc
-    return np.asarray(arr, dtype=np.float64)
+def _window_count(n_steps: int, window_length: int, horizon: int) -> int:
+    return max(0, n_steps - window_length - horizon + 1)
 
 
-def _to_optional_1d(value: Any) -> Optional[np.ndarray]:
-    if value is None:
-        return None
-    return np.asarray(value).reshape(-1)
-
-
-def _find_raw_file(raw_root: Path, candidates: Sequence[str]) -> Optional[Path]:
-    for name in candidates:
-        candidate = raw_root / name
-        if candidate.exists():
-            return candidate
-    for path in raw_root.glob("**/*"):
-        if path.is_file() and path.suffix.lower() in {".mat", ".npz", ".npy", ".csv", ".txt"}:
-            if "tep" in path.name.lower():
-                return path
-    return None
-
-
-def _safe_timestamp_value(value: Any, fallback: int) -> float:
-    try:
-        v = float(value)
-        return float(v) if np.isfinite(v) else float(fallback)
-    except Exception:
-        return float(fallback)
-
-
-def _safe_str_array(value: Any, default: Any, n: int) -> Optional[np.ndarray]:
-    if value is None:
-        return None if default is None else np.array([default] * n, dtype=object)
-    arr = np.asarray(value).reshape(-1)
-    if arr.size != n:
-        return None if default is None else np.array([default] * n, dtype=object)
-    return arr.astype(str, copy=False)
-    return np.asarray(value).reshape(-1).astype(str)
-
-
-def _safe_num_array(value: Any, default_len: int) -> np.ndarray:
-    if value is None:
-        return np.arange(default_len, dtype=np.float64)
-    arr = np.asarray(value).reshape(-1)
-    if arr.size != default_len:
-        return np.arange(default_len, dtype=np.float64)
-    return arr.astype(np.float64, copy=False)
-
-
-def load_raw(raw_root: Path, cfg: TEPBuilderConfig, channel_map: Mapping[str, Any]) -> Dict[str, np.ndarray]:
-    raw_path = _find_raw_file(raw_root, cfg.raw_file_candidates)
-    if raw_path is None:
-        raise TEPBuilderError(
-            f"No TEP raw file found in {raw_root}. Checked candidates: {list(cfg.raw_file_candidates)}."
-        )
-
-    obs_names = list(channel_map["observable_variables"]["names"])
-    idv_names = list(channel_map["idv_variables"]["names"])
-    all_names = obs_names + idv_names
-
-    suffix = raw_path.suffix.lower()
-    if suffix in {".npz", ".npy"}:
-        payload = np.load(raw_path, allow_pickle=True) if suffix == ".npz" else None
-        raw_matrix = None
-        mode = fault_id = scenario_id = run_id = timestamp = None
-
-        if suffix == ".npz":
-            raw_matrix = payload.get("X") if payload is not None else None
-            if raw_matrix is None:
-                for key in ("signals", "data", "values", "raw", "arr"):
-                    if key in payload:
-                        raw_matrix = payload[key]
-                        break
-            mode = payload.get("mode") if payload is not None else None
-            fault_id = payload.get("fault_id") if payload is not None else None
-            scenario_id = payload.get("scenario_id") if payload is not None else None
-            run_id = payload.get("run_id") if payload is not None else None
-            timestamp = payload.get("timestamp") if payload is not None else None
-            if fault_id is None and payload is not None and "label" in payload:
-                fault_id = payload["label"]
-        else:
-            raw_matrix = np.load(raw_path)
-
-    elif suffix in {".csv", ".txt"}:
-        with raw_path.open("r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            rows = list(reader)
-        if not rows:
-            raise TEPBuilderError(f"{raw_path} has no rows.")
-
-        header = rows[0].keys()
-        missing = [c for c in all_names if c not in header]
-        if missing:
-            raise TEPBuilderError(f"Missing expected TEP signal columns: {missing}")
-
-        raw_matrix = np.asarray([[float(r[name]) for name in all_names] for r in rows], dtype=float)
-        mode = _safe_str_array(np.asarray([r.get("mode") for r in rows]), "UNKNOWN", len(rows))
-        fault_id = _safe_str_array(np.asarray([r.get("fault_id") for r in rows]), "healthy", len(rows))
-        scenario_id = _safe_str_array(np.asarray([r.get("scenario_id") for r in rows]), "N/A", len(rows))
-        run_id = _safe_str_array(np.asarray([r.get("run_id") for r in rows]), default=None, n=len(rows))
-        if run_id is None:
-            run_id = np.array([str(i) for i in range(len(rows))], dtype=object)
-        else:
-            run_id = run_id.astype(object)
-        raw_t = []
-        for r in rows:
-            ts = r.get("timestamp")
-            if ts is None or ts == "":
-                raw_t.append(np.nan)
-            else:
-                raw_t.append(ts)
-        timestamp = np.asarray(raw_t)
-
-    elif suffix == ".mat":
-        try:
-            import scipy.io
-
-            payload = scipy.io.loadmat(raw_path)
-        except Exception as exc:
-            raise TEPBuilderError("Cannot read .mat file without scipy.") from exc
-
-        raw_matrix = None
-        for key in ("signals", "X", "data", "raw"):
-            if key in payload and isinstance(payload[key], np.ndarray):
-                raw_matrix = payload[key]
-                break
-
-        if raw_matrix is None:
-            for key, val in payload.items():
-                if key.startswith("__"):
-                    continue
-                if isinstance(val, np.ndarray) and np.asarray(val).ndim == 2 and np.asarray(val).shape[1] >= 81:
-                    raw_matrix = val
-                    break
-        if raw_matrix is None:
-            raise TEPBuilderError(f"No usable (T,>=81) signal array in {raw_path}.")
-
-        mode = payload.get("mode") if isinstance(payload.get("mode"), np.ndarray) else payload.get("run_mode")
-        fault_id = payload.get("fault_id")
-        scenario_id = payload.get("scenario_id")
-        run_id = payload.get("run_id")
-        timestamp = payload.get("timestamp")
-        if fault_id is None and "label" in payload:
-            fault_id = payload["label"]
-    else:
-        raise TEPBuilderError(f"Unsupported raw format: {suffix}")
-
-    signals = _to_float2d(raw_matrix, "tep signals")
-    if signals.shape[1] < 81:
-        raise TEPBuilderError(f"TEP raw signal matrix must contain at least 81 columns, got {signals.shape[1]}.")
-
-    n = len(signals)
-    x_obs = signals[:, :53]
-    x_idv = signals[:, 53:81]
-
-    mode = _safe_str_array(mode, "UNKNOWN", n)
-    fault_id = _safe_str_array(fault_id, "healthy", n)
-    scenario_id = _safe_str_array(scenario_id, "N/A", n)
-    run_id = _safe_str_array(run_id, default=None, n=n)
-    if run_id is None or run_id.size != n:
-        run_id = np.array([str(i) for i in range(n)], dtype=object)
-    timestamp = _to_optional_1d(timestamp)
-    timestamp = _safe_num_array(timestamp, n)
-
+def _parse_run_stem(stem: str) -> Dict[str, Any]:
+    match = RUN_PATTERN.match(stem)
+    if match is None:
+        raise TEPBuilderError(f"invalid TEP run stem `{stem}`")
+    mode_idx = int(match.group("mode"))
+    scenario = match.group("scenario")
+    mode = f"M{mode_idx}"
     return {
-        "X_obs": x_obs,
-        "X_idv": x_idv,
         "mode": mode,
-        "fault_id": fault_id,
-        "scenario_id": scenario_id,
-        "run_id": run_id,
-        "timestamp": timestamp,
-        "obs_names": np.asarray(obs_names, dtype=object),
-        "idv_names": np.asarray(idv_names, dtype=object),
+        "mode_index": mode_idx,
+        "scenario": scenario,
+        "run_key": f"{mode}_{scenario}",
+        "is_fault": scenario != "d00",
     }
 
 
-def build_windows(
+def _load_core_matrix(path: Path) -> tuple[str, np.ndarray, List[str]]:
+    try:
+        from scipy.io import loadmat
+    except Exception as exc:  # pragma: no cover
+        raise TEPBuilderError("scipy is required to read TEP .mat files") from exc
+
+    stem = path.stem
+    payload = loadmat(path)
+    available_vars = [key for key in payload.keys() if not key.startswith("__")]
+    if stem not in payload:
+        raise TEPBuilderError(
+            f"{path.name}: core variable `{stem}` missing; available variables={available_vars}"
+        )
+    core = np.asarray(payload[stem])
+    if core.ndim != 2:
+        raise TEPBuilderError(f"{path.name}: core variable `{stem}` must be 2D, got shape={core.shape}.")
+    if core.shape[1] != 81:
+        raise TEPBuilderError(f"{path.name}: expected 81 columns, got {core.shape[1]}.")
+    return stem, np.asarray(core, dtype=np.float32), available_vars
+
+
+def discover_raw(raw_root: Path, cfg: TEPBuilderConfig) -> Dict[str, Any]:
+    if not raw_root.exists():
+        raise TEPBuilderError(f"TEP raw directory missing: {raw_root}")
+
+    discovery_modes: List[Dict[str, Any]] = []
+    for mode in cfg.expected_modes:
+        mode_root = raw_root / mode
+        if not mode_root.exists():
+            raise TEPBuilderError(f"missing mode directory: {mode_root}")
+        expected_stems = {f"{mode.lower()}d{idx:02d}" for idx in range(29)}
+        actual_files = sorted([path for path in mode_root.glob("*.mat") if path.is_file()])
+        actual_stems = {path.stem for path in actual_files}
+        missing = sorted(expected_stems - actual_stems)
+        if missing:
+            raise TEPBuilderError(f"{mode}: missing required runs: {missing}")
+        unexpected = sorted(actual_stems - expected_stems)
+        discovery_modes.append(
+            {
+                "mode": mode,
+                "mode_dir": str(mode_root),
+                "d00_exists": f"{mode.lower()}d00" in actual_stems,
+                "fault_count": sum(1 for stem in actual_stems if stem.endswith(tuple(f"{i:02d}" for i in range(1, 29)))),
+                "missing_runs": missing,
+                "unexpected_runs": unexpected,
+                "files": [path.name for path in actual_files if path.stem in expected_stems],
+            }
+        )
+
+    actual_run_count = int(sum(len(entry["files"]) for entry in discovery_modes))
+    return {
+        "raw_root": str(raw_root),
+        "modes": discovery_modes,
+        "mode_count": len(discovery_modes),
+        "expected_run_count": len(cfg.expected_modes) * 29,
+        "run_count": actual_run_count,
+    }
+
+
+def _save_run_level_arrays(
+    *,
+    runs_root: Path,
+    run_key: str,
     x_obs: np.ndarray,
     x_idv: np.ndarray,
+    time_index: np.ndarray,
+) -> Dict[str, str]:
+    runs_root.mkdir(parents=True, exist_ok=True)
+    obs_name = f"{run_key}_X_obs.npy"
+    idv_name = f"{run_key}_X_idv.npy"
+    time_name = f"{run_key}_time_index.npy"
+    np.save(runs_root / obs_name, np.asarray(x_obs, dtype=np.float32))
+    np.save(runs_root / idv_name, np.asarray(x_idv, dtype=np.float32))
+    np.save(runs_root / time_name, np.asarray(time_index, dtype=np.int64))
+    return {
+        "observable_file": f"runs/{obs_name}",
+        "idv_file": f"runs/{idv_name}",
+        "time_index_file": f"runs/{time_name}",
+    }
+
+
+def load_runs(
     *,
+    raw_root: Path,
+    processed_root: Path,
+    cfg: TEPBuilderConfig,
+    scenario_to_idv_map: Mapping[str, Any],
+) -> List[Dict[str, Any]]:
+    runs_root = processed_root / "runs"
+    mapping = scenario_to_idv_map.get("mapping", {})
+    healthy = scenario_to_idv_map.get("healthy", {})
+    if not isinstance(mapping, Mapping):
+        raise TEPBuilderError("scenario_to_idv_map.mapping must be a mapping.")
+
+    runs: List[Dict[str, Any]] = []
+    for mode in cfg.expected_modes:
+        mode_root = raw_root / mode
+        for idx in range(29):
+            scenario = f"d{idx:02d}"
+            filename = f"{mode.lower()}{scenario}.mat"
+            path = mode_root / filename
+            stem, core, available_vars = _load_core_matrix(path)
+            parsed = _parse_run_stem(stem)
+            if not parsed["is_fault"] and int(core.shape[0]) != 7201:
+                raise TEPBuilderError(
+                    f"{path.name}: normal run expected 7201 rows, got {core.shape[0]}."
+                )
+            x_obs = np.asarray(core[:, :53], dtype=np.float32)
+            x_idv = np.asarray(core[:, 53:], dtype=np.float32)
+            time_index = np.arange(core.shape[0], dtype=np.int64)
+            saved = _save_run_level_arrays(
+                runs_root=runs_root,
+                run_key=parsed["run_key"],
+                x_obs=x_obs,
+                x_idv=x_idv,
+                time_index=time_index,
+            )
+
+            if parsed["is_fault"]:
+                scenario_info = mapping.get(parsed["scenario"])
+                if not isinstance(scenario_info, Mapping):
+                    raise TEPBuilderError(
+                        f"scenario_to_idv_map missing fault scenario `{parsed['scenario']}`"
+                    )
+                idv = str(scenario_info["idv"])
+                fault_id = parsed["scenario"]
+            else:
+                idv = str(healthy.get("idv", "healthy"))
+                fault_id = "healthy"
+
+            runs.append(
+                {
+                    **parsed,
+                    "file": str(path),
+                    "file_name": path.name,
+                    "stem": stem,
+                    "core_var": stem,
+                    "available_vars": available_vars,
+                    "n_steps": int(core.shape[0]),
+                    "n_obs": int(x_obs.shape[1]),
+                    "n_idv": int(x_idv.shape[1]),
+                    "idv": idv,
+                    "fault_id": fault_id,
+                    **saved,
+                }
+            )
+
+    return runs
+
+
+def _build_split_arrays(
+    *,
+    processed_root: Path,
+    split_name: str,
+    run_entries: Sequence[Mapping[str, Any]],
     window_length: int,
     horizon: int,
-    mode: np.ndarray,
-    fault_id: np.ndarray,
-    scenario_id: np.ndarray,
-    run_id: np.ndarray,
-    timestamp: np.ndarray,
-) -> Dict[str, Any]:
-    n = len(x_obs)
-    if n <= window_length + horizon:
-        raise TEPBuilderError(
-            f"Not enough steps for windowing: n={n}, window_length={window_length}, horizon={horizon}."
+) -> tuple[Dict[str, str], Dict[str, Any]]:
+    total = sum(_window_count(int(run["n_steps"]), window_length, horizon) for run in run_entries)
+    if total <= 0:
+        raise TEPBuilderError(f"{split_name}: no windows available.")
+
+    windows_root = processed_root / "windows"
+    windows_root.mkdir(parents=True, exist_ok=True)
+
+    x_file = f"windows/{split_name}_X.npy"
+    y_file = f"windows/{split_name}_Y.npy"
+    idv_file = f"windows/{split_name}_idv_aux.npy"
+    x_mem = open_memmap(processed_root / x_file, mode="w+", dtype=np.float32, shape=(total, window_length, 53))
+    y_mem = open_memmap(processed_root / y_file, mode="w+", dtype=np.float32, shape=(total, horizon, 53))
+    idv_mem = open_memmap(processed_root / idv_file, mode="w+", dtype=np.float32, shape=(total, 28))
+
+    timestamp = np.empty(total, dtype=np.float64)
+    window_idx = np.empty(total, dtype=np.int64)
+    window_start = np.empty(total, dtype=np.int64)
+    window_end = np.empty(total, dtype=np.int64)
+    sample_id: List[str] = []
+    run_id: List[str] = []
+    mode: List[str] = []
+    fault_id: List[str] = []
+    scenario_id: List[str] = []
+    idv_label: List[str] = []
+
+    offset = 0
+    per_run_counts: Dict[str, int] = {}
+    for run in run_entries:
+        obs = np.load(processed_root / str(run["observable_file"]), mmap_mode="r")
+        idv = np.load(processed_root / str(run["idv_file"]), mmap_mode="r")
+        count = _window_count(int(run["n_steps"]), window_length, horizon)
+        per_run_counts[str(run["run_key"])] = count
+        if count == 0:
+            continue
+
+        x_view = np.moveaxis(
+            sliding_window_view(obs, window_shape=window_length, axis=0)[:count],
+            -1,
+            1,
+        )
+        y_view = np.moveaxis(
+            sliding_window_view(obs[window_length:], window_shape=horizon, axis=0)[:count],
+            -1,
+            1,
+        )
+        x_mem[offset : offset + count] = x_view
+        y_mem[offset : offset + count] = y_view
+        idv_mem[offset : offset + count] = idv[window_length - 1 : window_length - 1 + count]
+
+        starts = np.arange(count, dtype=np.int64)
+        ends = starts + window_length - 1
+        timestamp[offset : offset + count] = ends.astype(np.float64, copy=False)
+        window_idx[offset : offset + count] = starts
+        window_start[offset : offset + count] = starts
+        window_end[offset : offset + count] = ends
+
+        sample_id.extend(f"{run['run_key']}:{idx}" for idx in range(count))
+        run_id.extend([str(run["run_key"])] * count)
+        mode.extend([str(run["mode"])] * count)
+        fault_id.extend([str(run["fault_id"])] * count)
+        scenario_id.extend([str(run["scenario"])] * count)
+        idv_label.extend([str(run["idv"])] * count)
+        offset += count
+
+    del x_mem
+    del y_mem
+    del idv_mem
+
+    processed_files = {
+        f"{split_name}_X": x_file,
+        f"{split_name}_Y": y_file,
+        f"{split_name}_idv_aux": idv_file,
+    }
+
+    extra_arrays = {
+        "sample_id": np.asarray(sample_id, dtype=object),
+        "run_id": np.asarray(run_id, dtype=object),
+        "timestamp": timestamp,
+        "mode": np.asarray(mode, dtype=object),
+        "fault_id": np.asarray(fault_id, dtype=object),
+        "scenario_id": np.asarray(scenario_id, dtype=object),
+        "window_idx": window_idx,
+        "window_start": window_start,
+        "window_end": window_end,
+        "idv_label": np.asarray(idv_label, dtype=object),
+    }
+    for key, array in extra_arrays.items():
+        fname = f"windows/{split_name}_{key}.npy"
+        np.save(processed_root / fname, array)
+        processed_files[f"{split_name}_{key}"] = fname
+
+    return processed_files, {
+        "window_count": total,
+        "run_keys": [str(run["run_key"]) for run in run_entries],
+        "per_run_window_counts": per_run_counts,
+    }
+
+
+def _build_fault_eval_manifest(
+    *,
+    processed_root: Path,
+    fault_runs: Sequence[Mapping[str, Any]],
+    truth_rows: Mapping[str, Mapping[str, Any]],
+    window_length: int,
+    horizon: int,
+) -> tuple[Path, Dict[str, Any], Path]:
+    entries: List[Dict[str, Any]] = []
+    for run in fault_runs:
+        truth = truth_rows.get(str(run["scenario"]), {})
+        entries.append(
+            {
+                "run_key": str(run["run_key"]),
+                "mode": str(run["mode"]),
+                "scenario": str(run["scenario"]),
+                "idv": str(run["idv"]),
+                "n_steps": int(run["n_steps"]),
+                "window_count": _window_count(int(run["n_steps"]), window_length, horizon),
+                "observable_file": str(run["observable_file"]),
+                "idv_file": str(run["idv_file"]),
+                "included_in_main_eval": bool(truth.get("included_in_main_eval", False)),
+                "primary_unit": truth.get("primary_unit"),
+                "expected_units": list(truth.get("expected_units", [])) if isinstance(truth.get("expected_units", []), list) else [],
+            }
         )
 
-    X_list = []
-    Y_list = []
-    mode_list = []
-    fault_list = []
-    scenario_list = []
-    run_list = []
-    timestamp_list = []
-    window_idx = []
-    idv_list = []
-
-    for start in range(0, n - window_length - horizon + 1):
-        end = start + window_length
-        t = end - 1
-        X_list.append(x_obs[start:end])
-        Y_list.append(x_obs[t + 1 : t + 1 + horizon])
-        idv_list.append(x_idv[t])
-        mode_list.append(mode[t])
-        fault_list.append(fault_id[t])
-        scenario_list.append(scenario_id[t])
-        run_list.append(run_id[t])
-        timestamp_list.append(_safe_timestamp_value(timestamp[t], t))
-        window_idx.append(start)
-
-    return {
-        "X": np.asarray(X_list, dtype=np.float64),
-        "Y": np.asarray(Y_list, dtype=np.float64),
-        "idv_aux": np.asarray(idv_list, dtype=np.float64),
-        "mode": np.asarray(mode_list, dtype=object),
-        "fault_id": np.asarray(fault_list, dtype=object),
-        "scenario_id": np.asarray(scenario_list, dtype=object),
-        "run_id": np.asarray(run_list, dtype=object),
-        "timestamp": np.asarray(timestamp_list, dtype=np.float64),
-        "window_idx": np.asarray(window_idx, dtype=np.int64),
-    }
-
-
-def _to_index_set(values: np.ndarray, allowed: Sequence[str]) -> np.ndarray:
-    if not allowed:
-        return np.array([], dtype=int)
-    allowed_set = {str(v).strip() for v in allowed}
-    mask = np.array([str(v).strip() in allowed_set for v in values], dtype=bool)
-    return np.where(mask)[0]
-
-
-def _normalize_mode(value: Any) -> str:
-    return str(value).strip()
-
-
-def _split_indices_by_mode(
-    payload: Mapping[str, np.ndarray],
-    protocol: Mapping[str, Any],
-) -> Dict[str, np.ndarray]:
-    modes = payload["mode"]
-    n = len(modes)
-    if n == 0:
-        raise TEPBuilderError("Cannot split empty payload.")
-
-    protocol_modes = protocol["modes"]
-    train_idx = _to_index_set(modes, protocol_modes.get("train_modes", []))
-    val_idx = _to_index_set(modes, protocol_modes.get("val_modes", []))
-
-    if train_idx.size == 0 and val_idx.size == 0:
-        split_cfg = protocol.get("split", {})
-        tr = float(split_cfg.get("train", 0.70))
-        va = float(split_cfg.get("val", 0.15))
-        te = float(split_cfg.get("test", 0.15))
-        s = tr + va + te
-        if s <= 0:
-            tr, va, te = 0.70, 0.15, 0.15
-        else:
-            tr, va, te = tr / s, va / s, te / s
-        n_train = max(1, int(n * tr))
-        n_val = max(0, int(n * va))
-        return {
-            "train": np.arange(0, n_train, dtype=int),
-            "val": np.arange(n_train, min(n, n_train + n_val), dtype=int),
-            "test": np.arange(min(n, n_train + n_val), n, dtype=int),
-            "fallback": True,
-        }
-
-    all_fault = []
-    if protocol_modes.get("test_fault_mode_pattern", "").lower().find("fault") >= 0:
-        all_fault = [m for m in modes if "FAULT" in _normalize_mode(m).upper()]
-    fault_idx = np.array([i for i, m in enumerate(modes) if str(m) in set(protocol_modes.get("test_fault_modes", []))], dtype=int)
-    if all_fault:
-        fault_mask = np.array(["FAULT" in _normalize_mode(m).upper() for m in modes], dtype=bool)
-        fault_idx = np.where(fault_mask)[0]
-    normal_modes = protocol_modes.get("test_normal_modes", [])
-    normal_idx = _to_index_set(modes, normal_modes)
-
-    test_idx = np.union1d(fault_idx, normal_idx)
-
-    if test_idx.size == 0:
-        test_idx = np.setdiff1d(np.arange(n), np.union1d(train_idx, val_idx))
-
-    if train_idx.size == 0:
-        train_idx = np.array([0], dtype=int)
-    if val_idx.size == 0:
-        # keep at least one val if possible
-        cand = np.setdiff1d(np.arange(n), train_idx)
-        if cand.size >= 1:
-            val_idx = cand[: min(1, cand.size)]
-
-    if train_idx.size > 0 and val_idx.size > 0 and test_idx.size > 0:
-        return {
-            "train": np.array(sorted(np.unique(train_idx)), dtype=int),
-            "val": np.array(sorted(np.unique(val_idx)), dtype=int),
-            "test": np.array(sorted(np.unique(test_idx)), dtype=int),
-            "fallback": False,
-        }
-
-    # final hard safeguard
-    n_train = max(1, int(0.7 * n))
-    n_val = max(0, int(0.15 * n))
-    return {
-        "train": np.arange(0, n_train, dtype=int),
-        "val": np.arange(n_train, min(n, n_train + n_val), dtype=int),
-        "test": np.arange(min(n, n_train + n_val), n, dtype=int),
-        "fallback": True,
-    }
-
-
-def build_split(window_payload: Mapping[str, Any], protocol: Mapping[str, Any], split_path: Path) -> Dict[str, Any]:
-    idx = _split_indices_by_mode(window_payload, protocol)
-
-    split_payload = {
+    fault_manifest_path = processed_root / "tep_fault_eval_manifest.json"
+    payload = {
         "dataset_name": "tep",
-        "protocol_name": protocol.get("protocol_name", "tep_mode_holdout_v1"),
-        "split_protocol": protocol.get("split_protocol", "tep_mode_holdout_v1"),
-        "mode_protocol": protocol.get("modes", {}),
-        "split_indices": {
-            k: v.tolist() for k, v in {"train": idx["train"], "val": idx["val"], "test": idx["test"]}.items()
-        },
-        "counts": {
-            "train": int(len(idx["train"])),
-            "val": int(len(idx["val"])),
-            "test": int(len(idx["test"])),
-        },
-        "generated_at": datetime.utcnow().isoformat() + "Z",
-        "fallback": bool(idx.get("fallback", False)),
+        "generated_at": _utc_now(),
+        "window_length": window_length,
+        "horizon": horizon,
+        "run_count": len(entries),
+        "total_window_count": int(sum(entry["window_count"] for entry in entries)),
+        "runs": entries,
+        "notes": "Fault runs are stored at run level plus per-run window counts. Dense fault windows are not materialized because fault runs are variable-length and large.",
     }
-    _write_json(split_path, split_payload)
+    _write_json(fault_manifest_path, payload)
 
-    X = np.asarray(window_payload["X"], dtype=np.float64)
-    Y = np.asarray(window_payload["Y"], dtype=np.float64)
+    main_eval_path = processed_root / "tep_main_eval_subset_manifest.json"
+    main_eval_runs = [entry for entry in entries if entry["included_in_main_eval"]]
+    _write_json(
+        main_eval_path,
+        {
+            "dataset_name": "tep",
+            "generated_at": _utc_now(),
+            "source": "fault_truth_table.included_in_main_eval",
+            "run_count": len(main_eval_runs),
+            "runs": main_eval_runs,
+            "notes": "This subset depends entirely on curated truth metadata.",
+        },
+    )
 
-    return {
-        "train": {
-            "X": X[idx["train"]],
-            "Y": Y[idx["train"]],
-            "sample_id": np.asarray(window_payload["window_idx"], dtype=np.int64)[idx["train"]],
-            "run_id": np.asarray(window_payload["run_id"], dtype=object)[idx["train"]],
-            "timestamp": np.asarray(window_payload["timestamp"], dtype=np.float64)[idx["train"]],
-            "mode": np.asarray(window_payload["mode"], dtype=object)[idx["train"]],
-            "fault_id": np.asarray(window_payload["fault_id"], dtype=object)[idx["train"]],
-            "scenario_id": np.asarray(window_payload["scenario_id"], dtype=object)[idx["train"]],
-            "window_idx": np.asarray(window_payload["window_idx"], dtype=np.int64)[idx["train"]],
-            "idv_aux": np.asarray(window_payload["idv_aux"], dtype=np.float64)[idx["train"]],
-            "meta_fields": {
-                "obs_names": window_payload.get("obs_names"),
-                "idv_names": window_payload.get("idv_names"),
-            },
+    propagation_path = processed_root / "tep_propagation_subset_manifest.json"
+    _write_json(
+        propagation_path,
+        {
+            "dataset_name": "tep",
+            "generated_at": _utc_now(),
+            "source": "all_fault_runs_default",
+            "run_count": len(entries),
+            "runs": entries,
+            "notes": "Default propagation subset keeps all fault runs until a narrower curated subset is provided.",
         },
-        "val": {
-            "X": X[idx["val"]],
-            "Y": Y[idx["val"]],
-            "sample_id": np.asarray(window_payload["window_idx"], dtype=np.int64)[idx["val"]],
-            "run_id": np.asarray(window_payload["run_id"], dtype=object)[idx["val"]],
-            "timestamp": np.asarray(window_payload["timestamp"], dtype=np.float64)[idx["val"]],
-            "mode": np.asarray(window_payload["mode"], dtype=object)[idx["val"]],
-            "fault_id": np.asarray(window_payload["fault_id"], dtype=object)[idx["val"]],
-            "scenario_id": np.asarray(window_payload["scenario_id"], dtype=object)[idx["val"]],
-            "window_idx": np.asarray(window_payload["window_idx"], dtype=np.int64)[idx["val"]],
-            "idv_aux": np.asarray(window_payload["idv_aux"], dtype=np.float64)[idx["val"]],
-            "meta_fields": {
-                "obs_names": window_payload.get("obs_names"),
-                "idv_names": window_payload.get("idv_names"),
-            },
+    )
+    return fault_manifest_path, payload, propagation_path
+
+
+def _write_run_manifest(
+    *,
+    processed_root: Path,
+    discovery: Mapping[str, Any],
+    runs: Sequence[Mapping[str, Any]],
+) -> Path:
+    path = processed_root / "tep_run_manifest.json"
+    _write_json(
+        path,
+        {
+            "dataset_name": "tep",
+            "generated_at": _utc_now(),
+            "discovery": discovery,
+            "run_count": len(runs),
+            "normal_run_count": sum(1 for run in runs if not bool(run["is_fault"])),
+            "fault_run_count": sum(1 for run in runs if bool(run["is_fault"])),
+            "runs": list(runs),
         },
-        "test": {
-            "X": X[idx["test"]],
-            "Y": Y[idx["test"]],
-            "sample_id": np.asarray(window_payload["window_idx"], dtype=np.int64)[idx["test"]],
-            "run_id": np.asarray(window_payload["run_id"], dtype=object)[idx["test"]],
-            "timestamp": np.asarray(window_payload["timestamp"], dtype=np.float64)[idx["test"]],
-            "mode": np.asarray(window_payload["mode"], dtype=object)[idx["test"]],
-            "fault_id": np.asarray(window_payload["fault_id"], dtype=object)[idx["test"]],
-            "scenario_id": np.asarray(window_payload["scenario_id"], dtype=object)[idx["test"]],
-            "window_idx": np.asarray(window_payload["window_idx"], dtype=np.int64)[idx["test"]],
-            "idv_aux": np.asarray(window_payload["idv_aux"], dtype=np.float64)[idx["test"]],
-            "meta_fields": {
-                "obs_names": window_payload.get("obs_names"),
-                "idv_names": window_payload.get("idv_names"),
+    )
+    return path
+
+
+def _write_split_manifest(
+    *,
+    split_root: Path,
+    protocol: Mapping[str, Any],
+    split_counts: Mapping[str, int],
+    split_summaries: Mapping[str, Mapping[str, Any]],
+    fault_eval_payload: Mapping[str, Any],
+) -> Path:
+    split_root.mkdir(parents=True, exist_ok=True)
+    train_count = int(split_counts["train"])
+    val_count = int(split_counts["val"])
+    test_count = int(split_counts["test"])
+    split_path = split_root / "tep_mode_holdout_split_manifest.json"
+    _write_json(
+        split_path,
+        {
+            "dataset_name": "tep",
+            "protocol_name": protocol["protocol_name"],
+            "split_protocol": protocol["split_protocol"],
+            "generated_at": _utc_now(),
+            "split_indices": {
+                "train": list(range(0, train_count)),
+                "val": list(range(train_count, train_count + val_count)),
+                "test": list(range(train_count + val_count, train_count + val_count + test_count)),
             },
+            "counts": {
+                "train": train_count,
+                "val": val_count,
+                "test": test_count,
+                "fault_eval": int(fault_eval_payload["total_window_count"]),
+            },
+            "run_sets": protocol["run_sets"],
+            "modes": protocol["modes"],
+            "windowing": protocol["windowing"],
+            "split_summary": split_summaries,
+            "fault_eval_run_count": int(fault_eval_payload["run_count"]),
         },
-    }
+    )
+    return split_path
 
 
 def export_bundle(
+    *,
     cfg: TEPBuilderConfig,
-    split_payload: Mapping[str, Mapping[str, Any]],
-    protocol: Mapping[str, Any],
-    five_unit: Mapping[str, Any],
-    truth_table: Mapping[str, Any],
-    channel_map: Mapping[str, Any],
+    project_root: Path,
     processed_root: Path,
-    split_path: Path,
+    split_root: Path,
     metadata_root: Path,
+    channel_map: Mapping[str, Any],
+    five_unit: Mapping[str, Any],
+    feed_side: Mapping[str, Any],
+    truth_table: Mapping[str, Any],
+    protocol: Mapping[str, Any],
+    scenario_map: Mapping[str, Any],
+    discovery: Mapping[str, Any],
+    runs: Sequence[Mapping[str, Any]],
 ) -> DatasetBundle:
     processed_root.mkdir(parents=True, exist_ok=True)
+    truth_rows = {
+        str(row["scenario"]): row
+        for row in truth_table.get("rows", [])
+        if isinstance(row, Mapping) and row.get("scenario")
+    }
+
+    train_keys = set(protocol["run_sets"]["train_normal_run_keys"])
+    val_keys = set(protocol["run_sets"]["val_normal_run_keys"])
+    test_keys = set(protocol["run_sets"]["normal_test_run_keys"])
+    train_runs = [run for run in runs if str(run["run_key"]) in train_keys]
+    val_runs = [run for run in runs if str(run["run_key"]) in val_keys]
+    test_runs = [run for run in runs if str(run["run_key"]) in test_keys]
+    fault_runs = [run for run in runs if bool(run["is_fault"])]
 
     processed_files: Dict[str, str] = {}
-    for split_name, payload in split_payload.items():
-        for key in ("X", "Y", "sample_id", "run_id", "timestamp", "mode", "fault_id", "scenario_id", "window_idx"):
-            if key not in payload or payload[key] is None:
-                continue
-            arr = np.asarray(payload[key])
-            if arr.size == 0:
-                continue
-            fname = f"{split_name}_{key}.npy"
-            np.save(processed_root / fname, arr)
-            processed_files[f"{split_name}_{key}"] = fname
+    split_summaries: Dict[str, Mapping[str, Any]] = {}
+    split_counts: Dict[str, int] = {}
+    for split_name, split_runs in (("train", train_runs), ("val", val_runs), ("test", test_runs)):
+        files, summary = _build_split_arrays(
+            processed_root=processed_root,
+            split_name=split_name,
+            run_entries=split_runs,
+            window_length=cfg.window_length,
+            horizon=cfg.horizon,
+        )
+        processed_files.update(files)
+        split_summaries[split_name] = summary
+        split_counts[split_name] = int(summary["window_count"])
 
-        idv_aux = np.asarray(payload.get("idv_aux"), dtype=np.float64)
-        if idv_aux.size > 0:
-            fname = f"{split_name}_idv_aux.npy"
-            np.save(processed_root / fname, idv_aux)
-            processed_files[f"{split_name}_idv_aux"] = fname
+    run_manifest_path = _write_run_manifest(processed_root=processed_root, discovery=discovery, runs=runs)
+    fault_manifest_path, fault_eval_payload, propagation_subset_path = _build_fault_eval_manifest(
+        processed_root=processed_root,
+        fault_runs=fault_runs,
+        truth_rows=truth_rows,
+        window_length=cfg.window_length,
+        horizon=cfg.horizon,
+    )
+    split_path = _write_split_manifest(
+        split_root=split_root,
+        protocol=protocol,
+        split_counts=split_counts,
+        split_summaries=split_summaries,
+        fault_eval_payload=fault_eval_payload,
+    )
 
-    train_x = np.asarray(split_payload["train"]["X"])
-    train_y = np.asarray(split_payload["train"]["Y"])
-    if train_x.size == 0:
-        raise TEPBuilderError("train split is empty.")
+    main_eval_subset_path = processed_root / "tep_main_eval_subset_manifest.json"
+    window_manifest_path = processed_root / "tep_window_manifest.json"
+    _write_json(
+        window_manifest_path,
+        {
+            "dataset_name": "tep",
+            "generated_at": _utc_now(),
+            "window_length": cfg.window_length,
+            "horizon": cfg.horizon,
+            "normal_splits": split_summaries,
+            "fault_eval": {
+                "manifest_file": str(fault_manifest_path),
+                "run_count": int(fault_eval_payload["run_count"]),
+                "window_count": int(fault_eval_payload["total_window_count"]),
+            },
+            "main_eval_subset_manifest_file": str(main_eval_subset_path),
+            "propagation_subset_manifest_file": str(propagation_subset_path),
+        },
+    )
 
     bundle = TEPAdapter.build_bundle(
         dataset_name=cfg.dataset_name,
-        train=split_payload["train"],
-        val=split_payload["val"],
-        test=split_payload["test"],
+        train={
+            "X": np.load(processed_root / processed_files["train_X"], allow_pickle=True),
+            "Y": np.load(processed_root / processed_files["train_Y"], allow_pickle=True),
+            "sample_id": np.load(processed_root / processed_files["train_sample_id"], allow_pickle=True),
+            "run_id": np.load(processed_root / processed_files["train_run_id"], allow_pickle=True),
+            "timestamp": np.load(processed_root / processed_files["train_timestamp"], allow_pickle=True),
+        },
+        val={
+            "X": np.load(processed_root / processed_files["val_X"], allow_pickle=True),
+            "Y": np.load(processed_root / processed_files["val_Y"], allow_pickle=True),
+            "sample_id": np.load(processed_root / processed_files["val_sample_id"], allow_pickle=True),
+            "run_id": np.load(processed_root / processed_files["val_run_id"], allow_pickle=True),
+            "timestamp": np.load(processed_root / processed_files["val_timestamp"], allow_pickle=True),
+        },
+        test={
+            "X": np.load(processed_root / processed_files["test_X"], allow_pickle=True),
+            "Y": np.load(processed_root / processed_files["test_Y"], allow_pickle=True),
+            "sample_id": np.load(processed_root / processed_files["test_sample_id"], allow_pickle=True),
+            "run_id": np.load(processed_root / processed_files["test_run_id"], allow_pickle=True),
+            "timestamp": np.load(processed_root / processed_files["test_timestamp"], allow_pickle=True),
+        },
         meta={
             "dataset_name": cfg.dataset_name,
             "task_family": "tep",
-            "input_dim": int(train_x.shape[-1]),
-            "output_dim": int(train_y.shape[-1]),
-            "window_length": int(cfg.window_length),
-            "horizon": int(cfg.horizon),
+            "input_dim": 53,
+            "output_dim": 53,
+            "window_length": cfg.window_length,
+            "horizon": cfg.horizon,
             "split_protocol": cfg.split_protocol,
             "has_ground_truth_kernel": False,
             "has_ground_truth_gfrf": False,
             "extras": {
+                "model_input_columns": list(channel_map["observable_variables"]["names"]),
+                "metadata_only_columns": list(channel_map["idv_variables"]["names"]),
                 "channel_map": channel_map,
                 "five_unit_definition": five_unit,
-                "fault_truth_table": truth_table,
+                "feed_side_definition": feed_side,
                 "mode_holdout_protocol": protocol,
-                "feed_side_unit_not_scored": True,
+                "window_manifest_file": str(window_manifest_path),
+                "run_manifest_file": str(run_manifest_path),
+                "fault_eval_manifest_file": str(fault_manifest_path),
+                "main_eval_subset_manifest_file": str(main_eval_subset_path),
+                "propagation_subset_manifest_file": str(propagation_subset_path),
+                "scenario_to_idv_map_file": str(metadata_root / "scenario_to_idv_map.json"),
+                "variable_length_fault_runs": True,
+                "normal_run_n_steps": 7201,
             },
         },
         artifacts={
-            "truth_file": None,
+            "truth_file": str(metadata_root / "fault_truth_table.json"),
             "grouping_file": str(metadata_root / "five_unit_definition.json"),
             "protocol_file": str(metadata_root / "mode_holdout_protocol.json"),
             "extra": {
-                "fault_truth_table_file": str(metadata_root / "fault_truth_table.json"),
+                "feed_side_definition_file": str(metadata_root / "feed_side_definition.json"),
+                "scenario_to_idv_map_file": str(metadata_root / "scenario_to_idv_map.json"),
                 "split_file": str(split_path),
+                "run_manifest_file": str(run_manifest_path),
+                "window_manifest_file": str(window_manifest_path),
+                "fault_eval_manifest_file": str(fault_manifest_path),
+                "main_eval_subset_manifest_file": str(main_eval_subset_path),
+                "propagation_subset_manifest_file": str(propagation_subset_path),
             },
         },
     )
+    check_dataset_bundle(bundle)
 
     _write_json(
         processed_root / "tep_processed_manifest.json",
         {
             "dataset_name": cfg.dataset_name,
-            "generated_at": datetime.utcnow().isoformat() + "Z",
-            "protocol": protocol,
+            "generated_at": _utc_now(),
             "split_file": str(split_path),
-            "window_length": int(cfg.window_length),
-            "horizon": int(cfg.horizon),
-            "sample_counts": {
-                "train": int(len(split_payload["train"]["X"])),
-                "val": int(len(split_payload["val"]["X"])),
-                "test": int(len(split_payload["test"]["X"])),
-            },
+            "window_length": cfg.window_length,
+            "horizon": cfg.horizon,
+            "raw_discovery": discovery,
+            "run_manifest_file": str(run_manifest_path),
+            "window_manifest_file": str(window_manifest_path),
+            "fault_eval_manifest_file": str(fault_manifest_path),
+            "sample_counts": split_counts,
             "processed_files": processed_files,
             "bundle_meta": bundle.meta.to_dict(),
             "bundle_artifacts": bundle.artifacts.to_dict(),
@@ -558,17 +647,20 @@ def export_bundle(
         metadata_root / "tep_builder_manifest.json",
         {
             "dataset_name": cfg.dataset_name,
+            "generated_at": _utc_now(),
             "mode_holdout_protocol_file": str(metadata_root / "mode_holdout_protocol.json"),
             "five_unit_definition_file": str(metadata_root / "five_unit_definition.json"),
+            "feed_side_definition_file": str(metadata_root / "feed_side_definition.json"),
             "fault_truth_table_file": str(metadata_root / "fault_truth_table.json"),
+            "scenario_to_idv_map_file": str(metadata_root / "scenario_to_idv_map.json"),
             "channel_map_file": str(metadata_root / "channel_map.json"),
+            "processed_manifest_file": str(processed_root / "tep_processed_manifest.json"),
             "split_file": str(split_path),
-            "generated_at": datetime.utcnow().isoformat() + "Z",
-            "protocol_name": protocol.get("protocol_name"),
+            "run_manifest_file": str(run_manifest_path),
+            "window_manifest_file": str(window_manifest_path),
         },
     )
 
-    check_dataset_bundle(bundle)
     return bundle
 
 
@@ -576,16 +668,18 @@ def run_build(project_root: Path) -> DatasetBundle:
     cfg = TEPBuilderConfig()
     cfg.validate()
 
+    project_root = project_root.expanduser().resolve()
     metadata_root = project_root / "data" / "metadata" / "tep"
     raw_root = project_root / "data" / "raw" / "tep"
-    interim_root = project_root / "data" / "interim" / "tep"
     processed_root = project_root / "data" / "processed" / "tep"
-    splits_root = project_root / "data" / "splits" / "tep"
+    split_root = project_root / "data" / "splits" / "tep"
 
     channel_map = _load_json(metadata_root / "channel_map.json")
     five_unit = _load_json(metadata_root / "five_unit_definition.json")
+    feed_side = _load_json(metadata_root / "feed_side_definition.json")
     truth_table = _load_json(metadata_root / "fault_truth_table.json")
     protocol = _load_json(metadata_root / "mode_holdout_protocol.json")
+    scenario_map = _load_json(metadata_root / "scenario_to_idv_map.json")
 
     total_vars = int(channel_map["observable_variables"].get("count", 0)) + int(
         channel_map["idv_variables"].get("count", 0)
@@ -593,66 +687,33 @@ def run_build(project_root: Path) -> DatasetBundle:
     if total_vars != 81:
         raise TEPBuilderError("channel_map must define exactly 81 variables (v01-v81).")
 
-    raw = load_raw(raw_root, cfg, channel_map)
-
-    interim_root.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(
-        interim_root / "tep_preprocessed.npz",
-        X_obs=np.asarray(raw["X_obs"], dtype=np.float64),
-        X_idv=np.asarray(raw["X_idv"], dtype=np.float64),
-        mode=np.asarray(raw["mode"], dtype=object),
-        fault_id=np.asarray(raw["fault_id"], dtype=object),
-        scenario_id=np.asarray(raw["scenario_id"], dtype=object),
-        run_id=np.asarray(raw["run_id"], dtype=object),
-        timestamp=np.asarray(raw["timestamp"], dtype=np.float64),
+    discovery = discover_raw(raw_root, cfg)
+    runs = load_runs(
+        raw_root=raw_root,
+        processed_root=processed_root,
+        cfg=cfg,
+        scenario_to_idv_map=scenario_map,
     )
-    _write_json(
-        interim_root / "tep_interim_manifest.json",
-        {
-            "dataset_name": cfg.dataset_name,
-            "generated_at": datetime.utcnow().isoformat() + "Z",
-            "raw_signal_shape": [int(raw["X_obs"].shape[0]), int(raw["X_obs"].shape[1] + raw["X_idv"].shape[1])],
-            "x_obs_shape": [int(raw["X_obs"].shape[0]), int(raw["X_obs"].shape[1])],
-            "x_idv_shape": [int(raw["X_idv"].shape[0]), int(raw["X_idv"].shape[1])],
-            "window_length": int(cfg.window_length),
-            "horizon": int(cfg.horizon),
-            "mode_protocol_name": protocol.get("protocol_name"),
-        },
-    )
-
-    windows = build_windows(
-        x_obs=np.asarray(raw["X_obs"], dtype=np.float64),
-        x_idv=np.asarray(raw["X_idv"], dtype=np.float64),
-        window_length=cfg.window_length,
-        horizon=cfg.horizon,
-        mode=np.asarray(raw["mode"], dtype=object),
-        fault_id=np.asarray(raw["fault_id"], dtype=object),
-        scenario_id=np.asarray(raw["scenario_id"], dtype=object),
-        run_id=np.asarray(raw["run_id"], dtype=object),
-        timestamp=np.asarray(raw["timestamp"], dtype=np.float64),
-    )
-    windows["obs_names"] = np.asarray(raw["obs_names"], dtype=object)
-    windows["idv_names"] = np.asarray(raw["idv_names"], dtype=object)
-
-    split_path = splits_root / "tep_mode_holdout_split_manifest.json"
-    split_path.parent.mkdir(parents=True, exist_ok=True)
-    split_payload = build_split(windows, protocol, split_path)
 
     return export_bundle(
         cfg=cfg,
-        split_payload=split_payload,
-        protocol=protocol,
-        five_unit=five_unit,
-        truth_table=truth_table,
-        channel_map=channel_map,
+        project_root=project_root,
         processed_root=processed_root,
-        split_path=split_path,
+        split_root=split_root,
         metadata_root=metadata_root,
+        channel_map=channel_map,
+        five_unit=five_unit,
+        feed_side=feed_side,
+        truth_table=truth_table,
+        protocol=protocol,
+        scenario_map=scenario_map,
+        discovery=discovery,
+        runs=runs,
     )
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Build TEP dataset bundle.")
+    parser = argparse.ArgumentParser(description="Build TEP multimode dataset bundle.")
     parser.add_argument("--project-root", type=Path, default=Path.cwd())
     return parser.parse_args()
 

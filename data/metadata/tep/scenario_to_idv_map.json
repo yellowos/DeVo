@@ -1,0 +1,40 @@
+{
+  "dataset_name": "tep",
+  "mapping_direction": "README reverse mapping: d01-d28 correspond to IDV(28)-IDV(01) respectively.",
+  "healthy": {
+    "scenario": "d00",
+    "idv": "healthy",
+    "idv_index": 0,
+    "is_fault": false
+  },
+  "mapping": {
+    "d01": {"scenario": "d01", "idv": "idv28", "idv_index": 28, "is_fault": true},
+    "d02": {"scenario": "d02", "idv": "idv27", "idv_index": 27, "is_fault": true},
+    "d03": {"scenario": "d03", "idv": "idv26", "idv_index": 26, "is_fault": true},
+    "d04": {"scenario": "d04", "idv": "idv25", "idv_index": 25, "is_fault": true},
+    "d05": {"scenario": "d05", "idv": "idv24", "idv_index": 24, "is_fault": true},
+    "d06": {"scenario": "d06", "idv": "idv23", "idv_index": 23, "is_fault": true},
+    "d07": {"scenario": "d07", "idv": "idv22", "idv_index": 22, "is_fault": true},
+    "d08": {"scenario": "d08", "idv": "idv21", "idv_index": 21, "is_fault": true},
+    "d09": {"scenario": "d09", "idv": "idv20", "idv_index": 20, "is_fault": true},
+    "d10": {"scenario": "d10", "idv": "idv19", "idv_index": 19, "is_fault": true},
+    "d11": {"scenario": "d11", "idv": "idv18", "idv_index": 18, "is_fault": true},
+    "d12": {"scenario": "d12", "idv": "idv17", "idv_index": 17, "is_fault": true},
+    "d13": {"scenario": "d13", "idv": "idv16", "idv_index": 16, "is_fault": true},
+    "d14": {"scenario": "d14", "idv": "idv15", "idv_index": 15, "is_fault": true},
+    "d15": {"scenario": "d15", "idv": "idv14", "idv_index": 14, "is_fault": true},
+    "d16": {"scenario": "d16", "idv": "idv13", "idv_index": 13, "is_fault": true},
+    "d17": {"scenario": "d17", "idv": "idv12", "idv_index": 12, "is_fault": true},
+    "d18": {"scenario": "d18", "idv": "idv11", "idv_index": 11, "is_fault": true},
+    "d19": {"scenario": "d19", "idv": "idv10", "idv_index": 10, "is_fault": true},
+    "d20": {"scenario": "d20", "idv": "idv09", "idv_index": 9, "is_fault": true},
+    "d21": {"scenario": "d21", "idv": "idv08", "idv_index": 8, "is_fault": true},
+    "d22": {"scenario": "d22", "idv": "idv07", "idv_index": 7, "is_fault": true},
+    "d23": {"scenario": "d23", "idv": "idv06", "idv_index": 6, "is_fault": true},
+    "d24": {"scenario": "d24", "idv": "idv05", "idv_index": 5, "is_fault": true},
+    "d25": {"scenario": "d25", "idv": "idv04", "idv_index": 4, "is_fault": true},
+    "d26": {"scenario": "d26", "idv": "idv03", "idv_index": 3, "is_fault": true},
+    "d27": {"scenario": "d27", "idv": "idv02", "idv_index": 2, "is_fault": true},
+    "d28": {"scenario": "d28", "idv": "idv01", "idv_index": 1, "is_fault": true}
+  }
+}

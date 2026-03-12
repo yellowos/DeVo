@@ -35,7 +35,7 @@
     },
     {
       "benchmark_name": "coupled_duffing",
-      "has_ground_truth_kernel": true,
+      "has_ground_truth_kernel": false,
       "kernel_reference": "nonlinear://truth/coupled_duffing/kernel/v1",
       "registration": {
         "source": "analytic_or_simulator_reference",
