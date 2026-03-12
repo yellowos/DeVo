@@ -14,12 +14,14 @@ from .base import (
     load_dataset_bundle,
     register_method,
 )
+from .baselines import LaguerreVolterraMethod
 
 __all__ = [
     "ArtifactRef",
     "BaseMethod",
     "KernelRecoveryNotSupportedError",
     "KernelRecoveryResult",
+    "LaguerreVolterraMethod",
     "MethodDatasetBundle",
     "MethodDatasetSplit",
     "MethodRegistry",
