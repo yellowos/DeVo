@@ -227,7 +227,8 @@ def _check_split_disjointness(report: CheckReport, split_payloads: Mapping[str, 
         sets = {name: set(int(x) for x in parsed[name]) for name in split_names}
         for name in split_names:
             if len(parsed[name]) != len(sets[name]):
-                report.warning(f"{dataset}: {name} split indices contain duplicates; deduplicated in checks.")
+                n_dupes = len(parsed[name]) - len(sets[name])
+                report.error(f"{dataset}: {name} split indices contain {n_dupes} duplicate(s)")
         for i, a in enumerate(split_names):
             for b in split_names[i + 1 :]:
                 overlap = sets[a] & sets[b]

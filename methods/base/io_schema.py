@@ -16,6 +16,10 @@ PathLike: TypeAlias = str | Path
 
 _STANDARD_SPLIT_KEYS = {"X", "Y", "sample_id", "run_id", "timestamp", "meta"}
 
+# Fields that may contain object arrays (e.g. string identifiers) and therefore
+# require ``allow_pickle=True`` when loaded via ``np.load``.
+_PICKLE_ALLOWED_FIELDS = {"sample_id", "run_id", "timestamp", "meta"}
+
 
 def _read_json(path: Path) -> Mapping[str, Any]:
     with path.open("r", encoding="utf-8") as handle:
@@ -121,7 +125,7 @@ def _load_split_payload(
             continue
         if not array_path.exists():
             raise FileNotFoundError(f"Missing processed file: {array_path}")
-        payload[field_name] = np.load(array_path, allow_pickle=True)
+        payload[field_name] = np.load(array_path, allow_pickle=(field_name in _PICKLE_ALLOWED_FIELDS))
 
     for field_name in ("X", "Y", "sample_id", "run_id", "timestamp"):
         if field_name in payload:
@@ -129,7 +133,7 @@ def _load_split_payload(
         for candidate in _default_field_candidates(split_name, field_name):
             array_path = processed_root / candidate
             if array_path.exists():
-                payload[field_name] = np.load(array_path, allow_pickle=True)
+                payload[field_name] = np.load(array_path, allow_pickle=(field_name in _PICKLE_ALLOWED_FIELDS))
                 break
 
     if "X" not in payload or "Y" not in payload:
