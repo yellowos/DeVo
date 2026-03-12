@@ -1,0 +1,101 @@
+paths:
+  processed_root: ../../../data/processed/tep
+  metadata_root: ../../../data/metadata/tep
+  output_root: ./outputs
+
+experiment:
+  name: exp01_five_unit_fault_isolation
+  window_length: 128
+  horizons: [1, 5]
+
+scaler:
+  enabled: true
+  epsilon: 1.0e-6
+
+scoring:
+  variable_score_reduce: mean_abs
+  unit_member_reduce: mean
+  early_window_count: 20
+
+profiles:
+  full:
+    seed: 42
+    allow_empty_main_eval: false
+    scenario_allowlist: []
+    run_key_allowlist: []
+    fault_run_limit: null
+    max_train_windows: null
+    max_val_windows: null
+    max_normal_test_windows: null
+    save_run_traces: false
+  smoke:
+    seed: 42
+    allow_empty_main_eval: false
+    scenario_allowlist: []
+    run_key_allowlist:
+      - M4_d01
+      - M4_d06
+    fault_run_limit: null
+    max_train_windows: 1024
+    max_val_windows: 256
+    max_normal_test_windows: 256
+    save_run_traces: true
+
+methods:
+  cva_contribution:
+    display_name: CVA contribution
+    backend: skipped
+    enabled: false
+    skip_reason: Stable CVA contribution implementation is not available in the current methods layer.
+  residual_decomposition:
+    display_name: residual decomposition
+    backend: skipped
+    enabled: false
+    skip_reason: Stable residual decomposition implementation is not available in the current methods layer.
+  lstm_gradient:
+    display_name: LSTM gradient
+    backend: lstm
+    enabled: true
+    prediction_batch_size: 128
+    training:
+      hidden_size: 64
+      num_layers: 1
+      dropout: 0.0
+      bidirectional: false
+      batch_size: 128
+      max_epochs: 8
+      learning_rate: 0.001
+      weight_decay: 0.0
+      gradient_clip_norm: 1.0
+      early_stopping_patience: 3
+      early_stopping_min_delta: 1.0e-6
+      seed: 42
+    attribution:
+      mode: gradient
+      batch_size: 64
+  devo_error_attribution:
+    display_name: DeVo error attribution
+    backend: devo
+    enabled: true
+    prediction_batch_size: 128
+    training:
+      orders: [1]
+      num_branches: 2
+      epochs: 8
+      batch_size: 64
+      eval_batch_size: 128
+      learning_rate: 0.001
+      weight_decay: 1.0e-6
+      grad_clip_norm: 1.0
+      feature_chunk_size: 2048
+      index_cache_limit: 500000
+      max_canonical_terms_per_order: 10000
+      max_full_recovery_elements: 4000000
+      seed: 7
+      include_bias: true
+      init_scale: 0.01
+      verbose: false
+      log_every: 1
+    attribution:
+      mode: grad_x_input
+      batch_size: 64
