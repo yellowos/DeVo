@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+import importlib
 from typing import Any, Callable, Dict, TypeVar
 
 from .base_method import BaseMethod
 
 MethodT = TypeVar("MethodT", bound=BaseMethod)
+
+_LAZY_IMPORT_CANDIDATES: dict[str, tuple[str, ...]] = {
+    "arx": ("methods.baselines.arx_var",),
+    "var": ("methods.baselines.arx_var",),
+}
 
 
 def _normalize_name(name: str) -> str:
@@ -48,8 +54,19 @@ class MethodRegistry:
     def get(self, name: str) -> type[BaseMethod]:
         key = _normalize_name(name)
         if key not in self._registry:
+            self._attempt_lazy_import(key)
+        if key not in self._registry:
             raise KeyError(f"Unknown method: {name}")
         return self._registry[key]
+
+    def _attempt_lazy_import(self, key: str) -> None:
+        for module_name in _LAZY_IMPORT_CANDIDATES.get(key, ()):
+            try:
+                importlib.import_module(module_name)
+            except ModuleNotFoundError as exc:
+                if exc.name != module_name:
+                    raise
+                continue
 
     def create(self, name: str, **kwargs: Any) -> BaseMethod:
         method_cls = self.get(name)
