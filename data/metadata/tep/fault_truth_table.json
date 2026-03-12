@@ -1,36 +1,288 @@
 {
   "dataset_name": "tep",
-  "schema_version": "2.0.0",
+  "schema_version": "2.1.0",
   "primary_key": "scenario",
   "rows": [
-    {"scenario": "d01", "fault_id": "d01", "idv": "idv28", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d02", "fault_id": "d02", "idv": "idv27", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d03", "fault_id": "d03", "idv": "idv26", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d04", "fault_id": "d04", "idv": "idv25", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d05", "fault_id": "d05", "idv": "idv24", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d06", "fault_id": "d06", "idv": "idv23", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Variable-length fault run in current raw release."},
-    {"scenario": "d07", "fault_id": "d07", "idv": "idv22", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Variable-length fault run in current raw release."},
-    {"scenario": "d08", "fault_id": "d08", "idv": "idv21", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Variable-length fault run in current raw release."},
-    {"scenario": "d09", "fault_id": "d09", "idv": "idv20", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d10", "fault_id": "d10", "idv": "idv19", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d11", "fault_id": "d11", "idv": "idv18", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d12", "fault_id": "d12", "idv": "idv17", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d13", "fault_id": "d13", "idv": "idv16", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Variable-length fault run in current raw release."},
-    {"scenario": "d14", "fault_id": "d14", "idv": "idv15", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d15", "fault_id": "d15", "idv": "idv14", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d16", "fault_id": "d16", "idv": "idv13", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d17", "fault_id": "d17", "idv": "idv12", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d18", "fault_id": "d18", "idv": "idv11", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d19", "fault_id": "d19", "idv": "idv10", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d20", "fault_id": "d20", "idv": "idv09", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d21", "fault_id": "d21", "idv": "idv08", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d22", "fault_id": "d22", "idv": "idv07", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d23", "fault_id": "d23", "idv": "idv06", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d24", "fault_id": "d24", "idv": "idv05", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d25", "fault_id": "d25", "idv": "idv04", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d26", "fault_id": "d26", "idv": "idv03", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d27", "fault_id": "d27", "idv": "idv02", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."},
-    {"scenario": "d28", "fault_id": "d28", "idv": "idv01", "primary_unit": null, "expected_units": [], "included_in_main_eval": false, "exclusion_reason": "Curated five-unit truth not yet provided.", "note": "Raw scenario aligned to README reverse mapping."}
+    {
+      "scenario": "d01",
+      "fault_id": "d01",
+      "idv": "idv28",
+      "primary_unit": "Condenser",
+      "expected_units": ["Condenser"],
+      "included_in_main_eval": true,
+      "exclusion_reason": null,
+      "note": "README Fig. 4: pressure fluctuation in the cooling water re-circulating unit of the condenser."
+    },
+    {
+      "scenario": "d02",
+      "fault_id": "d02",
+      "idv": "idv27",
+      "primary_unit": "Reactor",
+      "expected_units": ["Reactor"],
+      "included_in_main_eval": true,
+      "exclusion_reason": null,
+      "note": "README Fig. 4: pressure fluctuation in the cooling water re-circulating unit of the reactor."
+    },
+    {
+      "scenario": "d03",
+      "fault_id": "d03",
+      "idv": "idv26",
+      "primary_unit": null,
+      "expected_units": [],
+      "included_in_main_eval": false,
+      "exclusion_reason": "Feed-side pressure disturbance is retained in model input but excluded from five-unit scoring.",
+      "note": "README Fig. 4: A and C feed pressure (stream 4)."
+    },
+    {
+      "scenario": "d04",
+      "fault_id": "d04",
+      "idv": "idv25",
+      "primary_unit": null,
+      "expected_units": [],
+      "included_in_main_eval": false,
+      "exclusion_reason": "Feed-side pressure disturbance is retained in model input but excluded from five-unit scoring.",
+      "note": "README Fig. 4: E feed pressure (stream 3)."
+    },
+    {
+      "scenario": "d05",
+      "fault_id": "d05",
+      "idv": "idv24",
+      "primary_unit": null,
+      "expected_units": [],
+      "included_in_main_eval": false,
+      "exclusion_reason": "Feed-side pressure disturbance is retained in model input but excluded from five-unit scoring.",
+      "note": "README Fig. 4: D feed pressure (stream 2)."
+    },
+    {
+      "scenario": "d06",
+      "fault_id": "d06",
+      "idv": "idv23",
+      "primary_unit": null,
+      "expected_units": [],
+      "included_in_main_eval": false,
+      "exclusion_reason": "Feed-side pressure disturbance is retained in model input but excluded from five-unit scoring.",
+      "note": "README Fig. 4: A feed pressure (stream 1). Variable-length fault run in current raw release."
+    },
+    {
+      "scenario": "d07",
+      "fault_id": "d07",
+      "idv": "idv22",
+      "primary_unit": null,
+      "expected_units": [],
+      "included_in_main_eval": false,
+      "exclusion_reason": "Feed-side temperature disturbance is retained in model input but excluded from five-unit scoring.",
+      "note": "README Fig. 4: E feed temperature (stream 3). Variable-length fault run in current raw release."
+    },
+    {
+      "scenario": "d08",
+      "fault_id": "d08",
+      "idv": "idv21",
+      "primary_unit": "Condenser",
+      "expected_units": ["Condenser"],
+      "included_in_main_eval": true,
+      "exclusion_reason": null,
+      "note": "README Fig. 4: condenser cooling water flow. Variable-length fault run in current raw release."
+    },
+    {
+      "scenario": "d09",
+      "fault_id": "d09",
+      "idv": "idv20",
+      "primary_unit": null,
+      "expected_units": [],
+      "included_in_main_eval": false,
+      "exclusion_reason": "Fault description is marked unknown in the dataset disturbance list.",
+      "note": "README Fig. 4: unknown."
+    },
+    {
+      "scenario": "d10",
+      "fault_id": "d10",
+      "idv": "idv19",
+      "primary_unit": null,
+      "expected_units": [],
+      "included_in_main_eval": false,
+      "exclusion_reason": "Fault description is marked unknown in the dataset disturbance list.",
+      "note": "README Fig. 4: unknown."
+    },
+    {
+      "scenario": "d11",
+      "fault_id": "d11",
+      "idv": "idv18",
+      "primary_unit": "Condenser",
+      "expected_units": ["Condenser"],
+      "included_in_main_eval": true,
+      "exclusion_reason": null,
+      "note": "README Fig. 4: variation coefficients of heat transfer coefficient in condenser."
+    },
+    {
+      "scenario": "d12",
+      "fault_id": "d12",
+      "idv": "idv17",
+      "primary_unit": "Reactor",
+      "expected_units": ["Reactor"],
+      "included_in_main_eval": true,
+      "exclusion_reason": null,
+      "note": "README Fig. 4: variation coefficients of heat transfer coefficient in reactor."
+    },
+    {
+      "scenario": "d13",
+      "fault_id": "d13",
+      "idv": "idv16",
+      "primary_unit": "Stripper",
+      "expected_units": ["Stripper"],
+      "included_in_main_eval": true,
+      "exclusion_reason": null,
+      "note": "README Fig. 4: variation coefficients of steam supply of stripper heat exchanger. Variable-length fault run in current raw release."
+    },
+    {
+      "scenario": "d14",
+      "fault_id": "d14",
+      "idv": "idv15",
+      "primary_unit": "Condenser",
+      "expected_units": ["Condenser"],
+      "included_in_main_eval": true,
+      "exclusion_reason": null,
+      "note": "README Fig. 4: condenser cooling water valve."
+    },
+    {
+      "scenario": "d15",
+      "fault_id": "d15",
+      "idv": "idv14",
+      "primary_unit": "Reactor",
+      "expected_units": ["Reactor"],
+      "included_in_main_eval": true,
+      "exclusion_reason": null,
+      "note": "README Fig. 4: reactor cooling water valve."
+    },
+    {
+      "scenario": "d16",
+      "fault_id": "d16",
+      "idv": "idv13",
+      "primary_unit": "Reactor",
+      "expected_units": ["Reactor"],
+      "included_in_main_eval": true,
+      "exclusion_reason": null,
+      "note": "README Fig. 4: reaction kinetics."
+    },
+    {
+      "scenario": "d17",
+      "fault_id": "d17",
+      "idv": "idv12",
+      "primary_unit": "Condenser",
+      "expected_units": ["Condenser"],
+      "included_in_main_eval": true,
+      "exclusion_reason": null,
+      "note": "README Fig. 4: condenser cooling water inlet temperature."
+    },
+    {
+      "scenario": "d18",
+      "fault_id": "d18",
+      "idv": "idv11",
+      "primary_unit": "Reactor",
+      "expected_units": ["Reactor"],
+      "included_in_main_eval": true,
+      "exclusion_reason": null,
+      "note": "README Fig. 4: reactor cooling water inlet temperature."
+    },
+    {
+      "scenario": "d19",
+      "fault_id": "d19",
+      "idv": "idv10",
+      "primary_unit": null,
+      "expected_units": [],
+      "included_in_main_eval": false,
+      "exclusion_reason": "Feed-side temperature disturbance is retained in model input but excluded from five-unit scoring.",
+      "note": "README Fig. 4: C feed temperature (stream 4)."
+    },
+    {
+      "scenario": "d20",
+      "fault_id": "d20",
+      "idv": "idv09",
+      "primary_unit": null,
+      "expected_units": [],
+      "included_in_main_eval": false,
+      "exclusion_reason": "Feed-side temperature disturbance is retained in model input but excluded from five-unit scoring.",
+      "note": "README Fig. 4: D feed temperature (stream 2)."
+    },
+    {
+      "scenario": "d21",
+      "fault_id": "d21",
+      "idv": "idv08",
+      "primary_unit": null,
+      "expected_units": [],
+      "included_in_main_eval": false,
+      "exclusion_reason": "Feed-side composition disturbance is retained in model input but excluded from five-unit scoring.",
+      "note": "README Fig. 4: A, B, C feed composition (stream 4)."
+    },
+    {
+      "scenario": "d22",
+      "fault_id": "d22",
+      "idv": "idv07",
+      "primary_unit": null,
+      "expected_units": [],
+      "included_in_main_eval": false,
+      "exclusion_reason": "Feed-side pressure disturbance is retained in model input but excluded from five-unit scoring.",
+      "note": "README Fig. 4: C header pressure loss-reduced availability (stream 4)."
+    },
+    {
+      "scenario": "d23",
+      "fault_id": "d23",
+      "idv": "idv06",
+      "primary_unit": null,
+      "expected_units": [],
+      "included_in_main_eval": false,
+      "exclusion_reason": "Feed-side flow disturbance is retained in model input but excluded from five-unit scoring.",
+      "note": "README Fig. 4: A feed loss (stream 1)."
+    },
+    {
+      "scenario": "d24",
+      "fault_id": "d24",
+      "idv": "idv05",
+      "primary_unit": "Condenser",
+      "expected_units": ["Condenser"],
+      "included_in_main_eval": true,
+      "exclusion_reason": null,
+      "note": "README Fig. 4: condenser cooling water inlet temperature."
+    },
+    {
+      "scenario": "d25",
+      "fault_id": "d25",
+      "idv": "idv04",
+      "primary_unit": "Reactor",
+      "expected_units": ["Reactor"],
+      "included_in_main_eval": true,
+      "exclusion_reason": null,
+      "note": "README Fig. 4: reactor cooling water inlet temperature."
+    },
+    {
+      "scenario": "d26",
+      "fault_id": "d26",
+      "idv": "idv03",
+      "primary_unit": null,
+      "expected_units": [],
+      "included_in_main_eval": false,
+      "exclusion_reason": "Feed-side temperature disturbance is retained in model input but excluded from five-unit scoring.",
+      "note": "README Fig. 4: D feed temperature (stream 2)."
+    },
+    {
+      "scenario": "d27",
+      "fault_id": "d27",
+      "idv": "idv02",
+      "primary_unit": null,
+      "expected_units": [],
+      "included_in_main_eval": false,
+      "exclusion_reason": "Feed-side composition disturbance is retained in model input but excluded from five-unit scoring.",
+      "note": "README Fig. 4: B composition, A/C ratio constant (stream 4)."
+    },
+    {
+      "scenario": "d28",
+      "fault_id": "d28",
+      "idv": "idv01",
+      "primary_unit": null,
+      "expected_units": [],
+      "included_in_main_eval": false,
+      "exclusion_reason": "Feed-side composition disturbance is retained in model input but excluded from five-unit scoring.",
+      "note": "README Fig. 4: A/C feed ratio, B composition constant (stream 4)."
+    }
   ],
-  "notes": "This file aligns truth metadata to raw dxx namespace. It intentionally avoids fabricating five-unit labels until curated unit truth is provided."
+  "notes": "Curated five-unit truth keeps only scenes whose disturbance location is explicit in the dataset README Fig. 4 and maps directly to one of the five scored units. Feed-side scenes remain model inputs but are excluded from five-unit scoring."
 }
