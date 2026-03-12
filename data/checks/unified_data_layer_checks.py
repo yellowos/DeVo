@@ -487,6 +487,91 @@ def validate_nonlinear_dataset(
         if not isinstance(split_segment_roles, Mapping):
             report.error("cascaded_tanks: split manifest is missing segment_roles.")
 
+    if dataset == "coupled_duffing":
+        benchmark_extra = benchmark_entry.get("artifacts", {}).get("extra", {})
+        raw_sources = benchmark_extra.get("raw_sources")
+        if not isinstance(raw_sources, list):
+            report.error("coupled_duffing: benchmark_manifest is missing raw_sources.")
+        else:
+            raw_paths = {str(item.get("path")) for item in raw_sources if isinstance(item, Mapping)}
+            if "DATAUNIF.MAT" not in raw_paths or "DATAPRBS.MAT" not in raw_paths:
+                report.error("coupled_duffing: benchmark_manifest raw_sources must include DATAUNIF.MAT and DATAPRBS.MAT.")
+
+        trajectory_mapping = benchmark_extra.get("trajectory_field_mapping")
+        expected_trajectories = {"uniform_1", "uniform_2", "prbs_1", "prbs_2", "prbs_3"}
+        if not isinstance(trajectory_mapping, Mapping):
+            report.error("coupled_duffing: benchmark_manifest is missing trajectory_field_mapping.")
+        else:
+            missing = expected_trajectories.difference(set(trajectory_mapping.keys()))
+            if missing:
+                report.error(f"coupled_duffing: benchmark_manifest trajectory_field_mapping missing {sorted(missing)}.")
+
+        raw_trace = manifest_payload.get("raw_sources")
+        if not isinstance(raw_trace, Mapping):
+            meta_raw = meta.extras.get("raw_sources") if isinstance(meta.extras, Mapping) else None
+            artifact_raw = artifacts.extra.get("raw_sources") if isinstance(artifacts.extra, Mapping) else None
+            raw_trace = meta_raw if isinstance(meta_raw, Mapping) else artifact_raw
+
+        if not isinstance(raw_trace, Mapping):
+            report.error("coupled_duffing: processed manifest or bundle metadata is missing raw_sources.")
+        else:
+            for key, expected_name in (("uniform_source", "DATAUNIF"), ("prbs_source", "DATAPRBS")):
+                source = raw_trace.get(key)
+                if not isinstance(source, Mapping):
+                    report.error(f"coupled_duffing: raw_sources missing '{key}'.")
+                    continue
+                selected_path = source.get("selected_path")
+                if not isinstance(selected_path, str) or expected_name not in Path(selected_path).name.upper():
+                    report.error(f"coupled_duffing: raw_sources.{key}.selected_path must reference {expected_name}.")
+                else:
+                    _artifact_path_ok(
+                        report,
+                        dataset,
+                        selected_path,
+                        f"raw_sources.{key}.selected_path",
+                        data_root,
+                    )
+                if source.get("raw_format") not in {"mat", "csv"}:
+                    report.error(f"coupled_duffing: raw_sources.{key}.raw_format must be 'mat' or 'csv'.")
+
+        split_file = manifest_payload.get("split_file")
+        split_path = (data_root / split_file) if isinstance(split_file, str) and not Path(split_file).is_absolute() else Path(split_file) if isinstance(split_file, str) else split_root / f"{dataset}_split_manifest.json"
+        split_payload = _read_json(split_path)
+
+        expected_split_sources = {
+            "train": ["uniform_1", "uniform_2"],
+            "val": ["prbs_1"],
+            "test": ["prbs_2", "prbs_3"],
+        }
+        if split_payload.get("split_sources") != expected_split_sources:
+            report.error(
+                "coupled_duffing: split_sources must map train->[uniform_1,uniform_2], val->[prbs_1], test->[prbs_2,prbs_3]."
+            )
+
+        trajectory_roles = split_payload.get("trajectory_roles")
+        if not isinstance(trajectory_roles, Mapping):
+            report.error("coupled_duffing: split manifest is missing trajectory_roles.")
+        else:
+            missing = expected_trajectories.difference(set(trajectory_roles.keys()))
+            if missing:
+                report.error(f"coupled_duffing: split manifest trajectory_roles missing {sorted(missing)}.")
+
+        split_arrays = _load_split_payloads(processed_root, manifest_payload, dataset)
+        expected_run_ids = {
+            "train": {"uniform_1", "uniform_2"},
+            "val": {"prbs_1"},
+            "test": {"prbs_2", "prbs_3"},
+        }
+        for split_name, allowed in expected_run_ids.items():
+            payload = split_arrays.get(split_name, {})
+            if "run_id" not in payload:
+                report.error(f"coupled_duffing: {split_name} split is missing run_id.")
+                continue
+            run_ids = set(_to_set(payload["run_id"]))
+            if not run_ids.issubset(allowed):
+                diff = sorted(run_ids - allowed)
+                report.error(f"coupled_duffing: {split_name} split contains unexpected run_id values: {diff}")
+
     return report.ok
 
 

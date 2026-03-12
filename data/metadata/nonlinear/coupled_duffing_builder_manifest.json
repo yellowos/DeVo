@@ -1,0 +1,340 @@
+{
+  "dataset_name": "coupled_duffing",
+  "bundle_meta": {
+    "dataset_name": "coupled_duffing",
+    "task_family": "nonlinear",
+    "input_dim": 1,
+    "output_dim": 1,
+    "window_length": 128,
+    "horizon": 1,
+    "split_protocol": "nonlinear_temporal_grouped_holdout_v1",
+    "has_ground_truth_kernel": true,
+    "has_ground_truth_gfrf": true,
+    "extras": {
+      "task_usage": [
+        "prediction",
+        "kernel_recovery",
+        "gfrf_consistency"
+      ],
+      "input_channels": [
+        "u"
+      ],
+      "output_channels": [
+        "y"
+      ],
+      "system_type": "coupled_oscillators",
+      "split_protocol": "nonlinear_temporal_grouped_holdout_v1",
+      "split_path": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/splits/nonlinear/coupled_duffing_split_manifest.json",
+      "protocol_path": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+      "sampling_period_seconds": 0.02,
+      "raw_sources": {
+        "uniform_source": {
+          "selected_path": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/raw/nonlinear/coupled_duffing/DATAUNIF.MAT",
+          "relative_path": "DATAUNIF.MAT",
+          "discovery_method": "whitelist",
+          "raw_format": "mat",
+          "matched_candidate": "DATAUNIF.MAT",
+          "candidate_rank": 1,
+          "role": "identification_source",
+          "trajectory_names": [
+            "uniform_1",
+            "uniform_2"
+          ]
+        },
+        "prbs_source": {
+          "selected_path": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/raw/nonlinear/coupled_duffing/DATAPRBS.MAT",
+          "relative_path": "DATAPRBS.MAT",
+          "discovery_method": "whitelist",
+          "raw_format": "mat",
+          "matched_candidate": "DATAPRBS.MAT",
+          "candidate_rank": 1,
+          "role": "holdout_source",
+          "trajectory_names": [
+            "prbs_1",
+            "prbs_2",
+            "prbs_3"
+          ]
+        }
+      },
+      "trajectory_roles": {
+        "uniform_1": {
+          "source_file": "DATAUNIF.MAT",
+          "source_role": "identification_source",
+          "excitation_type": "uniform",
+          "input_field": "u11",
+          "output_field": "z11",
+          "split_role": "train",
+          "raw_samples": 500,
+          "window_count": 372
+        },
+        "uniform_2": {
+          "source_file": "DATAUNIF.MAT",
+          "source_role": "identification_source",
+          "excitation_type": "uniform",
+          "input_field": "u12",
+          "output_field": "z12",
+          "split_role": "train",
+          "raw_samples": 500,
+          "window_count": 372
+        },
+        "prbs_1": {
+          "source_file": "DATAPRBS.MAT",
+          "source_role": "holdout_source",
+          "excitation_type": "prbs",
+          "input_field": "u1",
+          "output_field": "z1",
+          "split_role": "val",
+          "raw_samples": 500,
+          "window_count": 372
+        },
+        "prbs_2": {
+          "source_file": "DATAPRBS.MAT",
+          "source_role": "holdout_source",
+          "excitation_type": "prbs",
+          "input_field": "u2",
+          "output_field": "z2",
+          "split_role": "test",
+          "raw_samples": 500,
+          "window_count": 372
+        },
+        "prbs_3": {
+          "source_file": "DATAPRBS.MAT",
+          "source_role": "holdout_source",
+          "excitation_type": "prbs",
+          "input_field": "u3",
+          "output_field": "z3",
+          "split_role": "test",
+          "raw_samples": 500,
+          "window_count": 372
+        }
+      },
+      "split_sources": {
+        "train": [
+          "uniform_1",
+          "uniform_2"
+        ],
+        "val": [
+          "prbs_1"
+        ],
+        "test": [
+          "prbs_2",
+          "prbs_3"
+        ]
+      }
+    }
+  },
+  "bundle_artifacts": {
+    "truth_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/truth/coupled_duffing_kernel_reference.json",
+    "grouping_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/splits/nonlinear/coupled_duffing_split_manifest.json",
+    "protocol_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+    "extra": {
+      "kernel_reference": "nonlinear://truth/coupled_duffing/kernel/v1",
+      "kernel_reference_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/truth/coupled_duffing_kernel_reference.json",
+      "gfrf_reference": "nonlinear://truth/coupled_duffing/gfrf/v1",
+      "gfrf_reference_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/truth/coupled_duffing_gfrf_reference.json",
+      "input_dim": 1,
+      "output_dim": 1,
+      "raw_sources": {
+        "uniform_source": {
+          "selected_path": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/raw/nonlinear/coupled_duffing/DATAUNIF.MAT",
+          "relative_path": "DATAUNIF.MAT",
+          "discovery_method": "whitelist",
+          "raw_format": "mat",
+          "matched_candidate": "DATAUNIF.MAT",
+          "candidate_rank": 1,
+          "role": "identification_source",
+          "trajectory_names": [
+            "uniform_1",
+            "uniform_2"
+          ]
+        },
+        "prbs_source": {
+          "selected_path": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/raw/nonlinear/coupled_duffing/DATAPRBS.MAT",
+          "relative_path": "DATAPRBS.MAT",
+          "discovery_method": "whitelist",
+          "raw_format": "mat",
+          "matched_candidate": "DATAPRBS.MAT",
+          "candidate_rank": 1,
+          "role": "holdout_source",
+          "trajectory_names": [
+            "prbs_1",
+            "prbs_2",
+            "prbs_3"
+          ]
+        }
+      },
+      "trajectory_roles": {
+        "uniform_1": {
+          "source_file": "DATAUNIF.MAT",
+          "source_role": "identification_source",
+          "excitation_type": "uniform",
+          "input_field": "u11",
+          "output_field": "z11",
+          "split_role": "train",
+          "raw_samples": 500,
+          "window_count": 372
+        },
+        "uniform_2": {
+          "source_file": "DATAUNIF.MAT",
+          "source_role": "identification_source",
+          "excitation_type": "uniform",
+          "input_field": "u12",
+          "output_field": "z12",
+          "split_role": "train",
+          "raw_samples": 500,
+          "window_count": 372
+        },
+        "prbs_1": {
+          "source_file": "DATAPRBS.MAT",
+          "source_role": "holdout_source",
+          "excitation_type": "prbs",
+          "input_field": "u1",
+          "output_field": "z1",
+          "split_role": "val",
+          "raw_samples": 500,
+          "window_count": 372
+        },
+        "prbs_2": {
+          "source_file": "DATAPRBS.MAT",
+          "source_role": "holdout_source",
+          "excitation_type": "prbs",
+          "input_field": "u2",
+          "output_field": "z2",
+          "split_role": "test",
+          "raw_samples": 500,
+          "window_count": 372
+        },
+        "prbs_3": {
+          "source_file": "DATAPRBS.MAT",
+          "source_role": "holdout_source",
+          "excitation_type": "prbs",
+          "input_field": "u3",
+          "output_field": "z3",
+          "split_role": "test",
+          "raw_samples": 500,
+          "window_count": 372
+        }
+      },
+      "split_sources": {
+        "train": [
+          "uniform_1",
+          "uniform_2"
+        ],
+        "val": [
+          "prbs_1"
+        ],
+        "test": [
+          "prbs_2",
+          "prbs_3"
+        ]
+      },
+      "sampling_period_seconds": 0.02
+    }
+  },
+  "processed_root": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/processed/nonlinear/coupled_duffing",
+  "split_path": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/splits/nonlinear/coupled_duffing_split_manifest.json",
+  "interim_root": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/interim/nonlinear/coupled_duffing",
+  "has_ground_truth_kernel": true,
+  "has_ground_truth_gfrf": true,
+  "raw_sources": {
+    "uniform_source": {
+      "selected_path": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/raw/nonlinear/coupled_duffing/DATAUNIF.MAT",
+      "relative_path": "DATAUNIF.MAT",
+      "discovery_method": "whitelist",
+      "raw_format": "mat",
+      "matched_candidate": "DATAUNIF.MAT",
+      "candidate_rank": 1,
+      "role": "identification_source",
+      "trajectory_names": [
+        "uniform_1",
+        "uniform_2"
+      ]
+    },
+    "prbs_source": {
+      "selected_path": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/raw/nonlinear/coupled_duffing/DATAPRBS.MAT",
+      "relative_path": "DATAPRBS.MAT",
+      "discovery_method": "whitelist",
+      "raw_format": "mat",
+      "matched_candidate": "DATAPRBS.MAT",
+      "candidate_rank": 1,
+      "role": "holdout_source",
+      "trajectory_names": [
+        "prbs_1",
+        "prbs_2",
+        "prbs_3"
+      ]
+    }
+  },
+  "trajectory_roles": {
+    "uniform_1": {
+      "source_file": "DATAUNIF.MAT",
+      "source_role": "identification_source",
+      "excitation_type": "uniform",
+      "input_field": "u11",
+      "output_field": "z11",
+      "split_role": "train",
+      "raw_samples": 500,
+      "window_count": 372
+    },
+    "uniform_2": {
+      "source_file": "DATAUNIF.MAT",
+      "source_role": "identification_source",
+      "excitation_type": "uniform",
+      "input_field": "u12",
+      "output_field": "z12",
+      "split_role": "train",
+      "raw_samples": 500,
+      "window_count": 372
+    },
+    "prbs_1": {
+      "source_file": "DATAPRBS.MAT",
+      "source_role": "holdout_source",
+      "excitation_type": "prbs",
+      "input_field": "u1",
+      "output_field": "z1",
+      "split_role": "val",
+      "raw_samples": 500,
+      "window_count": 372
+    },
+    "prbs_2": {
+      "source_file": "DATAPRBS.MAT",
+      "source_role": "holdout_source",
+      "excitation_type": "prbs",
+      "input_field": "u2",
+      "output_field": "z2",
+      "split_role": "test",
+      "raw_samples": 500,
+      "window_count": 372
+    },
+    "prbs_3": {
+      "source_file": "DATAPRBS.MAT",
+      "source_role": "holdout_source",
+      "excitation_type": "prbs",
+      "input_field": "u3",
+      "output_field": "z3",
+      "split_role": "test",
+      "raw_samples": 500,
+      "window_count": 372
+    }
+  },
+  "split_sources": {
+    "train": [
+      "uniform_1",
+      "uniform_2"
+    ],
+    "val": [
+      "prbs_1"
+    ],
+    "test": [
+      "prbs_2",
+      "prbs_3"
+    ]
+  },
+  "trajectory_window_counts": {
+    "uniform_1": 372,
+    "uniform_2": 372,
+    "prbs_1": 372,
+    "prbs_2": 372,
+    "prbs_3": 372
+  }
+}
