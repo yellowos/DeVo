@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -530,29 +531,125 @@ def _load_truth_reference(metadata_root: Path, truth_type: str, dataset_name: st
     raise DuffingBuilderError(f"{filename} missing benchmark '{dataset_name}'.")
 
 
-def _write_truth_entry_if_missing(
+def _extract_scalar_from_script(script_path: Path, variable_name: str) -> float:
+    if not script_path.exists():
+        raise DuffingBuilderError(f"Missing reference script: {script_path}")
+    pattern = re.compile(rf"^\s*{re.escape(variable_name)}\s*=\s*([-+0-9.eE]+)\s*;", re.MULTILINE)
+    text = script_path.read_text(encoding="utf-8")
+    match = pattern.search(text)
+    if match is None:
+        raise DuffingBuilderError(f"Could not find {variable_name} in {script_path}")
+    return float(match.group(1))
+
+
+def _materialize_reference_truth(
     metadata_root: Path,
+    raw_root: Path,
+    cfg: DuffingBuilderConfig,
     dataset_name: str,
-    truth_type: str,
-    registry_reference: Optional[str],
     benchmark_entry: Mapping[str, Any],
-) -> Path:
+) -> Dict[str, Path]:
+    try:
+        import scipy.io
+        from scipy import signal
+    except Exception as exc:  # pragma: no cover - environment guard
+        raise DuffingBuilderError("Duffing truth materialization requires scipy.") from exc
+
     truth_root = metadata_root / "truth"
     truth_root.mkdir(parents=True, exist_ok=True)
-    target = truth_root / f"{dataset_name}_{truth_type}_bundle_reference.json"
-    if target.exists():
-        return target
 
-    payload = {
-        "benchmark_name": dataset_name,
-        "truth_type": truth_type,
-        "protocol_reference": f"nonlinear://protocol/{benchmark_entry.get('recommended_split_protocol')}",
-        "registry_reference": registry_reference,
-        "status": "registered",
-        "notes": f"Generated reference entry for {dataset_name} {truth_type}.",
+    data_path = _find_raw_file(raw_root, cfg.raw_file_candidates)
+    if data_path is None or data_path.suffix.lower() != ".mat":
+        raise DuffingBuilderError(f"Could not locate Duffing reference .mat file under {raw_root}")
+    payload = scipy.io.loadmat(data_path, squeeze_me=True)
+    required_scalars = ("gtau", "kp", "kv")
+    for key in required_scalars:
+        if key not in payload:
+            raise DuffingBuilderError(f"{data_path} is missing required scalar '{key}'.")
+
+    gtau = float(np.asarray(payload["gtau"]).reshape(()))
+    kp = float(np.asarray(payload["kp"]).reshape(()))
+    kv = float(np.asarray(payload["kv"]).reshape(()))
+    time = np.asarray(payload.get("t"))
+    if time.ndim == 0 or time.size < 2:
+        raise DuffingBuilderError(f"{data_path} is missing a valid time vector 't'.")
+    dt = float(np.median(np.diff(time.reshape(-1))))
+    if dt <= 0:
+        raise DuffingBuilderError(f"Invalid Duffing sampling interval derived from {data_path}: {dt}")
+
+    simulation_script = raw_root / "Simulation_EMPS.m"
+    mass = _extract_scalar_from_script(simulation_script, "M1")
+    damping = _extract_scalar_from_script(simulation_script, "Fv1")
+
+    natural_gain = gtau * kp * kv / mass
+    numerator = np.asarray([natural_gain], dtype=np.float64)
+    denominator = np.asarray([1.0, (damping + gtau * kv) / mass, natural_gain], dtype=np.float64)
+    discrete = signal.cont2discrete((numerator, denominator), dt, method="zoh")
+    numerator_d = np.squeeze(np.asarray(discrete[0], dtype=np.float64))
+    denominator_d = np.squeeze(np.asarray(discrete[1], dtype=np.float64))
+    _, impulse = signal.dimpulse((numerator_d, denominator_d, discrete[2]), n=cfg.window_length + 1)
+    impulse_response = np.asarray(impulse[0], dtype=np.float64).reshape(-1)
+    if impulse_response.size < cfg.window_length + 1:
+        raise DuffingBuilderError("Discrete impulse response is shorter than the configured window length.")
+
+    order_1_kernel = np.asarray(impulse_response[1 : cfg.window_length + 1][::-1], dtype=np.float64)
+    kernel_payload_path = truth_root / f"{dataset_name}_kernel_truth_payload.npz"
+    gfrf_payload_path = truth_root / f"{dataset_name}_gfrf_truth_payload.npz"
+    np.savez_compressed(kernel_payload_path, order_1=order_1_kernel)
+    np.savez_compressed(gfrf_payload_path, order_1=np.fft.fft(order_1_kernel, n=cfg.window_length))
+
+    protocol_reference = f"nonlinear://protocol/{benchmark_entry.get('recommended_split_protocol')}"
+    kernel_reference = truth_root / f"{dataset_name}_kernel_bundle_reference.json"
+    gfrf_reference = truth_root / f"{dataset_name}_gfrf_bundle_reference.json"
+    common_derivation = {
+        "source_dataset": str(data_path),
+        "source_script": str(simulation_script),
+        "window_length": int(cfg.window_length),
+        "sampling_interval_seconds": dt,
+        "parameters": {
+            "gtau": gtau,
+            "kp": kp,
+            "kv": kv,
+            "M1": mass,
+            "Fv1": damping,
+        },
+        "model": "EMPS closed-loop second-order reference",
+        "window_semantics": "oldest_to_most_recent",
     }
-    _write_json(target, payload)
-    return target
+    _write_json(
+        kernel_reference,
+        {
+            "benchmark_name": dataset_name,
+            "truth_type": "kernel",
+            "protocol_reference": protocol_reference,
+            "registry_reference": benchmark_entry.get("artifacts", {}).get("kernel_reference"),
+            "status": "materialized",
+            "kernel_coefficients_path": str(kernel_payload_path),
+            "orders_materialized": [1],
+            "derivation": common_derivation,
+            "notes": "Materialized order-1 reference kernel derived from the official EMPS reference model.",
+        },
+    )
+    _write_json(
+        gfrf_reference,
+        {
+            "benchmark_name": dataset_name,
+            "truth_type": "gfrf",
+            "protocol_reference": protocol_reference,
+            "registry_reference": benchmark_entry.get("artifacts", {}).get("gfrf_reference"),
+            "status": "materialized",
+            "gfrf_coefficients_path": str(gfrf_payload_path),
+            "orders_materialized": [1],
+            "derivation": {**common_derivation, "nfft": int(cfg.window_length)},
+            "notes": "Materialized order-1 reference GFRF derived from the official EMPS reference model.",
+        },
+    )
+    return {
+        "kernel_reference": kernel_reference,
+        "gfrf_reference": gfrf_reference,
+        "kernel_payload": kernel_payload_path,
+        "gfrf_payload": gfrf_payload_path,
+    }
 
 
 def export_bundle(
@@ -592,8 +689,15 @@ def export_bundle(
     grouping_ref = benchmark_entry.get("artifacts", {}).get("grouping_reference")
     protocol_ref = str(metadata_root / "protocols" / f"{cfg.split_protocol}.json")
 
-    kernel_file = _write_truth_entry_if_missing(metadata_root, cfg.dataset_name, "kernel", kernel_ref, benchmark_entry)
-    gfrf_file = _write_truth_entry_if_missing(metadata_root, cfg.dataset_name, "gfrf", gfrf_ref, benchmark_entry)
+    truth_files = _materialize_reference_truth(
+        metadata_root=metadata_root,
+        raw_root=context.raw_root,
+        cfg=cfg,
+        dataset_name=cfg.dataset_name,
+        benchmark_entry=benchmark_entry,
+    )
+    kernel_file = truth_files["kernel_reference"]
+    gfrf_file = truth_files["gfrf_reference"]
 
     train_payload = {k: v for k, v in splits["train"].items() if k != "meta"}
     val_payload = {k: v for k, v in splits["val"].items() if k != "meta"}

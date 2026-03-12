@@ -1,0 +1,102 @@
+results:
+  root: experiments/nonlinear/exp02_kernel_recovery/results
+
+datasets:
+  volterra_wiener:
+    bundle: data/processed/nonlinear/volterra_wiener
+    smoke:
+      train_size: 256
+      val_size: 64
+      test_size: 64
+  duffing:
+    bundle: data/processed/nonlinear/duffing
+    smoke:
+      train_size: 256
+      val_size: 64
+      test_size: 64
+
+gfrf:
+  nfft: 128
+
+methods:
+  narmax:
+    enabled: true
+    method_config:
+      input_lags: 8
+      output_lags: 0
+      moving_average_lags: 0
+      polynomial_order: 2
+      include_bias: true
+      max_base_terms: 8
+      max_terms: 32
+      ranking_sample_size: 512
+      ridge_alpha: 1.0e-5
+    recovery_kwargs: {}
+
+  tt_volterra:
+    enabled: true
+    method_config:
+      max_order: 2
+      tt_rank: 6
+      epochs: 8
+      batch_size: 128
+      predict_batch_size: 256
+      learning_rate: 1.0e-2
+      patience: 3
+      dense_kernel_max_elements: 200000
+    recovery_kwargs:
+      as_dense: true
+      max_dense_elements: 200000
+
+  cp_volterra:
+    enabled: true
+    method_config:
+      max_order: 2
+      order_ranks:
+        1: 4
+        2: 4
+      learning_rate: 1.0e-2
+      batch_size: 128
+      num_epochs: 8
+      patience: 3
+      seed: 7
+      max_full_kernel_elements: 200000
+    recovery_kwargs:
+      expand_full: true
+      max_full_kernel_elements: 200000
+
+  laguerre_volterra:
+    enabled: true
+    method_config:
+      laguerre_pole: 0.6
+      num_laguerre: 4
+      volterra_order: 2
+      ridge_lambda: 1.0e-6
+      include_bias: true
+      max_feature_terms: 4096
+    recovery_kwargs:
+      map_to_time_domain: true
+      include_identified_terms: false
+
+  devo:
+    enabled: true
+    method_config:
+      orders: [1, 2]
+      num_branches: 1
+      epochs: 4
+      batch_size: 128
+      eval_batch_size: 256
+      learning_rate: 5.0e-3
+      feature_chunk_size: 2048
+      max_canonical_terms_per_order: 20000
+      max_full_recovery_elements: 200000
+      verbose: false
+      log_every: 1
+    recovery_kwargs:
+      materialize_full: true
+      max_full_elements: 200000
+
+smoke:
+  train_size: 256
+  val_size: 64
+  test_size: 64

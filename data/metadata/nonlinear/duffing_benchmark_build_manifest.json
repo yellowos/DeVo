@@ -1,9 +1,9 @@
 {
   "dataset_name": "duffing",
-  "generated_at": "2026-03-12T09:07:39.195242Z",
-  "processed_root": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/nonlinear/duffing",
-  "split_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/nonlinear/duffing_split_manifest.json",
-  "protocol_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+  "generated_at": "2026-03-12T13:11:13.439336Z",
+  "processed_root": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/processed/nonlinear/duffing",
+  "split_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/splits/nonlinear/duffing_split_manifest.json",
+  "protocol_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
   "processed_files": {
     "train_X": "train_x.npy",
     "train_Y": "train_y.npy",
@@ -38,9 +38,9 @@
       "output_channels": [
         "y"
       ],
-      "split_path": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/nonlinear/duffing_split_manifest.json",
+      "split_path": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/splits/nonlinear/duffing_split_manifest.json",
       "protocol_name": "nonlinear_temporal_grouped_holdout_v1",
-      "protocol_reference": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+      "protocol_reference": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
       "artifacts": {
         "kernel_reference": "nonlinear://truth/duffing/kernel/v1",
         "gfrf_reference": "nonlinear://truth/duffing/gfrf/v1",
@@ -69,12 +69,12 @@
     }
   },
   "bundle_artifacts": {
-    "truth_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/truth/duffing_gfrf_bundle_reference.json",
-    "grouping_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/nonlinear/duffing_split_manifest.json",
-    "protocol_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+    "truth_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/truth/duffing_gfrf_bundle_reference.json",
+    "grouping_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/splits/nonlinear/duffing_split_manifest.json",
+    "protocol_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
     "extra": {
-      "kernel_reference_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/truth/duffing_kernel_bundle_reference.json",
-      "gfrf_reference_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/truth/duffing_gfrf_bundle_reference.json",
+      "kernel_reference_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/truth/duffing_kernel_bundle_reference.json",
+      "gfrf_reference_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/truth/duffing_gfrf_bundle_reference.json",
       "input_file_candidates": [
         "duffing.mat",
         "duffing_raw.npz",
