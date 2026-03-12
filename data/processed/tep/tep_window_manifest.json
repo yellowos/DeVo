@@ -1,6 +1,6 @@
 {
   "dataset_name": "tep",
-  "generated_at": "2026-03-12T12:24:51.832551Z",
+  "generated_at": "2026-03-12T12:34:25.629381Z",
   "window_length": 128,
   "horizon": 1,
   "normal_splits": {
@@ -39,10 +39,10 @@
     }
   },
   "fault_eval": {
-    "manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_fault_eval_manifest.json",
+    "manifest_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/tep/tep_fault_eval_manifest.json",
     "run_count": 168,
     "window_count": 1131841
   },
-  "main_eval_subset_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_main_eval_subset_manifest.json",
-  "propagation_subset_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_propagation_subset_manifest.json"
+  "main_eval_subset_manifest_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/tep/tep_main_eval_subset_manifest.json",
+  "propagation_subset_manifest_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/tep/tep_propagation_subset_manifest.json"
 }

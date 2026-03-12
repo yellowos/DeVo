@@ -1,15 +1,15 @@
 {
   "dataset_name": "tep",
-  "generated_at": "2026-03-12T12:24:51.993161Z",
-  "split_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/splits/tep/tep_mode_holdout_split_manifest.json",
+  "generated_at": "2026-03-12T12:34:25.784263Z",
+  "split_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/tep/tep_mode_holdout_split_manifest.json",
   "window_length": 128,
   "horizon": 1,
   "raw_discovery": {
-    "raw_root": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/raw/tep",
+    "raw_root": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/raw/tep",
     "modes": [
       {
         "mode": "M1",
-        "mode_dir": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/raw/tep/M1",
+        "mode_dir": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/raw/tep/M1",
         "d00_exists": true,
         "fault_count": 28,
         "missing_runs": [],
@@ -48,7 +48,7 @@
       },
       {
         "mode": "M2",
-        "mode_dir": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/raw/tep/M2",
+        "mode_dir": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/raw/tep/M2",
         "d00_exists": true,
         "fault_count": 28,
         "missing_runs": [],
@@ -87,7 +87,7 @@
       },
       {
         "mode": "M3",
-        "mode_dir": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/raw/tep/M3",
+        "mode_dir": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/raw/tep/M3",
         "d00_exists": true,
         "fault_count": 28,
         "missing_runs": [],
@@ -126,7 +126,7 @@
       },
       {
         "mode": "M4",
-        "mode_dir": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/raw/tep/M4",
+        "mode_dir": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/raw/tep/M4",
         "d00_exists": true,
         "fault_count": 28,
         "missing_runs": [],
@@ -165,7 +165,7 @@
       },
       {
         "mode": "M5",
-        "mode_dir": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/raw/tep/M5",
+        "mode_dir": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/raw/tep/M5",
         "d00_exists": true,
         "fault_count": 28,
         "missing_runs": [],
@@ -204,7 +204,7 @@
       },
       {
         "mode": "M6",
-        "mode_dir": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/raw/tep/M6",
+        "mode_dir": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/raw/tep/M6",
         "d00_exists": true,
         "fault_count": 28,
         "missing_runs": [],
@@ -246,9 +246,9 @@
     "expected_run_count": 174,
     "run_count": 174
   },
-  "run_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_run_manifest.json",
-  "window_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_window_manifest.json",
-  "fault_eval_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_fault_eval_manifest.json",
+  "run_manifest_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/tep/tep_run_manifest.json",
+  "window_manifest_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/tep/tep_window_manifest.json",
+  "fault_eval_manifest_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/tep/tep_fault_eval_manifest.json",
   "sample_counts": {
     "train": 28292,
     "val": 7073,
@@ -773,29 +773,29 @@
           "cross_run_windows": false
         }
       },
-      "window_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_window_manifest.json",
-      "run_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_run_manifest.json",
-      "fault_eval_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_fault_eval_manifest.json",
-      "main_eval_subset_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_main_eval_subset_manifest.json",
-      "propagation_subset_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_propagation_subset_manifest.json",
-      "scenario_to_idv_map_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/metadata/tep/scenario_to_idv_map.json",
+      "window_manifest_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/tep/tep_window_manifest.json",
+      "run_manifest_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/tep/tep_run_manifest.json",
+      "fault_eval_manifest_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/tep/tep_fault_eval_manifest.json",
+      "main_eval_subset_manifest_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/tep/tep_main_eval_subset_manifest.json",
+      "propagation_subset_manifest_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/tep/tep_propagation_subset_manifest.json",
+      "scenario_to_idv_map_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/tep/scenario_to_idv_map.json",
       "variable_length_fault_runs": true,
       "normal_run_n_steps": 7201
     }
   },
   "bundle_artifacts": {
-    "truth_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/metadata/tep/fault_truth_table.json",
-    "grouping_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/metadata/tep/five_unit_definition.json",
-    "protocol_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/metadata/tep/mode_holdout_protocol.json",
+    "truth_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/tep/fault_truth_table.json",
+    "grouping_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/tep/five_unit_definition.json",
+    "protocol_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/tep/mode_holdout_protocol.json",
     "extra": {
-      "feed_side_definition_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/metadata/tep/feed_side_definition.json",
-      "scenario_to_idv_map_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/metadata/tep/scenario_to_idv_map.json",
-      "split_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/splits/tep/tep_mode_holdout_split_manifest.json",
-      "run_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_run_manifest.json",
-      "window_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_window_manifest.json",
-      "fault_eval_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_fault_eval_manifest.json",
-      "main_eval_subset_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_main_eval_subset_manifest.json",
-      "propagation_subset_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_propagation_subset_manifest.json"
+      "feed_side_definition_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/tep/feed_side_definition.json",
+      "scenario_to_idv_map_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/tep/scenario_to_idv_map.json",
+      "split_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/tep/tep_mode_holdout_split_manifest.json",
+      "run_manifest_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/tep/tep_run_manifest.json",
+      "window_manifest_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/tep/tep_window_manifest.json",
+      "fault_eval_manifest_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/tep/tep_fault_eval_manifest.json",
+      "main_eval_subset_manifest_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/tep/tep_main_eval_subset_manifest.json",
+      "propagation_subset_manifest_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/tep/tep_propagation_subset_manifest.json"
     }
   }
 }
