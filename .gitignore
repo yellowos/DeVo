@@ -2,3 +2,4 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .DS_Store
+experiments/nonlinear/exp01_prediction_benchmark/outputs/

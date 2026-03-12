@@ -1,0 +1,156 @@
+experiment_name: exp01_prediction_benchmark
+
+paths:
+  processed_root: ../../../data/processed/nonlinear
+
+defaults:
+  skip_existing: false
+  save_running_state: true
+  max_train_samples:
+  max_val_samples:
+  max_test_samples:
+
+runtime:
+  device_preference:
+  dtype: float32
+  batch_size_preference:
+  eval_batch_size_preference:
+
+method_configs:
+  narmax:
+    input_lags: 8
+    output_lags: 0
+    moving_average_lags: 0
+    polynomial_order: 2
+    include_bias: true
+    max_base_terms: 12
+    max_terms: 128
+    ranking_sample_size: 20000
+    ridge_alpha: 1.0e-6
+  tt_volterra:
+    max_order: 3
+    tt_rank: 6
+    epochs: 20
+    batch_size: 256
+    predict_batch_size: 512
+    learning_rate: 1.0e-2
+    weight_decay: 1.0e-6
+    patience: 6
+    min_delta: 1.0e-6
+    gradient_clip_norm: 5.0
+    shuffle: true
+    init_std: 5.0e-2
+    random_seed: 0
+    verbose: false
+  cp_volterra:
+    max_order: 3
+    order_ranks:
+      "1": 8
+      "2": 8
+      "3": 4
+    batch_size: 256
+    epochs: 20
+    learning_rate: 1.0e-3
+    weight_decay: 1.0e-6
+    init_scale: 1.0
+    patience: 6
+    min_delta: 1.0e-6
+    verbose: false
+  laguerre_volterra:
+    laguerre_pole: 0.6
+    num_laguerre: 6
+    volterra_order: 2
+    ridge_lambda: 1.0e-6
+    include_bias: true
+    max_feature_terms: 4096
+  mlp:
+    hidden_dim: 128
+    num_hidden_layers: 2
+    dropout: 0.1
+    batch_size: 256
+    epochs: 20
+    learning_rate: 1.0e-3
+    weight_decay: 1.0e-5
+    verbose: false
+    log_every: 10
+  lstm:
+    hidden_size: 64
+    num_layers: 1
+    dropout: 0.0
+    bidirectional: false
+    batch_size: 128
+    max_epochs: 15
+    learning_rate: 1.0e-3
+    weight_decay: 0.0
+    gradient_clip_norm: 1.0
+    early_stopping_patience: 5
+    early_stopping_min_delta: 1.0e-6
+  devo:
+    orders: [1, 2, 3]
+    num_branches: 4
+    epochs: 20
+    batch_size: 128
+    eval_batch_size: 256
+    learning_rate: 1.0e-3
+    weight_decay: 1.0e-6
+    grad_clip_norm: 1.0
+    feature_chunk_size: 4096
+    index_cache_limit: 500000
+    max_canonical_terms_per_order: 1000000
+    max_full_recovery_elements: 4000000
+    include_bias: true
+    init_scale: 1.0e-2
+    verbose: false
+    log_every: 5
+
+profiles:
+  full:
+    output_dir: ./outputs/full
+    datasets:
+      - duffing
+      - silverbox
+      - volterra_wiener
+      - coupled_duffing
+      - cascaded_tanks
+    methods:
+      - narmax
+      - tt_volterra
+      - cp_volterra
+      - laguerre_volterra
+      - mlp
+      - lstm
+      - devo
+    seeds: [0, 1, 2]
+
+  smoke:
+    output_dir: ./outputs/smoke
+    datasets:
+      - coupled_duffing
+      - cascaded_tanks
+    methods:
+      - narmax
+      - mlp
+      - devo
+    seeds: [0]
+    max_train_samples: 128
+    max_val_samples: 64
+    max_test_samples: 64
+    method_overrides:
+      narmax:
+        max_base_terms: 8
+        max_terms: 64
+        ranking_sample_size: 512
+      mlp:
+        hidden_dim: 32
+        num_hidden_layers: 1
+        batch_size: 32
+        epochs: 2
+        learning_rate: 5.0e-3
+      devo:
+        orders: [1, 2]
+        num_branches: 1
+        batch_size: 32
+        eval_batch_size: 64
+        epochs: 2
+        learning_rate: 5.0e-3
+        feature_chunk_size: 512
