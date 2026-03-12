@@ -13,6 +13,7 @@ import numpy as np
 from methods.base.base_method import BaseMethod, KernelRecoveryNotSupportedError, PathLike
 from methods.base.registry import register_method
 from methods.base.result_schema import ArtifactRef, KernelRecoveryResult, MethodResult
+from methods.utils.runtime import set_random_seed
 
 from .model import TCNRegressor
 
@@ -107,6 +108,7 @@ class TCNMethod(BaseMethod):
         "weight_decay": 0.0,
         "shuffle": True,
         "grad_clip_norm": None,
+        "seed": 42,
     }
 
     def __init__(
@@ -183,6 +185,12 @@ class TCNMethod(BaseMethod):
     def fit(self, dataset_bundle: Any, **kwargs: Any) -> MethodResult:
         _require_torch()
         bundle = self.normalize_dataset_bundle(dataset_bundle)
+
+        train_config = dict(self.config)
+        train_config.update({key: value for key, value in kwargs.items() if key in train_config})
+        seed = int(train_config["seed"])
+        set_random_seed(seed)
+
         X_train = self._coerce_inputs(bundle.train.X, name="train.X")
         Y_train, target_shape = self._coerce_targets(bundle.train.Y, name="train.Y")
         X_val = self._coerce_inputs(bundle.val.X, name="val.X")
@@ -193,8 +201,6 @@ class TCNMethod(BaseMethod):
         if X_val.shape[-1] != X_train.shape[-1]:
             raise ValueError("Validation split must use the same input_dim as training.")
 
-        train_config = dict(self.config)
-        train_config.update({key: value for key, value in kwargs.items() if key in train_config})
         batch_size = min(int(train_config["batch_size"]), int(X_train.shape[0]))
 
         self.input_dim = int(X_train.shape[-1])

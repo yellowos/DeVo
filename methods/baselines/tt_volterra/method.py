@@ -477,8 +477,14 @@ class TTVolterraMethod(BaseMethod):
         epochs_without_improvement = 0
         best_state: Optional[dict[str, torch.Tensor]] = None
         self._history = []
-        eval_x = val_x_scaled if val_x_scaled.shape[0] else train_x_scaled
-        eval_y = val_y_scaled if val_y_scaled.shape[0] else train_y_scaled
+        if val_x_scaled.shape[0] == 0:
+            raise ValueError(
+                "Validation split is empty.  TT-Volterra requires a non-empty "
+                "validation set for early-stopping model selection; falling back "
+                "to training data would leak information and bias results."
+            )
+        eval_x = val_x_scaled
+        eval_y = val_y_scaled
 
         for epoch in range(1, epochs + 1):
             self._model.train()
