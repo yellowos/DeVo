@@ -1,0 +1,7 @@
+{
+  "dataset_name": "volterra_wiener",
+  "raw_source_root": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/raw/nonlinear/volterra_wiener",
+  "window_length": 128,
+  "horizon": 1,
+  "generated_at": "2026-03-12T09:07:39.265838Z"
+}
