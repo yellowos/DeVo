@@ -22,6 +22,14 @@ def _normalize_name(name: str) -> str:
     return normalized
 
 
+def _lazy_import_candidates(name: str) -> tuple[str, ...]:
+    return (
+        f"methods.baselines.{name}",
+        f"methods.baselines.{name}.{name}_method",
+        f"methods.baselines.{name}.method",
+    )
+
+
 class MethodRegistry:
     """Central registry used by all method implementations."""
 
@@ -74,6 +82,17 @@ class MethodRegistry:
 
     def list(self) -> list[str]:
         return sorted(self._registry)
+
+    def _attempt_lazy_import(self, key: str) -> None:
+        for module_name in _lazy_import_candidates(key):
+            try:
+                importlib.import_module(module_name)
+            except ModuleNotFoundError as exc:
+                if exc.name != module_name:
+                    raise
+                continue
+            if key in self._registry:
+                return
 
 
 METHOD_REGISTRY = MethodRegistry()
