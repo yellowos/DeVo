@@ -1,5 +1,6 @@
 """Methods layer public exports."""
 
+from . import baselines
 from .base import (
     BaseMethod,
     KernelRecoveryNotSupportedError,
@@ -24,6 +25,7 @@ __all__ = [
     "MethodDatasetSplit",
     "MethodRegistry",
     "MethodResult",
+    "baselines",
     "create_method",
     "get_method_class",
     "load_dataset_bundle",

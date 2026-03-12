@@ -92,6 +92,7 @@ class BaseMethod(ABC):
         }
         with target.open("w", encoding="utf-8") as handle:
             json.dump(payload, handle, indent=2)
+        self._save_additional_state(target=target, payload=payload)
         self.model_state_path = str(target.resolve())
         return target
 
@@ -148,6 +149,7 @@ class BaseMethod(ABC):
         if not isinstance(state, Mapping):
             raise ValueError("Serialized method state must be a mapping.")
         instance.set_state(state)
+        instance._load_additional_state(source=source, payload=payload)
         return instance  # type: ignore[return-value]
 
     @abstractmethod
@@ -171,3 +173,13 @@ class BaseMethod(ABC):
         """Restore internal state emitted by `get_state`."""
 
         del state
+
+    def _save_additional_state(self, target: Path, payload: Mapping[str, Any]) -> None:
+        """Persist subclass-specific state alongside JSON serialization."""
+
+        del target, payload
+
+    def _load_additional_state(self, source: Path, payload: Mapping[str, Any]) -> None:
+        """Restore subclass-specific state after JSON deserialization."""
+
+        del source, payload
