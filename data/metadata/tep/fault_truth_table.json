@@ -1,0 +1,16 @@
+{
+  "dataset_name": "tep",
+  "schema_version": "1.0.0",
+  "primary_key": "fault_id",
+  "rows": [
+    {"fault_id": "F1", "primary_unit": "Reactor", "expected_units": ["Reactor"], "notes": "Reactor-side fault"},
+    {"fault_id": "F2", "primary_unit": "Condenser", "expected_units": ["Condenser"], "notes": "Condenser-side fault"},
+    {"fault_id": "F3", "primary_unit": "Separator", "expected_units": ["Separator"], "notes": "Separator-side fault"},
+    {"fault_id": "F4", "primary_unit": "Compressor", "expected_units": ["Compressor", "Reactor"], "notes": "Compressor-side fault with coupled influence"},
+    {"fault_id": "F5", "primary_unit": "Stripper", "expected_units": ["Stripper", "Separator"], "notes": "Stripper-side fault with separator impact"},
+    {"fault_id": "F6", "primary_unit": "Reactor", "expected_units": ["Reactor", "Condenser"], "notes": "Reactor-affected propagated scenario"},
+    {"fault_id": "F7", "primary_unit": "Condenser", "expected_units": ["Condenser", "Compressor"], "notes": "Condenser-affected propagated scenario"},
+    {"fault_id": "FAULT_OTHER", "primary_unit": "Unknown", "expected_units": ["Reactor", "Condenser", "Separator", "Compressor", "Stripper"], "notes": "Placeholder for non-enumerated scenarios when exact id unavailable."}
+  ],
+  "notes": "five-unit experiments should use primary_unit + expected_units only, never hard-code this mapping in code."
+}

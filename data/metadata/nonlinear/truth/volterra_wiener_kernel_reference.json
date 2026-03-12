@@ -1,0 +1,17 @@
+{
+  "benchmark_name": "volterra_wiener",
+  "truth_type": "kernel",
+  "status": "placeholder_registered",
+  "version": "1",
+  "kernel_reference_uri": "nonlinear://truth/volterra_wiener/kernel/v1",
+  "kernel_reference_file": null,
+  "notes": "Volterra–Wiener kernel truth is provided through explicit artifact registration; real coefficient object can be bound to this bundle reference.",
+  "schema": {
+    "hints": [
+      "kernel_order",
+      "kernel_rank",
+      "kernel_coefficients_path",
+      "kernel_metadata_path"
+    ]
+  }
+}

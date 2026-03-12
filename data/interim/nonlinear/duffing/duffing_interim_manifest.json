@@ -1,0 +1,17 @@
+{
+  "dataset_name": "duffing",
+  "generated_at": "2026-03-12T09:02:34.250841Z",
+  "raw_candidates": [
+    "duffing.mat",
+    "duffing_raw.npz",
+    "duffing_processed.npz",
+    "duffing.csv",
+    "duffing.txt",
+    "DATA_EMPS.mat",
+    "DATA_EMPS_PULSES.mat"
+  ],
+  "preprocessing": {
+    "window_length": 128,
+    "horizon": 1
+  }
+}

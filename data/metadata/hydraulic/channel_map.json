@@ -1,0 +1,26 @@
+{
+  "dataset_name": "hydraulic",
+  "description": "Canonical hydraulic process sensor channels in fixed order.",
+  "channels": [
+    "pressure_inlet",
+    "pressure_outlet",
+    "pressure_accumulator",
+    "pressure_line",
+    "flow_in",
+    "flow_out",
+    "flow_recirculation",
+    "temperature_inlet",
+    "temperature_outlet",
+    "temperature_oil",
+    "temperature_coolant_in",
+    "temperature_coolant_out",
+    "vibration_motor_x",
+    "vibration_motor_y",
+    "vibration_valve",
+    "motor_power",
+    "valve_position"
+  ],
+  "n_channels": 17,
+  "signal_type_order": "time_series_first_axis",
+  "notes": "Keep this exact order for all downstream hydraulic processing."
+}

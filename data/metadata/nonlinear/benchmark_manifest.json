@@ -1,0 +1,122 @@
+{
+  "manifest_version": "1.0.0",
+  "benchmark_name": "nonlinear",
+  "description": "Unified benchmark metadata for the nonlinear benchmark group.",
+  "benchmarks": [
+    {
+      "benchmark_name": "duffing",
+      "system_type": "single_oscillator",
+      "task_usage": ["prediction", "kernel_recovery", "gfrf_consistency"],
+      "input_channels": ["u"],
+      "output_channels": ["y"],
+      "default_window_length": 128,
+      "default_horizon": 1,
+      "has_ground_truth_kernel": true,
+      "has_ground_truth_gfrf": true,
+      "recommended_split_protocol": "nonlinear_temporal_grouped_holdout_v1",
+      "artifacts": {
+        "kernel_reference": "nonlinear://truth/duffing/kernel/v1",
+        "gfrf_reference": "nonlinear://truth/duffing/gfrf/v1",
+        "grouping_reference": "nonlinear://grouping/duffing/v1",
+        "extra": {
+          "source_type": "nonlinearbenchmark_official",
+          "nonlinearbenchmark_name": "EMPS",
+          "nonlinearbenchmark_url": "https://www.nonlinearbenchmark.org/benchmarks/emps",
+          "canonical_reference_name": "EMPS"
+        }
+      }
+    },
+    {
+      "benchmark_name": "silverbox",
+      "system_type": "physical_wiener_hammerstein_like",
+      "task_usage": ["prediction"],
+      "input_channels": ["u"],
+      "output_channels": ["y"],
+      "default_window_length": 128,
+      "default_horizon": 1,
+      "has_ground_truth_kernel": false,
+      "has_ground_truth_gfrf": false,
+      "recommended_split_protocol": "nonlinear_temporal_grouped_holdout_v1",
+      "artifacts": {
+        "kernel_reference": null,
+        "gfrf_reference": null,
+        "grouping_reference": "nonlinear://grouping/silverbox/v1",
+        "extra": {
+          "source_type": "nonlinearbenchmark_official",
+          "nonlinearbenchmark_name": "Silverbox",
+          "nonlinearbenchmark_url": "https://www.nonlinearbenchmark.org/benchmarks/silverbox",
+          "canonical_reference_name": "Silverbox"
+        }
+      }
+    },
+    {
+      "benchmark_name": "volterra_wiener",
+      "system_type": "volterra_wiener",
+      "task_usage": ["prediction", "kernel_recovery", "gfrf_consistency"],
+      "input_channels": ["u"],
+      "output_channels": ["y"],
+      "default_window_length": 128,
+      "default_horizon": 1,
+      "has_ground_truth_kernel": true,
+      "has_ground_truth_gfrf": true,
+      "recommended_split_protocol": "nonlinear_temporal_grouped_holdout_v1",
+      "artifacts": {
+        "kernel_reference": "nonlinear://truth/volterra_wiener/kernel/v1",
+        "gfrf_reference": "nonlinear://truth/volterra_wiener/gfrf/v1",
+        "grouping_reference": "nonlinear://grouping/volterra_wiener/v1",
+        "extra": {
+          "source_type": "nonlinearbenchmark_official",
+          "nonlinearbenchmark_name": "Wiener-Hammerstein",
+          "nonlinearbenchmark_url": "https://www.nonlinearbenchmark.org/benchmarks/wiener-hammerstein",
+          "canonical_reference_name": "Wiener-Hammerstein"
+        }
+      }
+    },
+    {
+      "benchmark_name": "coupled_duffing",
+      "system_type": "coupled_oscillators",
+      "task_usage": ["prediction", "kernel_recovery", "gfrf_consistency"],
+      "input_channels": ["u"],
+      "output_channels": ["y"],
+      "default_window_length": 128,
+      "default_horizon": 1,
+      "has_ground_truth_kernel": true,
+      "has_ground_truth_gfrf": true,
+      "recommended_split_protocol": "nonlinear_temporal_grouped_holdout_v1",
+      "artifacts": {
+        "kernel_reference": "nonlinear://truth/coupled_duffing/kernel/v1",
+        "gfrf_reference": "nonlinear://truth/coupled_duffing/gfrf/v1",
+        "grouping_reference": "nonlinear://grouping/coupled_duffing/v1",
+        "extra": {
+          "source_type": "nonlinearbenchmark_official",
+          "nonlinearbenchmark_name": "Coupled Electric Drives (CED)",
+          "nonlinearbenchmark_url": "https://www.nonlinearbenchmark.org/benchmarks/coupled-electric-drives",
+          "canonical_reference_name": "Coupled Electric Drives (CED)"
+        }
+      }
+    },
+    {
+      "benchmark_name": "cascaded_tanks",
+      "system_type": "cascaded_tanks_process",
+      "task_usage": ["prediction"],
+      "input_channels": ["u"],
+      "output_channels": ["y"],
+      "default_window_length": 128,
+      "default_horizon": 1,
+      "has_ground_truth_kernel": false,
+      "has_ground_truth_gfrf": false,
+      "recommended_split_protocol": "nonlinear_temporal_grouped_holdout_v1",
+      "artifacts": {
+        "kernel_reference": null,
+        "gfrf_reference": null,
+        "grouping_reference": "nonlinear://grouping/cascaded_tanks/v1",
+        "extra": {
+          "source_type": "nonlinearbenchmark_official",
+          "nonlinearbenchmark_name": "Cascaded Tanks",
+          "nonlinearbenchmark_url": "https://www.nonlinearbenchmark.org/benchmarks/cascaded-tanks",
+          "canonical_reference_name": "Cascaded Tanks"
+        }
+      }
+    }
+  ]
+}

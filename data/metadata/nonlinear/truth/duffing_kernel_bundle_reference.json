@@ -1,0 +1,8 @@
+{
+  "benchmark_name": "duffing",
+  "truth_type": "kernel",
+  "protocol_reference": "nonlinear://protocol/nonlinear_temporal_grouped_holdout_v1",
+  "registry_reference": "nonlinear://truth/duffing/kernel/v1",
+  "status": "registered",
+  "notes": "Generated reference entry for duffing kernel."
+}

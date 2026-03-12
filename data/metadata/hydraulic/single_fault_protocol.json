@@ -1,0 +1,54 @@
+{
+  "dataset_name": "hydraulic",
+  "protocol_name": "hydraulic_single_fault_protocol_v1",
+  "description": "Protocol for unsupervised subsystem isolation: main experiment keeps healthy + single-component degraded samples only.",
+  "split_protocol": "hydraulic_temporal_grouped_holdout_v1",
+  "window_length": 128,
+  "horizon": 1,
+  "split": {
+    "train": 0.70,
+    "val": 0.15,
+    "test": 0.15
+  },
+  "grouping": {
+    "level": "cycle",
+    "notes": "Split by cycle_id when available to reduce intra-cycle leakage."
+  },
+  "data_fields": {
+    "cycle_field": "cycle_id",
+    "subsystem_field": "subsystem_label",
+    "fault_label_field": "fault_label",
+    "condition_field": "condition_type",
+    "fault_count_field": "fault_count",
+    "sample_id_field": "sample_id"
+  },
+  "labeling": {
+    "healthy_value": "healthy",
+    "degraded_value": "degraded",
+    "allowed_fault_classes": [
+      "cooler",
+      "valve",
+      "pump",
+      "accumulator"
+    ],
+    "subsystem_class_order": [
+      "healthy",
+      "cooler",
+      "valve",
+      "pump",
+      "accumulator"
+    ]
+  },
+  "single_fault_filter": {
+    "enable": true,
+    "condition_type": "degraded",
+    "min_active_fault_count": 1,
+    "max_active_fault_count": 1,
+    "allow_healthy": false,
+    "fault_count_source": "auto"
+  },
+  "artifacts": {
+    "grouping_reference": "nonlinear://grouping/hydraulic/v1",
+    "schema_version": "v1"
+  }
+}

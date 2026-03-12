@@ -1,0 +1,36 @@
+{
+  "dataset_name": "tep",
+  "protocol_name": "tep_mode_holdout_v1",
+  "split_protocol": "tep_mode_holdout_v1",
+  "description": "Mode-holdout protocol with M1-4 train, M5d00 validation, M6d00 normal test, fault evaluation over all fault runs.",
+  "dataset_fields": {
+    "mode_field": "mode",
+    "run_id_field": "run_id",
+    "fault_field": "fault_id",
+    "scenario_field": "scenario_id",
+    "timestamp_field": "timestamp",
+    "window_index_field": "window_idx"
+  },
+  "modes": {
+    "train_modes": ["M1", "M2", "M3", "M4"],
+    "val_modes": ["M5d00"],
+    "test_normal_modes": ["M6d00"],
+    "test_fault_modes": ["FAULT"],
+    "test_fault_mode_pattern": "contains 'FAULT'",
+    "unknown_modes": []
+  },
+  "split": {
+    "train": 0.70,
+    "val": 0.15,
+    "test": 0.15
+  },
+  "split_fallback": {
+    "order": "temporal_contiguous_after_windowing",
+    "require_run_id_grouping": true,
+    "grouping_field": "run_id"
+  },
+  "artifacts": {
+    "reference": "tep://protocol/mode_holdout/v1",
+    "schema_version": "v1"
+  }
+}

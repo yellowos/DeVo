@@ -1,0 +1,14 @@
+{
+  "dataset_name": "silverbox",
+  "raw_candidates": [
+    "silverbox.mat",
+    "silverbox_raw.npz",
+    "silverbox.csv",
+    "silverbox.txt",
+    "silverbox_processed.npz",
+    "SNLS80mV.mat",
+    "Schroeder80mV.mat"
+  ],
+  "window_length": 128,
+  "horizon": 1
+}

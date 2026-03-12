@@ -1,0 +1,44 @@
+{
+  "dataset_name": "hydraulic",
+  "task_family": "hydraulic",
+  "task": "unsupervised_subsystem_fault_isolation",
+  "subsystems": {
+    "cooler": {
+      "channels": [
+        "temperature_coolant_in",
+        "temperature_coolant_out",
+        "temperature_outlet"
+      ],
+      "description": "Cooling loop related pressures/temperatures/controls."
+    },
+    "valve": {
+      "channels": [
+        "flow_recirculation",
+        "valve_position",
+        "vibration_valve",
+        "pressure_outlet"
+      ],
+      "description": "Control/feedback path and downstream flow balancing components."
+    },
+    "pump": {
+      "channels": [
+        "pressure_inlet",
+        "flow_in",
+        "flow_out",
+        "motor_power",
+        "temperature_inlet"
+      ],
+      "description": "Pump drive and delivery subcomponent channels."
+    },
+    "accumulator": {
+      "channels": [
+        "pressure_accumulator",
+        "pressure_line",
+        "temperature_oil",
+        "vibration_motor_x",
+        "vibration_motor_y"
+      ],
+      "description": "Energy storage/storage balancing subcomponent channels."
+    }
+  }
+}

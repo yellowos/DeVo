@@ -1,0 +1,17 @@
+{
+  "protocol_name": "nonlinear_temporal_grouped_holdout_v1",
+  "description": "Time-preserving split protocol with grouped trajectories and leakage-safe holdout.",
+  "split": {
+    "train": 0.70,
+    "val": 0.15,
+    "test": 0.15
+  },
+  "grouping": {
+    "level": "trajectory",
+    "notes": "Maintain contiguous trajectories per split; preserve order within each split."
+  },
+  "leakage_control": {
+    "time_gap": 0,
+    "requires_causal_model": true
+  }
+}

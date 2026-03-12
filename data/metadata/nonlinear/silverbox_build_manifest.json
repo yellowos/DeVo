@@ -1,0 +1,70 @@
+{
+  "dataset_name": "silverbox",
+  "generated_at": "placeholder_not_run",
+  "window_length": 128,
+  "horizon": 1,
+  "split_protocol": "nonlinear_temporal_grouped_holdout_v1",
+  "split_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/nonlinear/silverbox_split_manifest.json",
+  "processed_files": {
+    "train_X": "train_X.npy",
+    "train_Y": "train_Y.npy",
+    "train_sample_id": "train_sample_id.npy",
+    "train_run_id": "train_run_id.npy",
+    "train_timestamp": "train_timestamp.npy",
+    "val_X": "val_X.npy",
+    "val_Y": "val_Y.npy",
+    "val_sample_id": "val_sample_id.npy",
+    "val_run_id": "val_run_id.npy",
+    "val_timestamp": "val_timestamp.npy",
+    "test_X": "test_X.npy",
+    "test_Y": "test_Y.npy",
+    "test_sample_id": "test_sample_id.npy",
+    "test_run_id": "test_run_id.npy",
+    "test_timestamp": "test_timestamp.npy"
+  },
+  "split_summary": {
+    "train": 130943,
+    "val": 1,
+    "test": 1
+  },
+  "meta": {
+    "dataset_name": "silverbox",
+    "task_family": "nonlinear",
+    "input_dim": 1,
+    "output_dim": 1,
+    "window_length": 128,
+    "horizon": 1,
+    "split_protocol": "nonlinear_temporal_grouped_holdout_v1",
+    "has_ground_truth_kernel": false,
+    "has_ground_truth_gfrf": false,
+    "extras": {
+      "task_usage": [
+        "prediction"
+      ],
+      "input_channels": [
+        "u"
+      ],
+      "output_channels": [
+        "y"
+      ],
+      "protocol_reference": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+      "processed_root": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/nonlinear/silverbox",
+      "split_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/nonlinear/silverbox_split_manifest.json"
+    }
+  },
+  "artifacts": {
+    "truth_file": null,
+    "grouping_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/nonlinear/silverbox_split_manifest.json",
+    "protocol_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+    "extra": {
+      "source": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/benchmark_manifest.json",
+      "task_usage": [
+        "prediction"
+      ],
+      "system_type": "physical_wiener_hammerstein_like"
+    }
+  },
+  "task_family": "nonlinear",
+  "has_ground_truth_kernel": false,
+  "has_ground_truth_gfrf": false
+}

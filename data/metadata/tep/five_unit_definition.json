@@ -1,0 +1,38 @@
+{
+  "dataset_name": "tep",
+  "task_family": "tep",
+  "task": "five_unit_fault_isolation",
+  "five_units": {
+    "Reactor": {
+      "unit": "reactor",
+      "primary_units": ["R1", "R2"],
+      "description": "Reactor fault impact region."
+    },
+    "Condenser": {
+      "unit": "condenser",
+      "primary_units": ["C1"],
+      "description": "Condenser fault impact region."
+    },
+    "Separator": {
+      "unit": "separator",
+      "primary_units": ["S1", "S2", "S3"],
+      "description": "Separator fault impact region."
+    },
+    "Compressor": {
+      "unit": "compressor",
+      "primary_units": ["K1"],
+      "description": "Compressor fault impact region."
+    },
+    "Stripper": {
+      "unit": "stripper",
+      "primary_units": ["S4", "S5"],
+      "description": "Stripper fault impact region."
+    }
+  },
+  "evaluation": {
+    "five_unit_metrics": ["isolation_f1", "topk_support"],
+    "primary_unit_field": "primary_unit",
+    "expected_units_field": "expected_units",
+    "exclude_feed_side_unit": true
+  }
+}

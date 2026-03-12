@@ -1,0 +1,58 @@
+{
+  "manifest_version": "1.0.0",
+  "manifest_name": "nonlinear_gfrf_truth",
+  "benchmarks": [
+    {
+      "benchmark_name": "duffing",
+      "has_ground_truth_gfrf": true,
+      "can_derive_from_kernel": false,
+      "gfrf_reference": "nonlinear://truth/duffing/gfrf/v1",
+      "registration": {
+        "source": "truth_file_or_reference",
+        "format": "gfrf_object_reference"
+      }
+    },
+    {
+      "benchmark_name": "silverbox",
+      "has_ground_truth_gfrf": false,
+      "can_derive_from_kernel": false,
+      "gfrf_reference": null,
+      "registration": {
+        "source": "n/a",
+        "format": "n/a",
+        "notes": "No GFRF truth registered in current protocol version."
+      }
+    },
+    {
+      "benchmark_name": "volterra_wiener",
+      "has_ground_truth_gfrf": true,
+      "can_derive_from_kernel": false,
+      "gfrf_reference": "nonlinear://truth/volterra_wiener/gfrf/v1",
+      "registration": {
+        "source": "truth_file_or_reference",
+        "format": "gfrf_object_reference"
+      }
+    },
+    {
+      "benchmark_name": "coupled_duffing",
+      "has_ground_truth_gfrf": true,
+      "can_derive_from_kernel": false,
+      "gfrf_reference": "nonlinear://truth/coupled_duffing/gfrf/v1",
+      "registration": {
+        "source": "truth_file_or_reference",
+        "format": "gfrf_object_reference"
+      }
+    },
+    {
+      "benchmark_name": "cascaded_tanks",
+      "has_ground_truth_gfrf": false,
+      "can_derive_from_kernel": false,
+      "gfrf_reference": null,
+      "registration": {
+        "source": "n/a",
+        "format": "n/a",
+        "notes": "No GFRF truth registered in current protocol version."
+      }
+    }
+  ]
+}
