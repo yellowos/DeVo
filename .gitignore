@@ -3,5 +3,6 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 results/
+experiments/_summary/
 experiments/**/results/
 experiments/**/outputs/
