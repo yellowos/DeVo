@@ -5,11 +5,174 @@ from __future__ import annotations
 import itertools
 import math
 from dataclasses import dataclass
-from typing import Dict, Iterator, Optional
+from typing import Any, Dict, Iterator, Mapping, Optional
 
+import numpy as np
 import torch
 
 from .multiplicity import multiplicity_from_canonical_indices
+
+
+@dataclass(frozen=True)
+class AlignmentRecord:
+    window_start: int
+    window_end: int
+    target_index: int
+    horizon: int
+    run_id: Any = None
+
+
+def build_targets_with_horizon(
+    sequence: Any,
+    *,
+    window_length: int,
+    horizon: int,
+) -> tuple[np.ndarray, list[AlignmentRecord]]:
+    values = np.asarray(sequence)
+    if values.ndim == 1:
+        values = values[:, None]
+    if values.ndim != 2:
+        raise ValueError("sequence must be 1D or 2D when building aligned targets.")
+
+    sample_count = values.shape[0] - int(window_length) - int(horizon) + 1
+    if sample_count < 0:
+        raise ValueError(
+            f"Need at least window_length+horizon samples, got n={values.shape[0]}, "
+            f"window_length={window_length}, horizon={horizon}."
+        )
+
+    targets = []
+    alignment: list[AlignmentRecord] = []
+    for window_start in range(sample_count):
+        window_end = window_start + int(window_length) - 1
+        target_index = window_end + int(horizon)
+        targets.append(values[window_end + 1 : target_index + 1])
+        alignment.append(
+            AlignmentRecord(
+                window_start=window_start,
+                window_end=window_end,
+                target_index=target_index,
+                horizon=int(horizon),
+            )
+        )
+    return np.asarray(targets), alignment
+
+
+def build_aligned_windows(
+    sequence: Any,
+    *,
+    window_length: int,
+    horizon: int,
+    run_id: Any = None,
+) -> dict[str, Any]:
+    values = np.asarray(sequence)
+    if values.ndim == 1:
+        values = values[:, None]
+    if values.ndim != 2:
+        raise ValueError("sequence must be 1D or 2D when building aligned windows.")
+
+    targets, alignment = build_targets_with_horizon(
+        values,
+        window_length=window_length,
+        horizon=horizon,
+    )
+    run_values = None if run_id is None else np.asarray(run_id, dtype=object).reshape(-1)
+    windows = []
+    window_run_ids = []
+    for record in alignment:
+        windows.append(values[record.window_start : record.window_end + 1])
+        if run_values is None:
+            window_run_ids.append(None)
+            continue
+        if len(run_values) != len(values):
+            raise ValueError("run_id must match the raw sequence length.")
+        covered = run_values[record.window_start : record.target_index + 1]
+        if any(item != covered[0] for item in covered[1:]):
+            raise ValueError("Window/target alignment crosses run boundaries.")
+        window_run_ids.append(covered[0])
+
+    return {
+        "X": np.asarray(windows),
+        "Y": targets,
+        "window_start": np.asarray([item.window_start for item in alignment], dtype=np.int64),
+        "window_end": np.asarray([item.window_end for item in alignment], dtype=np.int64),
+        "target_index": np.asarray([item.target_index for item in alignment], dtype=np.int64),
+        "horizon": np.asarray([item.horizon for item in alignment], dtype=np.int64),
+        "run_id": np.asarray(window_run_ids, dtype=object),
+    }
+
+
+def infer_alignment_from_windowed_batch(
+    *,
+    num_samples: int,
+    window_length: int,
+    horizon: int,
+    alignment: Optional[Mapping[str, Any]] = None,
+) -> dict[str, np.ndarray]:
+    if alignment:
+        payload = {
+            key: np.asarray(value).reshape(-1)
+            for key, value in alignment.items()
+            if value is not None and key in {"window_start", "window_end", "target_index", "horizon"}
+        }
+        if not payload:
+            alignment = None
+    if not alignment:
+        base = np.arange(int(num_samples), dtype=np.int64)
+        payload = {
+            "window_start": base,
+            "window_end": base + int(window_length) - 1,
+            "target_index": base + int(window_length) - 1 + int(horizon),
+            "horizon": np.full(int(num_samples), int(horizon), dtype=np.int64),
+        }
+    return payload
+
+
+def validate_alignment(
+    x: Any,
+    y: Any | None,
+    *,
+    window_length: int,
+    input_dim: int,
+    horizon: int,
+    output_dim: Optional[int] = None,
+    alignment: Optional[Mapping[str, Any]] = None,
+) -> None:
+    x_array = np.asarray(x)
+    if x_array.ndim == 2:
+        x_array = x_array[..., None]
+    if x_array.ndim != 3:
+        raise ValueError("Aligned inputs must have shape [N, M, D] or [N, M].")
+    if x_array.shape[1] != int(window_length) or x_array.shape[2] != int(input_dim):
+        raise ValueError(
+            f"Aligned inputs expect trailing shape ({window_length}, {input_dim}), got {tuple(x_array.shape[1:])}."
+        )
+
+    if y is not None:
+        y_array = np.asarray(y)
+        if y_array.ndim != 3:
+            raise ValueError("Aligned targets must have shape [N, H, O].")
+        if y_array.shape[0] != x_array.shape[0]:
+            raise ValueError("Aligned inputs/targets must have the same batch size.")
+        if y_array.shape[1] != int(horizon):
+            raise ValueError(f"Aligned targets expect horizon={horizon}, got {y_array.shape[1]}.")
+        if output_dim is not None and y_array.shape[2] != int(output_dim):
+            raise ValueError(f"Aligned targets expect output_dim={output_dim}, got {y_array.shape[2]}.")
+
+    payload = infer_alignment_from_windowed_batch(
+        num_samples=x_array.shape[0],
+        window_length=window_length,
+        horizon=horizon,
+        alignment=alignment,
+    )
+    if any(len(value) != x_array.shape[0] for value in payload.values()):
+        raise ValueError("Alignment metadata length must match the batch size.")
+    if np.any(payload["window_end"] < payload["window_start"]):
+        raise ValueError("window_end must be greater than or equal to window_start.")
+    if np.any((payload["window_end"] - payload["window_start"] + 1) != int(window_length)):
+        raise ValueError("Alignment window span does not match window_length.")
+    if np.any((payload["target_index"] - payload["window_end"]) != int(horizon)):
+        raise ValueError("Alignment target_index does not match the configured horizon.")
 
 
 def flat_slot_count(window_length: int, input_dim: int) -> int:

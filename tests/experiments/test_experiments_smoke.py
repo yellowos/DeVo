@@ -12,10 +12,12 @@ from pathlib import Path
 
 from experiments import (
     ArtifactPathRef,
+    compute_config_hash,
     create_run_handle,
     load_experiment_config,
     scan_run_results,
     summarize_to_csv,
+    write_resolved_config,
 )
 from methods.base import ArtifactRef, MethodResult
 
@@ -186,6 +188,118 @@ class ExperimentsLayerSmokeTest(unittest.TestCase):
         )
         self.assertEqual(completed.returncode, 0, msg=completed.stderr)
         self.assertIn("python -m experiments.collect", completed.stdout)
+
+    def test_config_deep_merge_preserves_unmodified_nested_fields(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            base = {
+                "model": {"name": "devo", "orders": [1, 2], "hidden": {"width": 32}},
+                "training": {"batch_size": 16, "epochs": 2},
+                "data": {"dataset": "toy", "window_length": 8},
+            }
+            config = load_experiment_config(base, overrides={"training": {"batch_size": 64}})
+            self.assertEqual(config["training"]["batch_size"], 64)
+            self.assertEqual(config["training"]["epochs"], 2)
+            self.assertEqual(config["model"]["hidden"]["width"], 32)
+            self.assertEqual(config["data"]["window_length"], 8)
+
+            path_a = write_resolved_config(config, root / "resolved_a.json")
+            path_b = write_resolved_config(config, root / "resolved_b.json")
+            hash_a = compute_config_hash(config)
+            hash_b = compute_config_hash(load_experiment_config(config))
+            self.assertEqual(path_a.read_text(encoding="utf-8"), path_b.read_text(encoding="utf-8"))
+            self.assertEqual(hash_a, hash_b)
+
+    def test_run_id_uniqueness_no_overwrite(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            first = create_run_handle(
+                experiment_name="repeatable",
+                dataset="toy",
+                method="dummy",
+                seed=1,
+                config={"epochs": 1},
+                results_root=root / "results",
+            )
+            second = create_run_handle(
+                experiment_name="repeatable",
+                dataset="toy",
+                method="dummy",
+                seed=1,
+                config={"epochs": 1},
+                results_root=root / "results",
+            )
+            self.assertNotEqual(first.paths.run_id, second.paths.run_id)
+            self.assertNotEqual(first.paths.run_dir, second.paths.run_dir)
+            first.save_success(metrics={"test.rmse": 0.1})
+            second.save_success(metrics={"test.rmse": 0.2})
+            self.assertTrue(first.paths.result_path.exists())
+            self.assertTrue(second.paths.result_path.exists())
+
+    def test_collect_preserves_multiple_same_name_runs(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            results_root = root / "results"
+            first = create_run_handle(
+                experiment_name="repeatable",
+                dataset="toy",
+                method="dummy",
+                seed=2,
+                config={"epochs": 1},
+                results_root=results_root,
+            )
+            second = create_run_handle(
+                experiment_name="repeatable",
+                dataset="toy",
+                method="dummy",
+                seed=2,
+                config={"epochs": 1},
+                results_root=results_root,
+            )
+            first.save_success(metrics={"test.rmse": 0.1})
+            second.save_success(metrics={"test.rmse": 0.2})
+
+            csv_path = root / "summary.csv"
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "experiments.collect",
+                    str(results_root),
+                    "--output",
+                    str(csv_path),
+                ],
+                cwd=Path(__file__).resolve().parents[2],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 0, msg=completed.stderr)
+            with csv_path.open("r", encoding="utf-8", newline="") as handle:
+                rows = list(csv.DictReader(handle))
+            self.assertEqual(len(rows), 2)
+            self.assertNotEqual(rows[0]["run_id"], rows[1]["run_id"])
+
+    def test_collect_ignores_non_whitelisted_dirs(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            valid = create_run_handle(
+                experiment_name="whitelist",
+                dataset="toy",
+                method="dummy",
+                seed=0,
+                config={"epochs": 1},
+                results_root=root / "results",
+            )
+            valid.save_success(metrics={"test.rmse": 0.3})
+
+            invalid_dir = root / "results" / "whitelist" / "toy" / "dummy" / "seed_0" / "invalid_manual"
+            invalid_dir.mkdir(parents=True, exist_ok=True)
+            (invalid_dir / "result.json").write_text(json.dumps({"run_id": "invalid"}), encoding="utf-8")
+
+            records = scan_run_results(root / "results")
+            self.assertEqual(len(records), 1)
+            self.assertEqual(records[0].run_id, valid.paths.run_id)
 
 
 if __name__ == "__main__":

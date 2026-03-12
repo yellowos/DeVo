@@ -10,8 +10,8 @@ from typing import Any, Dict, Literal, Mapping, Optional, TypeAlias
 from .utils import to_jsonable
 
 
-RunState: TypeAlias = Literal["success", "skipped", "failed"]
-EXPERIMENT_RESULT_SCHEMA_VERSION = "experiments.run_result.v1"
+RunState: TypeAlias = Literal["running", "success", "skipped", "failed"]
+EXPERIMENT_RESULT_SCHEMA_VERSION = "experiments.run_result.v2"
 
 
 def _coerce_path(value: Optional[str | Path]) -> Optional[str]:
@@ -117,6 +117,10 @@ class RunStatusRecord:
         return cls(state="success", message=message)
 
     @classmethod
+    def running(cls, message: Optional[str] = "running") -> "RunStatusRecord":
+        return cls(state="running", message=message)
+
+    @classmethod
     def skipped(
         cls,
         message: str,
@@ -152,7 +156,7 @@ class RunStatusRecord:
         if isinstance(value, Mapping):
             raw_state = str(value.get("state", "failed"))
             state: RunState
-            if raw_state not in {"success", "skipped", "failed"}:
+            if raw_state not in {"running", "success", "skipped", "failed"}:
                 raise ValueError(f"Unsupported run state: {raw_state}")
             state = raw_state
             return cls(

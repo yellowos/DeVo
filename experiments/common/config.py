@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import copy
 import json
 from pathlib import Path
 from typing import Any, Mapping, TypeAlias
+
+from .utils import compute_mapping_hash, stable_json_dumps
 
 try:
     import tomllib
@@ -16,13 +19,13 @@ ConfigSource: TypeAlias = Mapping[str, Any] | str | Path | None
 
 
 def _deep_merge(base: Mapping[str, Any], overrides: Mapping[str, Any]) -> dict[str, Any]:
-    merged = dict(base)
+    merged: dict[str, Any] = {str(key): copy.deepcopy(value) for key, value in base.items()}
     for key, value in overrides.items():
         current = merged.get(key)
         if isinstance(current, Mapping) and isinstance(value, Mapping):
             merged[key] = _deep_merge(current, value)
         else:
-            merged[key] = value
+            merged[key] = copy.deepcopy(value)
     return merged
 
 
@@ -59,6 +62,35 @@ def load_experiment_config(
         path = Path(source).expanduser().resolve()
         config = _read_config_file(path)
 
-    if overrides:
-        return _deep_merge(config, overrides)
-    return dict(config)
+    return finalize_config(config, overrides=overrides)
+
+
+def deep_merge_configs(
+    base: Mapping[str, Any] | None,
+    override: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    return _deep_merge(base or {}, override or {})
+
+
+def finalize_config(
+    config: Mapping[str, Any] | None,
+    *,
+    overrides: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    return copy.deepcopy(deep_merge_configs(config, overrides))
+
+
+def compute_config_hash(config: Mapping[str, Any]) -> str:
+    return compute_mapping_hash(config)
+
+
+def write_resolved_config(
+    config: Mapping[str, Any],
+    output_path: str | Path,
+) -> Path:
+    target = Path(output_path).expanduser().resolve()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open("w", encoding="utf-8") as handle:
+        handle.write(stable_json_dumps(config))
+        handle.write("\n")
+    return target

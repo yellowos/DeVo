@@ -1,13 +1,26 @@
 """Shared experiments-layer helpers."""
 
-from .config import load_experiment_config
+from .config import (
+    compute_config_hash,
+    deep_merge_configs,
+    finalize_config,
+    load_experiment_config,
+    write_resolved_config,
+)
 from .run import (
     DEFAULT_RESULTS_ROOT,
     ExperimentPaths,
     ExperimentRunHandle,
+    compute_split_hash,
     create_run_handle,
+    is_valid_run_dir,
+    iter_valid_run_dirs,
+    make_run_id,
+    prepare_run_dir,
     read_run_result,
+    write_run_context,
     write_run_result,
+    write_status,
 )
 from .schema import (
     EXPERIMENT_RESULT_SCHEMA_VERSION,
@@ -38,12 +51,23 @@ __all__ = [
     "RunStatusRecord",
     "artifact_paths_from_method_result",
     "build_run_summary_rows",
+    "compute_config_hash",
+    "compute_split_hash",
     "collect_experiment_summary",
     "create_run_handle",
+    "deep_merge_configs",
+    "finalize_config",
+    "is_valid_run_dir",
+    "iter_valid_run_dirs",
     "load_experiment_config",
+    "make_run_id",
+    "prepare_run_dir",
     "read_run_result",
     "scan_run_results",
     "summarize_to_csv",
     "write_run_result",
+    "write_run_context",
+    "write_resolved_config",
+    "write_status",
     "write_summary_outputs",
 ]

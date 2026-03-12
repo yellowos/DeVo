@@ -196,6 +196,11 @@ class NonlinearAdapter(BaseDatasetAdapter):
                 "split_protocol_name": split_protocol,
                 "system_type": manifest_entry["system_type"],
                 "task_usage": manifest_entry["task_usage"],
+                "transform_provenance": {
+                    "source_split": "train",
+                    "policy": "split_before_fit_transform",
+                    "adapter": cls.__name__,
+                },
                 "kernel_truth": kernel_entry,
                 "gfrf_truth": gfrf_entry,
             },
@@ -218,6 +223,13 @@ class NonlinearAdapter(BaseDatasetAdapter):
         *,
         meta: Optional[Mapping[str, Any]] = None,
     ) -> Mapping[str, Any]:
+        meta = dict(meta or {})
+        extras_override = dict(meta.get("extras", {}))
+        transform_provenance = dict(extras_override.get("transform_provenance", {}))
+        if transform_provenance and str(transform_provenance.get("source_split", "train")) != "train":
+            raise DataProtocolError(
+                f"{dataset_name}: transform provenance must declare source_split='train'."
+            )
         merged_meta: dict[str, Any] = {
             "dataset_name": dataset_name,
             "task_family": cls.task_family.value,
@@ -235,10 +247,15 @@ class NonlinearAdapter(BaseDatasetAdapter):
                 "input_channels": list(manifest_entry["input_channels"]),
                 "output_channels": list(manifest_entry["output_channels"]),
                 "protocol_name": manifest_entry["recommended_split_protocol"],
+                "transform_provenance": {
+                    "source_split": "train",
+                    "policy": "split_before_fit_transform",
+                    "adapter": cls.__name__,
+                },
             },
         }
         if meta:
-            merged_meta.update(dict(meta))
+            merged_meta.update(meta)
             meta_extras = dict(merged_meta.get("extras", {}))
             extra_overrides = dict(meta.get("extras", {}))
             meta_extras.update(extra_overrides)

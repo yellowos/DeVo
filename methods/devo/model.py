@@ -124,6 +124,14 @@ class DeVoModel(nn.Module):
             )
         return x
 
+    def alignment_contract(self) -> Dict[str, int]:
+        return {
+            "window_length": self.window_length,
+            "input_dim": self.input_dim,
+            "output_dim": self.output_dim,
+            "horizon": self.horizon,
+        }
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self._validate_inputs(x)
         x_flat = x.reshape(x.shape[0], -1)

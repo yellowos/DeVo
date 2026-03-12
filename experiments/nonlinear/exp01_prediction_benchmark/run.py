@@ -21,7 +21,9 @@ if str(REPO_ROOT) not in sys.path:
 
 from methods.base import create_method, get_method_class, load_dataset_bundle
 from methods.devo import DeVoConfig
+from methods.metrics import compute_prediction_metrics
 from methods.utils import set_random_seed, slice_dataset_bundle
+from experiments.common import compute_config_hash, compute_split_hash, deep_merge_configs, make_run_id, write_resolved_config
 
 
 EXPERIMENT_NAME = "exp01_prediction_benchmark"
@@ -134,9 +136,7 @@ def _resolve_config(config_path: Path, profile: str) -> dict[str, Any]:
         raise KeyError(f"Unknown profile '{profile}'. Available: {available}")
 
     profile_payload = dict(profiles[profile] or {})
-    runtime_defaults = dict(raw.get("runtime", {}) or {})
-    runtime_overrides = dict(profile_payload.get("runtime", {}) or {})
-    runtime = {**runtime_defaults, **runtime_overrides}
+    runtime = deep_merge_configs(raw.get("runtime", {}) or {}, profile_payload.get("runtime", {}) or {})
 
     resolved = {
         "experiment_name": str(raw.get("experiment_name", EXPERIMENT_NAME)),
@@ -164,7 +164,7 @@ def _resolve_config(config_path: Path, profile: str) -> dict[str, Any]:
         "method_configs": dict(raw.get("method_configs", {}) or {}),
         "method_overrides": dict(profile_payload.get("method_overrides", {}) or {}),
     }
-    return resolved
+    return copy.deepcopy(resolved)
 
 
 def _override_config_with_cli(config: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
@@ -216,8 +216,10 @@ def _load_bundle(processed_root: Path, dataset_name: str, config: Mapping[str, A
 
 
 def _resolve_method_config(method_name: str, config: Mapping[str, Any], seed: int) -> dict[str, Any]:
-    method_config = copy.deepcopy(dict(config.get("method_configs", {}).get(method_name, {}) or {}))
-    method_config.update(copy.deepcopy(dict(config.get("method_overrides", {}).get(method_name, {}) or {})))
+    method_config = deep_merge_configs(
+        config.get("method_configs", {}).get(method_name, {}) or {},
+        config.get("method_overrides", {}).get(method_name, {}) or {},
+    )
     runtime = dict(config.get("runtime", {}) or {})
 
     batch_pref = runtime.get("batch_size_preference")
@@ -273,45 +275,12 @@ def _instantiate_method(method_name: str, method_config: Mapping[str, Any], runt
     )
 
 
-def _align_predictions(y_true: Any, y_pred: Any) -> tuple[np.ndarray, np.ndarray]:
-    true_array = np.asarray(y_true, dtype=np.float64)
-    pred_array = np.asarray(y_pred, dtype=np.float64)
-
-    if true_array.shape[0] != pred_array.shape[0]:
-        raise ValueError(
-            f"Prediction batch mismatch: expected {true_array.shape[0]} samples, got {pred_array.shape[0]}."
-        )
-
-    if true_array.shape == pred_array.shape:
-        return true_array, pred_array
-
-    true_flat = true_array.reshape(true_array.shape[0], -1)
-    pred_flat = pred_array.reshape(pred_array.shape[0], -1)
-    if true_flat.shape != pred_flat.shape:
-        raise ValueError(
-            f"Prediction shape mismatch: expected flattened shape {true_flat.shape}, got {pred_flat.shape}."
-        )
-    return true_flat, pred_flat
-
-
 def _compute_metrics(y_true: Any, y_pred: Any) -> dict[str, float]:
-    true_array, pred_array = _align_predictions(y_true, y_pred)
-    error = pred_array - true_array
-    mse = float(np.mean(np.square(error)))
-    rmse = float(np.sqrt(mse))
-
-    true_flat = true_array.reshape(true_array.shape[0], -1)
-    centered = true_flat - true_flat.mean(axis=0, keepdims=True)
-    variance = float(np.mean(np.square(centered)))
-    if variance <= 1e-12:
-        signal_power = float(np.mean(np.square(true_flat)))
-        variance = signal_power if signal_power > 1e-12 else float("nan")
-    nmse = float(mse / variance) if np.isfinite(variance) else float("nan")
-
+    metrics = compute_prediction_metrics(y_true, y_pred, domain="native")
     return {
-        "nmse": nmse,
-        "rmse": rmse,
-        "mse": mse,
+        "nmse": float(metrics["nmse"]),
+        "rmse": float(metrics["rmse"]),
+        "mse": float(metrics["mse"]),
     }
 
 
@@ -324,15 +293,99 @@ def _classify_exception(exc: Exception) -> str:
     return "failed"
 
 
+def _flatten_for_hash(value: Any) -> list[Any]:
+    if value is None:
+        return []
+    return np.asarray(value, dtype=object).reshape(-1).tolist()
+
+
+def _compute_bundle_split_hash(bundle: Any) -> str:
+    payload: dict[str, Any] = {
+        "dataset_name": bundle.meta.dataset_name,
+        "source_manifest": getattr(bundle, "source_manifest", None),
+        "source_root": getattr(bundle, "source_root", None),
+        "splits": {},
+    }
+    for split_name in ("train", "val", "test"):
+        split = bundle.get_split(split_name)
+        payload["splits"][split_name] = {
+            "num_samples": int(split.num_samples),
+            "sample_id": _flatten_for_hash(split.sample_id),
+            "run_id": _flatten_for_hash(split.run_id),
+            "timestamp": _flatten_for_hash(split.timestamp),
+            "window_start": _flatten_for_hash(split.extra_fields.get("window_start")),
+            "window_end": _flatten_for_hash(split.extra_fields.get("window_end")),
+            "target_index": _flatten_for_hash(split.extra_fields.get("target_index")),
+        }
+    return compute_split_hash(payload)
+
+
+def _iter_valid_run_dirs(results_dir: Path) -> list[Path]:
+    run_dirs: list[Path] = []
+    if not results_dir.exists():
+        return run_dirs
+    for result_path in sorted(results_dir.rglob("result.json")):
+        run_dir = result_path.parent
+        if _is_valid_exp01_run_dir(run_dir):
+            run_dirs.append(run_dir)
+    return run_dirs
+
+
+def _find_existing_terminal_run(seed_dir: Path, *, config_hash: str) -> Path | None:
+    if not seed_dir.exists():
+        return None
+    for run_dir in sorted(seed_dir.iterdir()):
+        if not run_dir.is_dir() or not _is_valid_exp01_run_dir(run_dir):
+            continue
+        result_path = run_dir / "result.json"
+        try:
+            payload = json.loads(result_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        if payload.get("config_hash") != config_hash:
+            continue
+        if payload.get("status") in {"success", "failed", "skipped"}:
+            return run_dir
+    return None
+
+
+def _is_valid_exp01_run_dir(run_dir: Path) -> bool:
+    required = (
+        run_dir / "result.json",
+        run_dir / "status.json",
+        run_dir / "run_context.json",
+        run_dir / "resolved_config.json",
+        run_dir / "metrics.json",
+        run_dir / "artifacts_manifest.json",
+    )
+    if any(not path.is_file() for path in required):
+        return False
+    try:
+        result_payload = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+        status_payload = json.loads((run_dir / "status.json").read_text(encoding="utf-8"))
+        config_payload = json.loads((run_dir / "resolved_config.json").read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return False
+    if not isinstance(result_payload, dict) or not isinstance(status_payload, dict) or not isinstance(config_payload, dict):
+        return False
+    if result_payload.get("run_id") != status_payload.get("run_id"):
+        return False
+    return result_payload.get("config_hash") == compute_config_hash(config_payload)
+
+
 def _run_result_base(
     *,
     config: Mapping[str, Any],
     dataset_name: str,
     method_name: str,
     seed: int,
+    run_id: str,
     run_dir: Path,
     bundle: Any | None,
     method_config: Mapping[str, Any],
+    config_hash: str,
+    split_hash: str | None,
+    resolved_config_path: Path,
 ) -> dict[str, Any]:
     dataset_meta = None
     split_sizes = None
@@ -359,11 +412,19 @@ def _run_result_base(
         "dataset": dataset_name,
         "method": method_name,
         "seed": int(seed),
+        "run_id": run_id,
+        "config_hash": config_hash,
+        "resolved_config_path": str(resolved_config_path),
+        "split_hash": split_hash,
         "status": "running",
         "started_at": _utc_now(),
         "finished_at": None,
         "duration_seconds": None,
         "run_dir": str(run_dir),
+        "run_context_path": str(run_dir / "run_context.json"),
+        "status_path": str(run_dir / "status.json"),
+        "metrics_path": str(run_dir / "metrics.json"),
+        "artifacts_manifest_path": str(run_dir / "artifacts_manifest.json"),
         "config_path": str(config["config_path"]),
         "output_dir": str(config["output_dir"]),
         "method_config": dict(method_config),
@@ -395,6 +456,48 @@ def _finalize_result(
     payload["error"] = None if error is None else dict(error)
     payload["notes"] = list(notes or [])
     return payload
+
+
+def _write_run_sidecars(
+    run_dir: Path,
+    result_payload: Mapping[str, Any],
+    *,
+    run_context: Mapping[str, Any],
+) -> None:
+    status_value = str(result_payload.get("status", "running"))
+    error_payload = result_payload.get("error")
+    error_message = error_payload.get("message") if isinstance(error_payload, Mapping) else None
+    _write_json(
+        run_dir / "run_context.json",
+        run_context,
+    )
+    _write_json(
+        run_dir / "status.json",
+        {
+            "run_id": result_payload.get("run_id"),
+            "state": status_value,
+            "message": None if status_value == "success" else error_message,
+            "config_hash": result_payload.get("config_hash"),
+            "resolved_config_path": result_payload.get("resolved_config_path"),
+            "split_hash": result_payload.get("split_hash"),
+        },
+    )
+    _write_json(
+        run_dir / "metrics.json",
+        {
+            "run_id": result_payload.get("run_id"),
+            "metrics": dict(result_payload.get("metrics") or {}),
+            "domain": "native",
+        },
+    )
+    _write_json(
+        run_dir / "artifacts_manifest.json",
+        {
+            "run_id": result_payload.get("run_id"),
+            "artifacts": dict(result_payload.get("artifacts") or {}),
+            "method_result": dict(result_payload.get("method_result") or {}),
+        },
+    )
 
 
 def _existing_result_is_terminal(path: Path) -> bool:
@@ -453,40 +556,71 @@ def main() -> None:
 
     output_dir = Path(config["output_dir"]).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
-    _write_json(output_dir / "resolved_config.json", config)
+    config_hash = compute_config_hash(config)
+    write_resolved_config(config, output_dir / "resolved_config.json")
 
     bundle_cache: dict[str, Any] = {}
     bundle_errors: dict[str, Exception] = {}
+    bundle_split_hashes: dict[str, str] = {}
     counters = {"success": 0, "failed": 0, "skipped": 0, "reused": 0}
 
     for dataset_name in config["datasets"]:
         try:
-            bundle_cache[dataset_name] = _load_bundle(Path(config["processed_root"]), dataset_name, config)
+            bundle = _load_bundle(Path(config["processed_root"]), dataset_name, config)
+            bundle_cache[dataset_name] = bundle
+            bundle_split_hashes[dataset_name] = _compute_bundle_split_hash(bundle)
         except Exception as exc:  # pragma: no cover - exercised in broken-data scenarios.
             bundle_errors[dataset_name] = exc
 
     for dataset_name in config["datasets"]:
         bundle = bundle_cache.get(dataset_name)
         bundle_error = bundle_errors.get(dataset_name)
+        split_hash = bundle_split_hashes.get(dataset_name)
         for method_name in config["methods"]:
             for seed in config["seeds"]:
-                run_dir = output_dir / "runs" / dataset_name / method_name / f"seed_{int(seed):03d}"
-                result_path = run_dir / "result.json"
-                if bool(config["skip_existing"]) and _existing_result_is_terminal(result_path):
+                seed_dir = output_dir / "runs" / dataset_name / method_name / f"seed_{int(seed):03d}"
+                existing_run_dir = None
+                if bool(config["skip_existing"]):
+                    existing_run_dir = _find_existing_terminal_run(seed_dir, config_hash=config_hash)
+                if existing_run_dir is not None:
                     counters["reused"] += 1
                     continue
 
                 method_config = _resolve_method_config(method_name, config, int(seed))
+                run_id = make_run_id(
+                    experiment_name=str(config["experiment_name"]),
+                    dataset=dataset_name,
+                    method=method_name,
+                    seed=int(seed),
+                )
+                run_dir = seed_dir / run_id
+                run_dir.mkdir(parents=True, exist_ok=False)
+                resolved_config_path = write_resolved_config(config, run_dir / "resolved_config.json")
+                result_path = run_dir / "result.json"
                 result_payload = _run_result_base(
                     config=config,
                     dataset_name=dataset_name,
                     method_name=method_name,
                     seed=int(seed),
+                    run_id=run_id,
                     run_dir=run_dir,
                     bundle=bundle,
                     method_config=method_config,
+                    config_hash=config_hash,
+                    split_hash=split_hash,
+                    resolved_config_path=resolved_config_path,
                 )
                 started_at = datetime.now(UTC)
+                run_context = {
+                    "run_id": run_id,
+                    "seed": int(seed),
+                    "dataset": dataset_name,
+                    "method": method_name,
+                    "config_hash": config_hash,
+                    "resolved_config_path": str(resolved_config_path),
+                    "split_hash": split_hash,
+                }
+                _write_run_sidecars(run_dir, result_payload, run_context=run_context)
                 if bool(config.get("save_running_state", True)):
                     _write_json(result_path, result_payload)
 
@@ -503,6 +637,7 @@ def main() -> None:
                         notes=["dataset_bundle_load_failed"],
                     )
                     counters["failed"] += 1
+                    _write_run_sidecars(run_dir, final_payload, run_context=run_context)
                     _write_json(result_path, final_payload)
                     continue
 
@@ -510,7 +645,7 @@ def main() -> None:
 
                 try:
                     method = _instantiate_method(method_name, method_config, config["runtime"])
-                    fit_result = method.fit(bundle)
+                    fit_result = method.fit(bundle, run_context=run_context)
                     predictions = method.predict(bundle.test.X)
                     metrics = _compute_metrics(bundle.test.Y, predictions)
                     method_result = {
@@ -539,9 +674,17 @@ def main() -> None:
                     )
                     counters[status] += 1
 
+                _write_run_sidecars(run_dir, final_payload, run_context=run_context)
                 _write_json(result_path, final_payload)
 
-    _write_json(output_dir / "run_manifest.json", _build_run_manifest(config, counters))
+    _write_json(
+        output_dir / "run_manifest.json",
+        {
+            **_build_run_manifest(config, counters),
+            "config_hash": config_hash,
+            "valid_run_dirs": [str(path) for path in _iter_valid_run_dirs(output_dir / "runs")],
+        },
+    )
     print(json.dumps(_to_jsonable(counters), indent=2))
 
 

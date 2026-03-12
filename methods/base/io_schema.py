@@ -155,6 +155,139 @@ def _coerce_artifacts(value: DatasetArtifacts | Mapping[str, Any] | None) -> Dat
     return DatasetArtifacts.from_mapping(value)
 
 
+def _flatten_optional(value: Any) -> Optional[np.ndarray]:
+    if value is None:
+        return None
+    return np.asarray(value, dtype=object).reshape(-1)
+
+
+def _numeric_if_possible(value: np.ndarray) -> Optional[np.ndarray]:
+    try:
+        numeric = value.astype(np.float64)
+    except (TypeError, ValueError):
+        return None
+    if not np.isfinite(numeric).all():
+        return None
+    return numeric
+
+
+def validate_split_disjointness(bundle: "MethodDatasetBundle") -> None:
+    split_names = ("train", "val", "test")
+    alignment_available = any(
+        any(key in (bundle.get_split(name).extra_fields or {}) for key in ("window_start", "window_end"))
+        for name in split_names
+    )
+    fingerprints: dict[str, Optional[set[tuple[Any, ...] | Any]]] = {}
+    for split_name in split_names:
+        split = bundle.get_split(split_name)
+        sample_id = _flatten_optional(split.sample_id)
+        run_id = _flatten_optional(split.run_id)
+        window_start = _flatten_optional(split.extra_fields.get("window_start"))
+        window_end = _flatten_optional(split.extra_fields.get("window_end"))
+        if run_id is not None and window_start is not None and window_end is not None:
+            fingerprints[split_name] = set(zip(run_id.tolist(), window_start.tolist(), window_end.tolist()))
+            continue
+        if sample_id is not None and run_id is not None and (alignment_available or bundle.source_manifest is not None):
+            fingerprints[split_name] = set(zip(run_id.tolist(), sample_id.tolist()))
+            continue
+        fingerprints[split_name] = None
+
+    for index, left_name in enumerate(split_names):
+        left = fingerprints[left_name]
+        if left is None:
+            continue
+        for right_name in split_names[index + 1 :]:
+            right = fingerprints[right_name]
+            if right is None:
+                continue
+            overlap = left & right
+            if overlap:
+                raise DataProtocolError(
+                    f"Dataset bundle has overlapping {left_name}/{right_name} splits; "
+                    f"overlap size={len(overlap)}."
+                )
+
+
+def validate_temporal_order(split: "MethodDatasetSplit", *, split_name: str) -> None:
+    timestamp = _flatten_optional(split.timestamp)
+    run_id = _flatten_optional(split.run_id)
+    if timestamp is not None:
+        numeric_timestamp = _numeric_if_possible(timestamp)
+        if numeric_timestamp is None:
+            return
+        if run_id is None:
+            if np.any(np.diff(numeric_timestamp) < 0):
+                raise DataProtocolError(f"{split_name}: timestamp must be monotonic.")
+        else:
+            unique_runs = []
+            for item in run_id.tolist():
+                if item not in unique_runs:
+                    unique_runs.append(item)
+            for run_value in unique_runs:
+                mask = run_id == run_value
+                run_ts = numeric_timestamp[mask]
+                if run_ts.size > 1 and np.any(np.diff(run_ts) < 0):
+                    raise DataProtocolError(
+                        f"{split_name}: timestamp must be monotonic within run_id={run_value!r}."
+                    )
+
+
+def validate_run_window_boundaries(split: "MethodDatasetSplit", meta: DatasetMeta, *, split_name: str) -> None:
+    window_start = _flatten_optional(split.extra_fields.get("window_start"))
+    window_end = _flatten_optional(split.extra_fields.get("window_end"))
+    target_index = _flatten_optional(split.extra_fields.get("target_index"))
+    window_run_id = _flatten_optional(split.extra_fields.get("window_run_id"))
+    target_run_id = _flatten_optional(split.extra_fields.get("target_run_id"))
+    run_length = _flatten_optional(split.extra_fields.get("run_length"))
+
+    if window_start is None and window_end is None and target_index is None:
+        return
+    if window_start is None or window_end is None:
+        raise DataProtocolError(f"{split_name}: window_start/window_end must be provided together.")
+
+    sample_count = split.num_samples
+    for field_name, value in (
+        ("window_start", window_start),
+        ("window_end", window_end),
+        ("target_index", target_index),
+        ("window_run_id", window_run_id),
+        ("target_run_id", target_run_id),
+        ("run_length", run_length),
+    ):
+        if value is not None and len(value) != sample_count:
+            raise DataProtocolError(
+                f"{split_name}: {field_name} length {len(value)} must match sample count {sample_count}."
+            )
+
+    start_int = window_start.astype(np.int64)
+    end_int = window_end.astype(np.int64)
+    if np.any(start_int < 0) or np.any(end_int < start_int):
+        raise DataProtocolError(f"{split_name}: invalid window boundaries.")
+    expected_window = int(meta.window_length)
+    if np.any((end_int - start_int + 1) != expected_window):
+        raise DataProtocolError(
+            f"{split_name}: window boundaries must span exactly window_length={expected_window}."
+        )
+
+    if target_index is not None:
+        target_int = target_index.astype(np.int64)
+        if np.any(target_int <= end_int):
+            raise DataProtocolError(f"{split_name}: target_index must be strictly after window_end.")
+        if np.any((target_int - end_int) != int(meta.horizon)):
+            raise DataProtocolError(
+                f"{split_name}: target_index must satisfy target_index-window_end == horizon={meta.horizon}."
+            )
+
+    run_id = _flatten_optional(split.run_id)
+    if run_id is not None and window_run_id is not None and np.any(window_run_id != run_id):
+        raise DataProtocolError(f"{split_name}: window_run_id must match run_id for every sample.")
+    if run_id is not None and target_run_id is not None and np.any(target_run_id != run_id):
+        raise DataProtocolError(f"{split_name}: target_run_id must match run_id for every sample.")
+    if run_length is not None and target_index is not None:
+        if np.any(target_index.astype(np.int64) >= run_length.astype(np.int64)):
+            raise DataProtocolError(f"{split_name}: target_index exceeds run_length boundary.")
+
+
 @dataclass(frozen=True)
 class MethodDatasetSplit:
     """Methods-layer view of one dataset split."""
@@ -234,13 +367,17 @@ class MethodDatasetBundle:
     @classmethod
     def from_data_bundle(cls, bundle: DatasetBundle) -> "MethodDatasetBundle":
         check_dataset_bundle(bundle)
-        return cls(
+        normalized = cls(
             train=MethodDatasetSplit.from_data_split(bundle.train),
             val=MethodDatasetSplit.from_data_split(bundle.val),
             test=MethodDatasetSplit.from_data_split(bundle.test),
             meta=bundle.meta,
             artifacts=bundle.artifacts,
         )
+        validate_split_disjointness(normalized)
+        for split_name in ("train", "val", "test"):
+            validate_temporal_order(normalized.get_split(split_name), split_name=split_name)
+        return normalized
 
     @classmethod
     def from_mapping(
@@ -270,6 +407,11 @@ class MethodDatasetBundle:
             source_root=source_root,
         )
         check_dataset_bundle(bundle.to_data_bundle())
+        validate_split_disjointness(bundle)
+        for split_name in ("train", "val", "test"):
+            split = bundle.get_split(split_name)
+            validate_temporal_order(split, split_name=split_name)
+            validate_run_window_boundaries(split, bundle.meta, split_name=split_name)
         return bundle
 
     def get_split(self, split_name: str) -> MethodDatasetSplit:

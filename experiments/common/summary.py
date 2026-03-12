@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
-from .run import RESULT_FILENAME, read_run_result
+from .run import RESULT_FILENAME, iter_valid_run_dirs, read_run_result
 from .schema import ExperimentRunResult
 from .utils import flatten_mapping, to_csv_scalar
 
@@ -19,10 +19,11 @@ from .utils import flatten_mapping, to_csv_scalar
 RESULT_STATUS_ORDER: dict[str, int] = {
     "failed": 0,
     "skipped": 1,
-    "ready": 2,
-    "partial": 3,
-    "not_ready": 4,
-    "missing": 5,
+    "running": 2,
+    "ready": 3,
+    "partial": 4,
+    "not_ready": 5,
+    "missing": 6,
 }
 
 TRACKED_EXTENSIONS = {
@@ -82,12 +83,9 @@ _BASE_SUMMARY_COLUMNS = [
 def scan_run_results(results_root: str | Path) -> list[ExperimentRunResult]:
     """Recursively load every experiments-layer `result.json` file under a root."""
 
-    root = Path(results_root).expanduser().resolve()
-    if not root.exists():
-        return []
     records: list[ExperimentRunResult] = []
-    for result_path in sorted(root.rglob(RESULT_FILENAME)):
-        records.append(read_run_result(result_path))
+    for run_dir in iter_valid_run_dirs(results_root):
+        records.append(read_run_result(run_dir / RESULT_FILENAME))
     return records
 
 
@@ -143,9 +141,9 @@ def build_run_summary_rows(
 def _result_paths_for_rows(
     results_root: str | Path,
 ) -> dict[tuple[str, str, str, Any, str], tuple[str, str]]:
-    root = Path(results_root).expanduser().resolve()
     path_index: dict[tuple[str, str, str, Any, str], tuple[str, str]] = {}
-    for result_path in sorted(root.rglob(RESULT_FILENAME)):
+    for run_dir in iter_valid_run_dirs(results_root):
+        result_path = run_dir / RESULT_FILENAME
         record = read_run_result(result_path)
         key = (
             record.experiment_name,
@@ -154,7 +152,7 @@ def _result_paths_for_rows(
             record.seed,
             record.run_id,
         )
-        path_index[key] = (str(result_path), str(result_path.parent))
+        path_index[key] = (str(result_path), str(run_dir))
     return path_index
 
 
@@ -497,6 +495,11 @@ def _is_candidate_file(path: Path) -> bool:
     return any(keyword in lowered for keyword in RESULT_FILE_KEYWORDS)
 
 
+def _should_ignore_discovery_path(path: Path) -> bool:
+    ignored_tokens = {"tmp", "temp", "draft", "drafts", "scratch", "_tmp", "__pycache__"}
+    return any(_normalize_token(part) in ignored_tokens for part in path.parts)
+
+
 def _scan_status_markers(path: Path) -> tuple[set[str], list[str]]:
     lowered_name = path.name.lower()
     markers: set[str] = set()
@@ -514,6 +517,8 @@ def _scan_status_markers(path: Path) -> tuple[set[str], list[str]]:
         if isinstance(payload, Mapping):
             json_markers = _collect_json_status_markers(payload)
             markers.update(json_markers)
+            if "running" in json_markers:
+                notes.append(f"status payload marks running: {path.name}")
             if "skipped" in json_markers:
                 notes.append(f"status payload marks skipped: {path.name}")
             if "failed" in json_markers:
@@ -539,6 +544,8 @@ def _collect_json_status_markers(payload: Mapping[str, Any], *, depth: int = 0) 
         value = payload.get(key)
         if isinstance(value, str):
             normalized = _normalize_token(value)
+            if normalized in {"running", "inprogress", "in_progress"}:
+                markers.add("running")
             if normalized in {"skip", "skipped"}:
                 markers.add("skipped")
             if normalized in {"error", "fail", "failed"}:
@@ -645,6 +652,8 @@ def _discover_files(experiment_dir: Path) -> list[Path]:
     if not experiment_dir.exists():
         return files
     for path in sorted(experiment_dir.rglob("*")):
+        if _should_ignore_discovery_path(path):
+            continue
         if _is_candidate_file(path):
             files.append(path)
     return files

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
@@ -15,6 +16,7 @@ from methods.base import BaseMethod, KernelRecoveryResult, MethodResult, registe
 from methods.utils import coerce_dataset_bundle, set_random_seed
 
 from .attribution import prediction_error_gradient_attribution
+from .canonical_features import infer_alignment_from_windowed_batch, validate_alignment
 from .model import DeVoConfig, DeVoModel
 from .recovery import RecoveredKernelBundle, recover_devo_kernels
 
@@ -59,6 +61,69 @@ def _prepare_target_array(value: Any, *, horizon: int, output_dim: int) -> np.nd
             f"Expected Y shape [N, {horizon}, {output_dim}], got {tuple(array.shape)}."
         )
     return np.asarray(array, dtype=np.float32)
+
+
+class DeVoTrainingError(RuntimeError):
+    """Structured training failure with run and batch context."""
+
+    def __init__(self, message: str, *, context: Mapping[str, Any]) -> None:
+        self.context = dict(context)
+        rendered = json.dumps(self.context, sort_keys=True, ensure_ascii=True, default=str)
+        super().__init__(f"{message}; context={rendered}")
+
+
+def _merge_context(base: Mapping[str, Any], **extra: Any) -> dict[str, Any]:
+    context = dict(base)
+    context.update({key: value for key, value in extra.items() if value is not None})
+    return context
+
+
+def _alignment_payload(split: Any, *, sample_count: int, window_length: int, horizon: int) -> dict[str, np.ndarray]:
+    extra_fields = getattr(split, "extra_fields", {}) or {}
+    return infer_alignment_from_windowed_batch(
+        num_samples=sample_count,
+        window_length=window_length,
+        horizon=horizon,
+        alignment={
+            "window_start": extra_fields.get("window_start"),
+            "window_end": extra_fields.get("window_end"),
+            "target_index": extra_fields.get("target_index"),
+            "horizon": extra_fields.get("horizon"),
+        },
+    )
+
+
+def maybe_raise_on_invalid_training_state(
+    *,
+    pred: torch.Tensor,
+    target: torch.Tensor,
+    loss: torch.Tensor,
+    model: DeVoModel,
+    context: Mapping[str, Any],
+) -> None:
+    if pred.device != target.device:
+        raise DeVoTrainingError(
+            "DeVo device mismatch between predictions and targets",
+            context=_merge_context(context, prediction_device=str(pred.device), target_device=str(target.device)),
+        )
+    if tuple(pred.shape) != tuple(target.shape):
+        raise DeVoTrainingError(
+            "DeVo prediction/target shape mismatch",
+            context=_merge_context(context, prediction_shape=list(pred.shape), target_shape=list(target.shape)),
+        )
+    if not torch.isfinite(pred).all():
+        raise DeVoTrainingError("DeVo predictions contain NaN or Inf", context=context)
+    if not torch.isfinite(target).all():
+        raise DeVoTrainingError("DeVo targets contain NaN or Inf", context=context)
+    if not torch.isfinite(loss):
+        raise DeVoTrainingError("DeVo loss became NaN or Inf", context=context)
+
+    gradients = [parameter.grad for parameter in model.parameters() if parameter.requires_grad]
+    if gradients and not any(grad is not None for grad in gradients):
+        raise DeVoTrainingError("DeVo backward pass produced no gradients", context=context)
+    for grad in gradients:
+        if grad is not None and not torch.isfinite(grad).all():
+            raise DeVoTrainingError("DeVo gradients contain NaN or Inf", context=context)
 
 
 def _to_loader(X: np.ndarray, Y: np.ndarray, *, batch_size: int, shuffle: bool, seed: int) -> DataLoader:
@@ -199,6 +264,9 @@ class DeVoMethod(BaseMethod):
     def fit(self, dataset_bundle: Any, **kwargs: Any) -> MethodResult:
         bundle = coerce_dataset_bundle(dataset_bundle)
         self.bundle_meta = bundle.meta
+        run_context = dict(kwargs.get("run_context", {}) or {})
+        run_context.setdefault("dataset_name", bundle.meta.dataset_name)
+        run_context.setdefault("seed", int(self.devo_config.seed))
         self._model_spec = {
             "window_length": int(bundle.meta.window_length),
             "input_dim": int(bundle.meta.input_dim),
@@ -219,6 +287,42 @@ class DeVoMethod(BaseMethod):
             horizon=bundle.meta.horizon,
             output_dim=bundle.meta.output_dim,
         )
+        train_alignment = _alignment_payload(
+            bundle.train,
+            sample_count=X_train.shape[0],
+            window_length=bundle.meta.window_length,
+            horizon=bundle.meta.horizon,
+        )
+        val_alignment = _alignment_payload(
+            bundle.val,
+            sample_count=X_val.shape[0],
+            window_length=bundle.meta.window_length,
+            horizon=bundle.meta.horizon,
+        )
+        try:
+            validate_alignment(
+                X_train,
+                Y_train,
+                window_length=bundle.meta.window_length,
+                input_dim=bundle.meta.input_dim,
+                horizon=bundle.meta.horizon,
+                output_dim=bundle.meta.output_dim,
+                alignment=train_alignment,
+            )
+            validate_alignment(
+                X_val,
+                Y_val,
+                window_length=bundle.meta.window_length,
+                input_dim=bundle.meta.input_dim,
+                horizon=bundle.meta.horizon,
+                output_dim=bundle.meta.output_dim,
+                alignment=val_alignment,
+            )
+        except ValueError as exc:
+            raise DeVoTrainingError(
+                "DeVo alignment validation failed before training",
+                context=_merge_context(run_context, stage="prepare", reason=str(exc)),
+            ) from exc
 
         self.model = self._build_model(**self._model_spec)
         optimizer = torch.optim.Adam(
@@ -253,7 +357,6 @@ class DeVoMethod(BaseMethod):
         best_epoch = 0
         best_state: Optional[Dict[str, torch.Tensor]] = None
         epochs_completed = 0
-        nonfinite_detected = False
         early_stopped = False
 
         for epoch in range(1, epochs + 1):
@@ -261,16 +364,26 @@ class DeVoMethod(BaseMethod):
             total = 0.0
             count = 0
 
-            for x_batch, y_batch in train_loader:
+            for batch_index, (x_batch, y_batch) in enumerate(train_loader, start=1):
                 x_batch = x_batch.to(self.device, dtype=self.dtype)
                 y_batch = y_batch.to(self.device, dtype=self.dtype)
                 optimizer.zero_grad(set_to_none=True)
                 pred = self.model(x_batch)
                 loss = torch.mean((pred - y_batch) ** 2)
-                if not torch.isfinite(loss):
-                    nonfinite_detected = True
-                    break
                 loss.backward()
+                maybe_raise_on_invalid_training_state(
+                    pred=pred,
+                    target=y_batch,
+                    loss=loss,
+                    model=self.model,
+                    context=_merge_context(
+                        run_context,
+                        stage="train",
+                        epoch=epoch,
+                        batch_index=batch_index,
+                        batch_size=int(x_batch.shape[0]),
+                    ),
+                )
                 if self.devo_config.grad_clip_norm is not None:
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.devo_config.grad_clip_norm)
                 optimizer.step()
@@ -278,12 +391,8 @@ class DeVoMethod(BaseMethod):
                 count += x_batch.shape[0]
 
             epochs_completed = epoch
-            if nonfinite_detected:
-                train_loss = float("nan")
-                val_loss = float("nan")
-            else:
-                train_loss = total / max(count, 1)
-                val_loss = self._evaluate_loss(val_loader)
+            train_loss = total / max(count, 1)
+            val_loss = self._evaluate_loss(val_loader)
             record = {
                 "epoch": float(epoch),
                 "train_loss": float(train_loss),
@@ -306,8 +415,6 @@ class DeVoMethod(BaseMethod):
                     f"val_loss={val_loss:.6f} device={device_label}"
                 )
 
-            if nonfinite_detected:
-                break
             if early_stop_patience is not None and best_epoch > 0 and (epoch - best_epoch) >= early_stop_patience:
                 early_stopped = True
                 break
@@ -317,7 +424,7 @@ class DeVoMethod(BaseMethod):
 
         final_train_loss = float(self.training_history[-1]["train_loss"]) if self.training_history else float("nan")
         final_val_loss = float(self.training_history[-1]["val_loss"]) if self.training_history else float("nan")
-        converged = bool(self.training_history) and np.isfinite(final_val_loss) and not nonfinite_detected
+        converged = bool(self.training_history) and np.isfinite(final_val_loss)
 
         self.training_summary = {
             "dataset_name": bundle.meta.dataset_name,
@@ -330,13 +437,24 @@ class DeVoMethod(BaseMethod):
             "best_val_loss": float(best_val_loss) if np.isfinite(best_val_loss) else float("nan"),
             "best_epoch": int(best_epoch),
             "converged": converged,
-            "had_nonfinite": bool(nonfinite_detected),
+            "had_nonfinite": not np.isfinite(final_val_loss),
             "early_stopped": bool(early_stopped),
             "device_type": self.runtime.device_type,
             "dtype": self.runtime.dtype_name,
             "feature_mode": self.devo_config.normalized_feature_mode(),
             "apply_multiplicity_correction": bool(self.devo_config.apply_multiplicity_correction),
             "num_branches": int(self.devo_config.num_branches),
+            "alignment": {
+                "mode": (
+                    "explicit"
+                    if any(key in (bundle.train.extra_fields or {}) for key in ("window_start", "window_end", "target_index"))
+                    else "inferred_relative_index"
+                ),
+                "window_start": int(train_alignment["window_start"][0]) if train_alignment["window_start"].size else None,
+                "window_end": int(train_alignment["window_end"][0]) if train_alignment["window_end"].size else None,
+                "target_index": int(train_alignment["target_index"][0]) if train_alignment["target_index"].size else None,
+                "horizon": int(bundle.meta.horizon),
+            },
         }
         self.is_fitted = converged
         return MethodResult(
@@ -352,6 +470,18 @@ class DeVoMethod(BaseMethod):
             raise RuntimeError("Call fit() before predict().")
 
         array = _prepare_input_array(X)
+        validate_alignment(
+            array,
+            None,
+            window_length=self.model.window_length,
+            input_dim=self.model.input_dim,
+            horizon=self.model.horizon,
+            alignment=infer_alignment_from_windowed_batch(
+                num_samples=array.shape[0],
+                window_length=self.model.window_length,
+                horizon=self.model.horizon,
+            ),
+        )
         batch_size = int(kwargs.get("batch_size", self.devo_config.eval_batch_size))
         self.model.eval()
         outputs = []

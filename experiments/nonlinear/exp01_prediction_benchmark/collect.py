@@ -15,6 +15,8 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from experiments.common import compute_config_hash
+
 
 DEFAULT_DATASET_ORDER = [
     "duffing",
@@ -75,6 +77,65 @@ def _read_result(path: Path) -> dict[str, Any]:
         raise ValueError(f"Result payload at {path} must be an object.")
     payload["result_path"] = str(path.resolve())
     return payload
+
+
+def _write_runs_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = [
+        "dataset",
+        "method",
+        "seed",
+        "run_id",
+        "config_hash",
+        "status",
+        "nmse",
+        "rmse",
+        "mse",
+        "result_path",
+    ]
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            metrics = dict(row.get("metrics", {}) or {})
+            writer.writerow(
+                {
+                    "dataset": row.get("dataset"),
+                    "method": row.get("method"),
+                    "seed": row.get("seed"),
+                    "run_id": row.get("run_id"),
+                    "config_hash": row.get("config_hash"),
+                    "status": row.get("status"),
+                    "nmse": metrics.get("nmse"),
+                    "rmse": metrics.get("rmse"),
+                    "mse": metrics.get("mse"),
+                    "result_path": row.get("result_path"),
+                }
+            )
+
+
+def _is_valid_run_dir(run_dir: Path) -> bool:
+    required = (
+        run_dir / "result.json",
+        run_dir / "status.json",
+        run_dir / "run_context.json",
+        run_dir / "resolved_config.json",
+        run_dir / "metrics.json",
+        run_dir / "artifacts_manifest.json",
+    )
+    if any(not path.is_file() for path in required):
+        return False
+    try:
+        result_payload = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+        status_payload = json.loads((run_dir / "status.json").read_text(encoding="utf-8"))
+        config_payload = json.loads((run_dir / "resolved_config.json").read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return False
+    if not isinstance(result_payload, dict) or not isinstance(status_payload, dict) or not isinstance(config_payload, dict):
+        return False
+    if result_payload.get("run_id") != status_payload.get("run_id"):
+        return False
+    return result_payload.get("config_hash") == compute_config_hash(config_payload)
 
 
 def _safe_float(value: Any) -> float | None:
@@ -296,7 +357,9 @@ def main() -> None:
     summary_dir = (args.output_dir or results_dir / "summary").expanduser().resolve()
     summary_dir.mkdir(parents=True, exist_ok=True)
 
-    result_files = sorted(results_dir.rglob("result.json"))
+    result_files = sorted(
+        run_dir / "result.json" for run_dir in results_dir.rglob("*") if _is_valid_run_dir(run_dir)
+    )
     if not result_files:
         raise FileNotFoundError(f"No result.json files found under {results_dir}")
 
@@ -307,6 +370,8 @@ def main() -> None:
 
     long_csv_path = summary_dir / "benchmark_summary_long.csv"
     _write_csv(long_csv_path, summary_rows)
+    runs_csv_path = summary_dir / "benchmark_runs.csv"
+    _write_runs_csv(runs_csv_path, results)
 
     headers = ["method", *profile["datasets"]]
     nmse_rows = _build_metric_matrix(summary_rows, datasets=profile["datasets"], methods=profile["methods"], metric_name="nmse")
@@ -359,6 +424,7 @@ def main() -> None:
         "num_result_files": len(result_files),
         "num_summary_rows": len(summary_rows),
         "long_csv": str(long_csv_path),
+        "runs_csv": str(runs_csv_path),
         "nmse_csv": str(nmse_csv_path),
         "rmse_csv": str(rmse_csv_path),
     }

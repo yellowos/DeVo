@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from datetime import datetime, timezone
@@ -50,6 +51,19 @@ def to_csv_scalar(value: Any) -> Any:
     if jsonable is None or isinstance(jsonable, (bool, int, float, str)):
         return jsonable
     return json.dumps(jsonable, sort_keys=True, ensure_ascii=True)
+
+
+def stable_json_dumps(value: Any) -> str:
+    return json.dumps(
+        to_jsonable(value),
+        sort_keys=True,
+        ensure_ascii=True,
+        separators=(",", ":"),
+    )
+
+
+def compute_mapping_hash(value: Any) -> str:
+    return hashlib.sha256(stable_json_dumps(value).encode("utf-8")).hexdigest()
 
 
 def flatten_mapping(

@@ -91,10 +91,33 @@ def _read_json(path: Path) -> Mapping[str, Any]:
     return payload
 
 
+def _to_jsonable(value: Any) -> Any:
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, Mapping):
+        return {str(key): _to_jsonable(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [_to_jsonable(item) for item in value]
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if hasattr(value, "to_dict") and callable(value.to_dict):
+        return _to_jsonable(value.to_dict())
+    if hasattr(value, "tolist") and callable(value.tolist):
+        try:
+            return _to_jsonable(value.tolist())
+        except Exception:
+            pass
+    return str(value)
+
+
 def _write_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
-        json.dump(payload, handle, indent=2, ensure_ascii=True)
+        json.dump(_to_jsonable(payload), handle, indent=2, ensure_ascii=True)
 
 
 def _deep_merge(base: Mapping[str, Any], override: Mapping[str, Any]) -> dict[str, Any]:

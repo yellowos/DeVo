@@ -101,13 +101,15 @@ def _resolve_split_manifest_path(
 ) -> Path:
     fallback_path = split_root / (default_name or f"{dataset}_split_manifest.json")
     resolved = _resolve_path(data_root, split_file)
-    if resolved is None:
-        return fallback_path
-    if resolved.exists():
+    if resolved is not None and resolved.exists():
         return resolved
+    if isinstance(split_file, str):
+        fallback_by_name = split_root / Path(split_file).name
+        if fallback_by_name.exists():
+            return fallback_by_name
     if fallback_path.exists():
         return fallback_path
-    return resolved
+    return resolved or fallback_path
 
 
 def _find_processed_manifest(processed_root: Path, dataset_name: str) -> Optional[Path]:

@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 import json
 from abc import ABC, abstractmethod
+from datetime import datetime
 from pathlib import Path
 from typing import Any, ClassVar, Mapping, Optional, Self
 
@@ -15,6 +16,32 @@ from .result_schema import KernelRecoveryResult, MethodResult
 
 
 PathLike = str | Path
+
+
+def _to_jsonable(value: Any) -> Any:
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, Mapping):
+        return {str(key): _to_jsonable(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [_to_jsonable(item) for item in value]
+    if hasattr(value, "item") and callable(value.item):
+        try:
+            return value.item()
+        except Exception:
+            pass
+    if hasattr(value, "tolist") and callable(value.tolist):
+        try:
+            return _to_jsonable(value.tolist())
+        except Exception:
+            pass
+    if hasattr(value, "to_dict") and callable(value.to_dict):
+        return _to_jsonable(value.to_dict())
+    return str(value)
 
 
 class KernelRecoveryNotSupportedError(NotImplementedError):
@@ -96,7 +123,7 @@ class BaseMethod(ABC):
             "state": dict(self.get_state()),
         }
         with target.open("w", encoding="utf-8") as handle:
-            json.dump(payload, handle, indent=2)
+            json.dump(_to_jsonable(payload), handle, indent=2)
         self._save_additional_state(target=target, payload=payload)
         self.model_state_path = str(target.resolve())
         return target
