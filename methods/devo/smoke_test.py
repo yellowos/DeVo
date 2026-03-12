@@ -99,17 +99,18 @@ def run_smoke_test() -> None:
 
     pred = method.predict(bundle.test.X[:8])
     recovered = method.recover_kernels(materialize_full=True, max_full_elements=500_000)
+    recovered_orders = recovered.kernels["orders"]
     attributions = method.attribute(bundle.test.X[:8], bundle.test.Y[:8])
     exported = method.export_parameters()
 
     assert method.supports_kernel_recovery() is True
     assert pred.shape == bundle.test.Y[:8].shape
     assert attributions.shape == bundle.test.X[:8].shape
-    assert len(recovered.orders) == 2
-    assert recovered.orders[0].canonical_indices.shape[1] == 1
-    assert recovered.orders[1].canonical_indices.shape[1] == 2
-    assert recovered.orders[1].full_tensor is not None
-    assert exported["orders"][2]["effective_parameters"].shape[-1] == recovered.orders[1].feature_count
+    assert len(recovered_orders) == 2
+    assert recovered_orders["1"]["canonical_indices"].shape[1] == 1
+    assert recovered_orders["2"]["canonical_indices"].shape[1] == 2
+    assert recovered_orders["2"]["full_tensor"] is not None
+    assert exported["orders"][2]["effective_parameters"].shape[-1] == recovered_orders["2"]["feature_count"]
 
     print("[DeVo smoke] device:", method.device.type)
     print("[DeVo smoke] prediction shape:", pred.shape)
@@ -118,11 +119,11 @@ def run_smoke_test() -> None:
         "[DeVo smoke] recovered orders:",
         [
             {
-                "order": order.order,
-                "feature_count": order.feature_count,
-                "full_tensor_shape": order.full_tensor_shape,
+                "order": order["order"],
+                "feature_count": order["feature_count"],
+                "full_tensor_shape": order["full_tensor_shape"],
             }
-            for order in recovered.orders
+            for order in recovered_orders.values()
         ],
     )
 

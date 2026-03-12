@@ -27,12 +27,16 @@ class DeVoConfig:
 
     orders: Tuple[int, ...] = (1, 2, 3)
     num_branches: int = 4
+    feature_mode: str = "canonical"
+    apply_multiplicity_correction: bool = True
     epochs: int = 25
     batch_size: int = 128
     eval_batch_size: int = 256
     learning_rate: float = 1e-3
     weight_decay: float = 1e-6
     grad_clip_norm: Optional[float] = 1.0
+    early_stop_patience: Optional[int] = None
+    early_stop_min_delta: float = 0.0
     feature_chunk_size: int = 4_096
     index_cache_limit: int = 500_000
     max_canonical_terms_per_order: int = 1_000_000
@@ -52,6 +56,12 @@ class DeVoConfig:
         if not unique or unique[0] <= 0:
             raise ValueError("orders must contain positive integers.")
         return tuple(unique)
+
+    def normalized_feature_mode(self) -> str:
+        mode = str(self.feature_mode).strip().lower() or "canonical"
+        if mode not in {"canonical", "full"}:
+            raise ValueError("feature_mode must be 'canonical' or 'full'.")
+        return mode
 
 
 class DeVoModel(nn.Module):
@@ -74,6 +84,7 @@ class DeVoModel(nn.Module):
         self.horizon = int(horizon)
         self.response_dim = self.horizon * self.output_dim
         self.orders = self.config.normalized_orders()
+        self.feature_mode = self.config.normalized_feature_mode()
 
         self.order_specs: Dict[int, CanonicalOrderSpec] = {}
         feature_counts: Dict[int, int] = {}
@@ -83,10 +94,11 @@ class DeVoModel(nn.Module):
                 window_length=self.window_length,
                 input_dim=self.input_dim,
                 index_cache_limit=self.config.index_cache_limit,
+                index_mode=self.feature_mode,
             )
             if spec.feature_count > self.config.max_canonical_terms_per_order:
                 raise ValueError(
-                    "Canonical feature count exceeds the configured memory budget: "
+                    "Feature count exceeds the configured memory budget: "
                     f"order={order}, feature_count={spec.feature_count}, "
                     f"max={self.config.max_canonical_terms_per_order}."
                 )

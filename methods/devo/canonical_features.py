@@ -1,4 +1,4 @@
-"""Canonical feature construction for structured Volterra models."""
+"""Feature construction for structured Volterra models."""
 
 from __future__ import annotations
 
@@ -73,14 +73,21 @@ class CanonicalOrderSpec:
         window_length: int,
         input_dim: int,
         index_cache_limit: int = 500_000,
+        index_mode: str = "canonical",
     ) -> None:
         if order <= 0:
             raise ValueError("order must be positive.")
         self.order = int(order)
         self.window_length = int(window_length)
         self.input_dim = int(input_dim)
+        self.index_mode = str(index_mode).strip().lower() or "canonical"
+        if self.index_mode not in {"canonical", "full"}:
+            raise ValueError("index_mode must be 'canonical' or 'full'.")
         self.flattened_dim = flat_slot_count(self.window_length, self.input_dim)
-        self.feature_count = canonical_parameter_count(self.flattened_dim, self.order)
+        if self.index_mode == "full":
+            self.feature_count = naive_full_tensor_parameter_count(self.flattened_dim, self.order)
+        else:
+            self.feature_count = canonical_parameter_count(self.flattened_dim, self.order)
         self.index_cache_limit = int(index_cache_limit)
         self._cached_indices: Optional[torch.Tensor] = None
         self._cached_multiplicity: Optional[torch.Tensor] = None
@@ -92,17 +99,25 @@ class CanonicalOrderSpec:
         return self._cached_indices is not None and self._cached_multiplicity is not None
 
     def _materialize_cache(self) -> None:
-        tuples = list(itertools.combinations_with_replacement(range(self.flattened_dim), self.order))
+        if self.index_mode == "full":
+            tuples = list(itertools.product(range(self.flattened_dim), repeat=self.order))
+        else:
+            tuples = list(itertools.combinations_with_replacement(range(self.flattened_dim), self.order))
         self._cached_indices = torch.tensor(tuples, dtype=torch.long)
-        self._cached_multiplicity = multiplicity_from_canonical_indices(self._cached_indices)
+        if self.index_mode == "full":
+            self._cached_multiplicity = torch.ones(self.feature_count, dtype=torch.float32)
+        else:
+            self._cached_multiplicity = multiplicity_from_canonical_indices(self._cached_indices)
 
-    def parameterization_summary(self) -> Dict[str, int]:
+    def parameterization_summary(self) -> Dict[str, int | str]:
         """Return a small summary contrasting naive and canonical sizes."""
 
         return {
             "order": self.order,
+            "index_mode": self.index_mode,
             "flattened_dim": self.flattened_dim,
-            "canonical_feature_count": self.feature_count,
+            "feature_count": self.feature_count,
+            "canonical_feature_count": canonical_parameter_count(self.flattened_dim, self.order),
             "naive_full_tensor_parameter_count": naive_full_tensor_parameter_count(
                 self.flattened_dim, self.order
             ),
@@ -128,7 +143,10 @@ class CanonicalOrderSpec:
             return
 
         start = 0
-        generator = itertools.combinations_with_replacement(range(self.flattened_dim), self.order)
+        if self.index_mode == "full":
+            generator = itertools.product(range(self.flattened_dim), repeat=self.order)
+        else:
+            generator = itertools.combinations_with_replacement(range(self.flattened_dim), self.order)
         while True:
             batch = list(itertools.islice(generator, chunk_size))
             if not batch:
@@ -139,7 +157,11 @@ class CanonicalOrderSpec:
                 start=start,
                 stop=stop,
                 indices=indices,
-                multiplicity=multiplicity_from_canonical_indices(indices),
+                multiplicity=(
+                    torch.ones(indices.shape[0], dtype=torch.float32)
+                    if self.index_mode == "full"
+                    else multiplicity_from_canonical_indices(indices)
+                ),
             )
             start = stop
 

@@ -1,6 +1,6 @@
 {
   "dataset_name": "hydraulic",
-  "generated_at": "2026-03-12T12:34:22.104145Z",
+  "generated_at": "2026-03-12T12:55:55.713167Z",
   "representation_name": "cycle_60",
   "representation_role": "main_experiment",
   "representation_description": "Main experiment representation with 60 points per cycle.",
@@ -13,7 +13,7 @@
     17
   ],
   "label_table_file": "hydraulic_cycle_labels.csv",
-  "split_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/hydraulic/hydraulic_split_manifest.json",
+  "split_file": "/Users/yellowos/.codex/worktrees/a7b0/EXPfinal/data/splits/hydraulic/hydraulic_split_manifest.json",
   "processed_files": {
     "train_X": "train_X.npy",
     "train_Y": "train_Y.npy",
@@ -825,7 +825,7 @@
           17
         ]
       },
-      "label_table_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/hydraulic/cycle_60/hydraulic_cycle_labels.csv",
+      "label_table_file": "/Users/yellowos/.codex/worktrees/a7b0/EXPfinal/data/processed/hydraulic/cycle_60/hydraulic_cycle_labels.csv",
       "stable_flag_retained": true,
       "class_names": [
         "healthy",
@@ -844,12 +844,12 @@
   },
   "bundle_artifacts": {
     "truth_file": null,
-    "grouping_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/hydraulic/subsystem_groups.json",
-    "protocol_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/hydraulic/single_fault_protocol.json",
+    "grouping_file": "/Users/yellowos/.codex/worktrees/a7b0/EXPfinal/data/metadata/hydraulic/subsystem_groups.json",
+    "protocol_file": "/Users/yellowos/.codex/worktrees/a7b0/EXPfinal/data/metadata/hydraulic/single_fault_protocol.json",
     "extra": {
-      "channel_map_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/hydraulic/channel_map.json",
-      "split_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/hydraulic/hydraulic_split_manifest.json",
-      "label_table_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/hydraulic/cycle_60/hydraulic_cycle_labels.csv",
+      "channel_map_file": "/Users/yellowos/.codex/worktrees/a7b0/EXPfinal/data/metadata/hydraulic/channel_map.json",
+      "split_file": "/Users/yellowos/.codex/worktrees/a7b0/EXPfinal/data/splits/hydraulic/hydraulic_split_manifest.json",
+      "label_table_file": "/Users/yellowos/.codex/worktrees/a7b0/EXPfinal/data/processed/hydraulic/cycle_60/hydraulic_cycle_labels.csv",
       "representation_name": "cycle_60"
     }
   }

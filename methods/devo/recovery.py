@@ -7,6 +7,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
+import numpy as np
 import torch
 
 from .multiplicity import effective_to_symmetric_coefficients
@@ -14,6 +15,38 @@ from .multiplicity import effective_to_symmetric_coefficients
 
 def _unique_permutations(index_tuple: Tuple[int, ...]) -> List[Tuple[int, ...]]:
     return list({tuple(value) for value in itertools.permutations(index_tuple)})
+
+
+def _aggregate_full_tensor_coefficients(
+    indices: torch.Tensor,
+    effective_coefficients: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Collapse a naive full-tensor parameterization into canonical tuples."""
+
+    if indices.ndim != 2:
+        raise ValueError("indices must have shape [feature_count, order].")
+    sorted_indices = torch.sort(indices, dim=1).values.detach().cpu().numpy().astype(np.int64, copy=False)
+    record_view = np.ascontiguousarray(sorted_indices).view(
+        np.dtype({"names": [f"f{i}" for i in range(sorted_indices.shape[1])], "formats": [sorted_indices.dtype] * sorted_indices.shape[1]})
+    ).reshape(-1)
+    unique_view, inverse = np.unique(record_view, return_inverse=True)
+    canonical = unique_view.view(sorted_indices.dtype).reshape(-1, sorted_indices.shape[1])
+    multiplicity = np.bincount(inverse, minlength=canonical.shape[0]).astype(np.float32, copy=False)
+
+    effective_np = effective_coefficients.detach().cpu().numpy()
+    response_dim = int(np.prod(effective_np.shape[:-1]))
+    effective_flat = effective_np.reshape(response_dim, effective_np.shape[-1])
+    aggregated = np.zeros((response_dim, canonical.shape[0]), dtype=effective_flat.dtype)
+    for row_idx in range(response_dim):
+        np.add.at(aggregated[row_idx], inverse, effective_flat[row_idx])
+    symmetric = aggregated / multiplicity[None, :]
+
+    return (
+        torch.from_numpy(canonical.astype(np.int64, copy=False)),
+        torch.from_numpy(multiplicity),
+        torch.from_numpy(aggregated.reshape(*effective_np.shape[:-1], canonical.shape[0])),
+        torch.from_numpy(symmetric.reshape(*effective_np.shape[:-1], canonical.shape[0])),
+    )
 
 
 @dataclass
@@ -141,15 +174,24 @@ def recover_devo_kernels(
 
     exported = model.export_parameters()
     limit = max_full_elements or model.config.max_full_recovery_elements
+    feature_mode = model.config.normalized_feature_mode()
+    apply_multiplicity_correction = bool(getattr(model.config, "apply_multiplicity_correction", True))
     recovered_orders: List[RecoveredKernelOrder] = []
 
     for order in model.orders:
         spec = model.order_specs[order]
         effective = exported["orders"][order]["effective_parameters"].clone()
         indices = spec.materialize_indices()
-        multiplicity = spec.materialize_multiplicity()
+        if feature_mode == "full":
+            indices, multiplicity, effective, symmetric = _aggregate_full_tensor_coefficients(indices, effective)
+        else:
+            multiplicity = spec.materialize_multiplicity()
+            symmetric = (
+                effective_to_symmetric_coefficients(effective, multiplicity)
+                if apply_multiplicity_correction
+                else effective.clone()
+            )
         lag_input = spec.decode_indices(indices)
-        symmetric = effective_to_symmetric_coefficients(effective, multiplicity)
 
         full_tensor_shape = (model.horizon, model.output_dim) + tuple(
             axis for _ in range(order) for axis in (model.window_length, model.input_dim)
@@ -182,6 +224,8 @@ def recover_devo_kernels(
         metadata={
             "num_branches": model.parameterization.num_branches,
             "feature_chunk_size": model.config.feature_chunk_size,
+            "feature_mode": feature_mode,
+            "apply_multiplicity_correction": apply_multiplicity_correction,
             "orders": list(model.orders),
         },
     )

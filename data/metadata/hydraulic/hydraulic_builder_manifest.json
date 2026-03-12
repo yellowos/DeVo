@@ -1,6 +1,6 @@
 {
   "dataset_name": "hydraulic",
-  "generated_at": "2026-03-12T12:34:22.285058Z",
+  "generated_at": "2026-03-12T12:55:56.166369Z",
   "raw_discovery": {
     "sensor_files": {
       "PS1": "PS1.txt",
@@ -28,7 +28,7 @@
     ]
   },
   "cycle_count": 2205,
-  "split_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/hydraulic/hydraulic_split_manifest.json",
+  "split_file": "/Users/yellowos/.codex/worktrees/a7b0/EXPfinal/data/splits/hydraulic/hydraulic_split_manifest.json",
   "default_representation": "cycle_60",
   "representations": {
     "cycle_60": {
