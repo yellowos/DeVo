@@ -1,0 +1,77 @@
+{
+  "dataset_name": "hydraulic",
+  "protocol_name": "hydraulic_single_fault_protocol_v2",
+  "description": "Protocol metadata for the hydraulic subsystem isolation study. The builder retains all cycles and derives healthy/single-fault/multi-fault fields at cycle level.",
+  "sample_granularity": "cycle",
+  "cycle_duration_seconds": 60,
+  "split_protocol": "hydraulic_cycle_bundle_holdout_v1",
+  "split_protocol_kind": "bundle_scaffold_only",
+  "split": {
+    "train": 0.70,
+    "val": 0.15,
+    "test": 0.15
+  },
+  "grouping": {
+    "level": "cycle",
+    "field": "cycle_id",
+    "notes": "Cycle-contiguous split for bundle scaffolding only. It is not the paper's final experiment protocol."
+  },
+  "data_fields": {
+    "cycle_field": "cycle_id",
+    "sample_id_field": "sample_id",
+    "stable_flag_field": "stable_flag",
+    "subsystem_field": "subsystem_label",
+    "fault_label_field": "fault_label",
+    "condition_field": "condition_type",
+    "fault_count_field": "num_degraded_components",
+    "single_fault_field": "is_single_component_fault",
+    "healthy_field": "is_healthy"
+  },
+  "nominal_conditions": {
+    "cooler_condition": 100,
+    "valve_condition": 100,
+    "pump_leakage": 0,
+    "accumulator_pressure": 130
+  },
+  "degraded_rules": {
+    "cooler": "cooler_condition != 100",
+    "valve": "valve_condition != 100",
+    "pump": "pump_leakage != 0",
+    "accumulator": "accumulator_pressure != 130"
+  },
+  "selection_logic": {
+    "healthy_rule": "All four component conditions match the nominal values.",
+    "single_component_rule": "Exactly one of cooler/valve/pump/accumulator deviates from nominal.",
+    "builder_keeps": "all_cycles",
+    "main_experiment_subset": "healthy or single_component_fault",
+    "stable_flag_filter_is_protocol_controlled": true
+  },
+  "stable_flag_policy": {
+    "field": "stable_flag",
+    "stable_value": 0,
+    "unstable_value": 1,
+    "builder_behavior": "retain_all_cycles",
+    "main_experiment_filter": "optional"
+  },
+  "labeling": {
+    "healthy_value": "healthy",
+    "single_component_value": "single_component_degraded",
+    "multi_component_value": "multi_component_degraded",
+    "allowed_fault_classes": ["cooler", "valve", "pump", "accumulator"],
+    "subsystem_class_order": [
+      "healthy",
+      "cooler",
+      "valve",
+      "pump",
+      "accumulator",
+      "multi_component"
+    ]
+  },
+  "single_fault_filter": {
+    "enable": false,
+    "allow_healthy": true,
+    "min_active_fault_count": 1,
+    "max_active_fault_count": 1,
+    "notes": "The builder only derives single-fault flags. Downstream experiments should filter by is_single_component_fault when needed."
+  }
+}

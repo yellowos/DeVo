@@ -1,0 +1,21 @@
+{
+  "dataset_name": "volterra_wiener",
+  "build_manifest": "data/metadata/nonlinear/volterra_wiener_processed_manifest.json",
+  "bundle_artifacts": {
+    "truth_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
+    "grouping_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/splits/nonlinear/volterra_wiener_split_manifest.json",
+    "protocol_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+    "extra": {
+      "kernel_reference_uri": "data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
+      "gfrf_available": true,
+      "task_family": "nonlinear"
+    }
+  },
+  "kernel_truth_reference": {
+    "kernel_reference_uri": "data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
+    "kernel_reference_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
+    "kernel_reference_payload": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/truth/volterra_wiener_kernel_truth_payload.npz"
+  },
+  "has_ground_truth_kernel": true,
+  "has_ground_truth_gfrf": true
+}

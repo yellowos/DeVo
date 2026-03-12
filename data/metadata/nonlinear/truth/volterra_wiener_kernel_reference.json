@@ -1,0 +1,35 @@
+{
+  "benchmark_name": "volterra_wiener",
+  "truth_type": "kernel",
+  "source": "data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
+  "status": "materialized",
+  "registration_type": "builder_materialized_reference",
+  "artifact_created_at": "2026-03-12T13:11:13.401978Z",
+  "notes": "Materialized order-1 Volterra-Wiener reference kernel for kernel recovery experiments.",
+  "kernel_coefficients_path": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/truth/volterra_wiener_kernel_truth_payload.npz",
+  "orders_materialized": [
+    1
+  ],
+  "derivation": {
+    "estimator": "windowed_linear_fir_least_squares",
+    "window_length": 128,
+    "num_windows": 187872,
+    "window_semantics": "oldest_to_most_recent",
+    "bias": -0.035889471186231106
+  },
+  "registration": {
+    "can_be_loaded_by_methods": true,
+    "reference_protocol": "nonlinear.kernel_truth_manifest.v1",
+    "reference_entry": {
+      "benchmark_name": "volterra_wiener",
+      "has_ground_truth_kernel": true,
+      "kernel_reference": "data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
+      "registration": {
+        "source": "explicit_kernel_artifact",
+        "format": "kernel_bundle_reference_json",
+        "reference_file": "data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
+        "notes": "Structured kernel truth location managed by Volterra–Wiener builder."
+      }
+    }
+  }
+}
