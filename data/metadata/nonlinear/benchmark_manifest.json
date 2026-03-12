@@ -114,7 +114,44 @@
           "source_type": "nonlinearbenchmark_official",
           "nonlinearbenchmark_name": "Cascaded Tanks",
           "nonlinearbenchmark_url": "https://www.nonlinearbenchmark.org/benchmarks/cascaded-tanks",
-          "canonical_reference_name": "Cascaded Tanks"
+          "canonical_reference_name": "Cascaded Tanks",
+          "raw_sources": [
+            {
+              "path": "CascadedTanksFiles/dataBenchmark.mat",
+              "format": "mat",
+              "priority": 1,
+              "preferred": true
+            },
+            {
+              "path": "dataBenchmark.mat",
+              "format": "mat",
+              "priority": 2,
+              "preferred": false
+            },
+            {
+              "path": "CascadedTanksFiles/dataBenchmark.csv",
+              "format": "csv",
+              "priority": 3,
+              "preferred": false
+            },
+            {
+              "path": "dataBenchmark.csv",
+              "format": "csv",
+              "priority": 4,
+              "preferred": false
+            }
+          ],
+          "raw_field_mapping": {
+            "estimation": {
+              "u": "uEst",
+              "y": "yEst"
+            },
+            "validation": {
+              "u": "uVal",
+              "y": "yVal"
+            },
+            "sampling_period": "Ts"
+          }
         }
       }
     }

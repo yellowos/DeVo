@@ -1,0 +1,60 @@
+{
+  "dataset_name": "cascaded_tanks",
+  "raw_root": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/raw/nonlinear/cascaded_tanks",
+  "window_length": 128,
+  "horizon": 1,
+  "generated_at": "2026-03-12T09:40:44.767268Z",
+  "raw_file_candidates": [
+    "CascadedTanksFiles/dataBenchmark.mat",
+    "dataBenchmark.mat",
+    "CascadedTanksFiles/dataBenchmark.csv",
+    "dataBenchmark.csv"
+  ],
+  "raw_source": {
+    "selected_path": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/raw/nonlinear/cascaded_tanks/CascadedTanksFiles/dataBenchmark.mat",
+    "relative_path": "CascadedTanksFiles/dataBenchmark.mat",
+    "discovery_method": "whitelist",
+    "raw_format": "mat",
+    "matched_candidate": "CascadedTanksFiles/dataBenchmark.mat",
+    "candidate_rank": 1
+  },
+  "raw_field_mapping": {
+    "estimation": {
+      "u": "uEst",
+      "y": "yEst"
+    },
+    "validation": {
+      "u": "uVal",
+      "y": "yVal"
+    },
+    "sampling_period": "Ts"
+  },
+  "segment_roles": {
+    "estimation": {
+      "role": "train_source",
+      "split_targets": [
+        "train"
+      ],
+      "raw_fields": {
+        "u": "uEst",
+        "y": "yEst"
+      },
+      "raw_samples": 1024,
+      "window_count": 896
+    },
+    "validation": {
+      "role": "holdout_source",
+      "split_targets": [
+        "val",
+        "test"
+      ],
+      "raw_fields": {
+        "u": "uVal",
+        "y": "yVal"
+      },
+      "raw_samples": 1024,
+      "window_count": 896
+    }
+  },
+  "sampling_period": 4.0
+}

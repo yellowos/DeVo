@@ -426,6 +426,67 @@ def validate_nonlinear_dataset(
         if bool(gfrf_entry.get("has_ground_truth_gfrf", False)) != meta.has_ground_truth_gfrf:
             report.error(f"{dataset}: gfrf manifest flag mismatch with bundle meta.")
 
+    if dataset == "cascaded_tanks":
+        benchmark_extra = benchmark_entry.get("artifacts", {}).get("extra", {})
+        raw_sources = benchmark_extra.get("raw_sources")
+        if not isinstance(raw_sources, list) or not any(
+            isinstance(item, Mapping) and "dataBenchmark" in str(item.get("path", ""))
+            for item in raw_sources
+        ):
+            report.error("cascaded_tanks: benchmark_manifest is missing dataBenchmark raw source traceability.")
+
+        raw_field_mapping = benchmark_extra.get("raw_field_mapping")
+        if not isinstance(raw_field_mapping, Mapping):
+            report.error("cascaded_tanks: benchmark_manifest is missing raw_field_mapping.")
+
+        raw_trace = manifest_payload.get("raw_source")
+        if not isinstance(raw_trace, Mapping):
+            meta_raw_trace = meta.extras.get("raw_source") if isinstance(meta.extras, Mapping) else None
+            artifact_raw_trace = artifacts.extra.get("raw_source") if isinstance(artifacts.extra, Mapping) else None
+            raw_trace = meta_raw_trace if isinstance(meta_raw_trace, Mapping) else artifact_raw_trace
+
+        if not isinstance(raw_trace, Mapping):
+            report.error("cascaded_tanks: processed manifest or bundle metadata is missing raw_source.")
+        else:
+            selected_path = raw_trace.get("selected_path") or raw_trace.get("path")
+            if not isinstance(selected_path, str) or "dataBenchmark" not in Path(selected_path).name:
+                report.error("cascaded_tanks: raw_source.selected_path must reference dataBenchmark.mat/csv.")
+            else:
+                _artifact_path_ok(
+                    report,
+                    dataset,
+                    selected_path,
+                    "raw_source.selected_path",
+                    data_root,
+                )
+            if raw_trace.get("raw_format") not in {"mat", "csv"}:
+                report.error("cascaded_tanks: raw_source.raw_format must be 'mat' or 'csv'.")
+            if raw_trace.get("discovery_method") not in {"whitelist", "fallback"}:
+                report.warning("cascaded_tanks: raw_source.discovery_method should be whitelist or fallback.")
+
+        processed_segment_roles = manifest_payload.get("segment_roles")
+        if not isinstance(processed_segment_roles, Mapping):
+            report.error("cascaded_tanks: processed manifest is missing segment_roles.")
+        else:
+            for segment_name in ("estimation", "validation"):
+                segment_spec = processed_segment_roles.get(segment_name)
+                if not isinstance(segment_spec, Mapping):
+                    report.error(f"cascaded_tanks: processed manifest missing segment role '{segment_name}'.")
+
+        split_file = manifest_payload.get("split_file")
+        split_path = (data_root / split_file) if isinstance(split_file, str) and not Path(split_file).is_absolute() else Path(split_file) if isinstance(split_file, str) else split_root / f"{dataset}_split_manifest.json"
+        split_payload = _read_json(split_path)
+        split_sources = split_payload.get("split_sources")
+        expected_split_sources = {"train": "estimation", "val": "validation", "test": "validation"}
+        if split_sources != expected_split_sources:
+            report.error(
+                "cascaded_tanks: split_sources must map train->estimation and val/test->validation."
+            )
+
+        split_segment_roles = split_payload.get("segment_roles")
+        if not isinstance(split_segment_roles, Mapping):
+            report.error("cascaded_tanks: split manifest is missing segment_roles.")
+
     return report.ok
 
 
@@ -754,4 +815,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

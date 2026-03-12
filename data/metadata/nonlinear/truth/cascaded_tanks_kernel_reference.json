@@ -1,0 +1,9 @@
+{
+  "dataset_name": "cascaded_tanks",
+  "truth_type": "kernel",
+  "status": "not_available",
+  "reference_uri": null,
+  "artifact_type": "truth_reference_registry",
+  "notes": "kernel truth reference for cascaded_tanks (protocol-driven). Explicitly keep as placeholder when not available.",
+  "registered_at": "2026-03-12T09:40:44.772432Z"
+}
