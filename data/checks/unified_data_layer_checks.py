@@ -91,6 +91,25 @@ def _pick_first_existing(path_root: Path, candidates: Sequence[Path]) -> Optiona
     return None
 
 
+def _resolve_split_manifest_path(
+    data_root: Path,
+    split_root: Path,
+    dataset: str,
+    split_file: Optional[Any],
+    *,
+    default_name: Optional[str] = None,
+) -> Path:
+    fallback_path = split_root / (default_name or f"{dataset}_split_manifest.json")
+    resolved = _resolve_path(data_root, split_file)
+    if resolved is None:
+        return fallback_path
+    if resolved.exists():
+        return resolved
+    if fallback_path.exists():
+        return fallback_path
+    return resolved
+
+
 def _find_processed_manifest(processed_root: Path, dataset_name: str) -> Optional[Path]:
     candidates = [
         processed_root / f"{dataset_name}_processed_manifest.json",
@@ -284,11 +303,12 @@ def validate_generic_bundle(
         report.error(f"{dataset}: cannot find processed manifest under {processed_root}")
         return False
     manifest_payload = _read_json(manifest)
-    split_file = manifest_payload.get("split_file")
-    if isinstance(split_file, str):
-        split_path = (data_root / split_file) if not Path(split_file).is_absolute() else Path(split_file)
-    else:
-        split_path = split_root / f"{dataset}_split_manifest.json"
+    split_path = _resolve_split_manifest_path(
+        data_root=data_root,
+        split_root=split_root,
+        dataset=dataset,
+        split_file=manifest_payload.get("split_file"),
+    )
     if not split_path.exists():
         report.error(f"{dataset}: split manifest missing at {split_path}")
         return False
@@ -474,8 +494,12 @@ def validate_nonlinear_dataset(
                 if not isinstance(segment_spec, Mapping):
                     report.error(f"cascaded_tanks: processed manifest missing segment role '{segment_name}'.")
 
-        split_file = manifest_payload.get("split_file")
-        split_path = (data_root / split_file) if isinstance(split_file, str) and not Path(split_file).is_absolute() else Path(split_file) if isinstance(split_file, str) else split_root / f"{dataset}_split_manifest.json"
+        split_path = _resolve_split_manifest_path(
+            data_root=data_root,
+            split_root=split_root,
+            dataset=dataset,
+            split_file=manifest_payload.get("split_file"),
+        )
         split_payload = _read_json(split_path)
         split_sources = split_payload.get("split_sources")
         expected_split_sources = {"train": "estimation", "val": "validation", "test": "validation"}
@@ -535,8 +559,12 @@ def validate_nonlinear_dataset(
                 if source.get("raw_format") not in {"mat", "csv"}:
                     report.error(f"coupled_duffing: raw_sources.{key}.raw_format must be 'mat' or 'csv'.")
 
-        split_file = manifest_payload.get("split_file")
-        split_path = (data_root / split_file) if isinstance(split_file, str) and not Path(split_file).is_absolute() else Path(split_file) if isinstance(split_file, str) else split_root / f"{dataset}_split_manifest.json"
+        split_path = _resolve_split_manifest_path(
+            data_root=data_root,
+            split_root=split_root,
+            dataset=dataset,
+            split_file=manifest_payload.get("split_file"),
+        )
         split_payload = _read_json(split_path)
 
         expected_split_sources = {
@@ -693,7 +721,15 @@ def validate_hydraulic_dataset(report: CheckReport, data_root: Path) -> bool:
     if manifest.get("representation_name") != "cycle_60":
         report.error("hydraulic: top-level processed manifest must default to representation cycle_60.")
 
-    split_payload = _read_json((data_root / manifest.get("split_file") if isinstance(manifest.get("split_file"), str) else split_root / "hydraulic_split_manifest.json"))
+    split_payload = _read_json(
+        _resolve_split_manifest_path(
+            data_root=data_root,
+            split_root=split_root,
+            dataset=dataset,
+            split_file=manifest.get("split_file"),
+            default_name="hydraulic_split_manifest.json",
+        )
+    )
     processed_files = _processed_file_map(manifest)
     split_arrays = _load_split_payloads(processed_root, manifest, dataset)
 
@@ -763,7 +799,15 @@ def validate_tep_dataset(report: CheckReport, data_root: Path) -> bool:
 
     manifest = _read_json(_find_processed_manifest(processed_root, dataset))
     meta_payload, artifact_payload = _get_bundle_payload(manifest, processed_root)
-    split_payload = _read_json((data_root / manifest.get("split_file") if isinstance(manifest.get("split_file"), str) else split_root / "tep_mode_holdout_split_manifest.json"))
+    split_payload = _read_json(
+        _resolve_split_manifest_path(
+            data_root=data_root,
+            split_root=split_root,
+            dataset=dataset,
+            split_file=manifest.get("split_file"),
+            default_name="tep_mode_holdout_split_manifest.json",
+        )
+    )
 
     manifest_meta = DatasetMeta.from_mapping(meta_payload)
     if manifest_meta.input_dim != 53:

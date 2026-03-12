@@ -237,6 +237,82 @@ class DataAdapterSmokeTest(unittest.TestCase):
         self.assertTrue(set(train_sample_id.tolist()).isdisjoint(set(test_sample_id.tolist())))
         self.assertTrue(set(val_sample_id.tolist()).isdisjoint(set(test_sample_id.tolist())))
 
+    def test_validate_generic_bundle_falls_back_from_missing_absolute_split_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            data_root = tmp_path / "data"
+            processed_root = data_root / "processed" / "nonlinear" / "toy_portable"
+            split_root = data_root / "splits" / "nonlinear"
+            processed_root.mkdir(parents=True, exist_ok=True)
+            split_root.mkdir(parents=True, exist_ok=True)
+
+            split_indices: dict[str, list[int]] = {}
+            split_layout = {"train": 4, "val": 2, "test": 2}
+            split_offsets = {"train": 0, "val": 100, "test": 200}
+            for split_name, num_samples in split_layout.items():
+                split = _build_split(
+                    np.random.default_rng(23 + len(split_name)),
+                    num_samples=num_samples,
+                    window_length=4,
+                    input_dim=2,
+                    output_dim=1,
+                )
+                sample_ids = np.arange(
+                    split_offsets[split_name],
+                    split_offsets[split_name] + num_samples,
+                    dtype=np.int32,
+                )
+                np.save(processed_root / f"{split_name}_X.npy", split["X"])
+                np.save(processed_root / f"{split_name}_Y.npy", split["Y"])
+                np.save(processed_root / f"{split_name}_sample_id.npy", sample_ids)
+                split_indices[split_name] = sample_ids.tolist()
+
+            split_path = split_root / "toy_portable_split_manifest.json"
+            split_path.write_text(json.dumps({"split_indices": split_indices}), encoding="utf-8")
+
+            manifest = {
+                "bundle_meta": {
+                    "dataset_name": "toy_portable",
+                    "task_family": "nonlinear",
+                    "input_dim": 2,
+                    "output_dim": 1,
+                    "window_length": 4,
+                    "horizon": 1,
+                    "split_protocol": "nonlinear_temporal_grouped_holdout_v1",
+                    "has_ground_truth_kernel": False,
+                    "has_ground_truth_gfrf": False,
+                    "extras": {},
+                },
+                "bundle_artifacts": {},
+                "processed_files": {
+                    "train_X": "train_X.npy",
+                    "train_Y": "train_Y.npy",
+                    "train_sample_id": "train_sample_id.npy",
+                    "val_X": "val_X.npy",
+                    "val_Y": "val_Y.npy",
+                    "val_sample_id": "val_sample_id.npy",
+                    "test_X": "test_X.npy",
+                    "test_Y": "test_Y.npy",
+                    "test_sample_id": "test_sample_id.npy",
+                },
+                "split_file": "/tmp/nonexistent/toy_portable_split_manifest.json",
+            }
+            manifest_path = processed_root / "toy_portable_processed_manifest.json"
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+            report = CheckReport()
+            ok = validate_generic_bundle(
+                report=report,
+                dataset="toy_portable",
+                data_root=data_root,
+                family=TaskFamily.NONLINEAR,
+                processed_root=processed_root,
+                split_root=split_root,
+            )
+
+            self.assertTrue(ok)
+            self.assertEqual(report.errors, [])
+
     def test_hydraulic_raw_channel_layout_matches_protocol_expectation(self) -> None:
         raw_root = self.root / "data" / "raw" / "hydraulic"
         expected_channels = [
