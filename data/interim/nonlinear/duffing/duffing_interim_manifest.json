@@ -1,6 +1,6 @@
 {
   "dataset_name": "duffing",
-  "generated_at": "2026-03-12T09:02:34.250841Z",
+  "generated_at": "2026-03-12T09:07:39.152670Z",
   "raw_candidates": [
     "duffing.mat",
     "duffing_raw.npz",

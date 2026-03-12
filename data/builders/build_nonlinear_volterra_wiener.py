@@ -35,6 +35,9 @@ class VolterraWienerBuilderConfig:
     horizon: int = 1
     split_protocol: str = "nonlinear_temporal_grouped_holdout_v1"
     raw_file_candidates: tuple[str, ...] = (
+        "wiener_hammerstein.mat",
+        "WienerHammerBenchMark.mat",
+        "wienerhammerbenchmark.mat",
         "volterra_wiener.mat",
         "volterra_wiener_raw.npz",
         "volterra_wiener_processed.npz",
@@ -70,8 +73,16 @@ def _find_first_existing(root: Path, names: Sequence[str]) -> Optional[Path]:
             continue
         stem = candidate.stem.lower()
         suffix = candidate.suffix.lower()
-        if suffix in {".mat", ".npz", ".npy", ".csv", ".txt"} and "volterra" in stem:
+        if suffix in {".mat", ".npz", ".npy", ".csv", ".txt"} and (
+            "volterra" in stem or "wiener" in stem or "wiener-hammer" in stem
+        ):
             return candidate
+        if suffix in {".mat", ".npz", ".npy", ".csv", ".txt"}:
+            parent_stem = candidate.parent.name.lower()
+            if ("wiener" in parent_stem and "hammer" in parent_stem) or (
+                "volterra" in parent_stem and "wiener" in parent_stem
+            ):
+                return candidate
     return None
 
 
@@ -79,6 +90,8 @@ def _to_float2d(value: Any, key: str) -> np.ndarray:
     arr = np.asarray(value)
     if arr.ndim == 1:
         arr = arr.reshape(-1, 1)
+    if arr.ndim == 2 and arr.shape[0] == 1 and arr.shape[1] > 1:
+        arr = arr.T
     if arr.ndim != 2:
         raise VolterraWienerBuilderError(f"{key} must be 1D or 2D numeric array.")
     if not np.issubdtype(arr.dtype, np.number):
@@ -154,11 +167,11 @@ def load_raw(raw_root: Path, cfg: VolterraWienerBuilderConfig) -> Dict[str, Any]
                 "Could not parse .mat without scipy support."
             ) from exc
 
-        for key in ("u", "input", "u_in"):
+        for key in ("u", "input", "u_in", "uBenchMark", "uBenchmark", "uWiener", "U"):
             if key in payload and isinstance(payload[key], np.ndarray):
                 u = payload[key]
                 break
-        for key in ("y", "output", "y_out"):
+        for key in ("y", "output", "y_out", "yBenchMark", "yBenchmark", "Y"):
             if key in payload and isinstance(payload[key], np.ndarray):
                 y = payload[key]
                 break

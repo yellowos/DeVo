@@ -1,6 +1,6 @@
 {
   "dataset_name": "duffing",
-  "generated_at": "2026-03-12T09:02:34.304196Z",
+  "generated_at": "2026-03-12T09:07:39.195242Z",
   "processed_root": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/processed/nonlinear/duffing",
   "split_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/nonlinear/duffing_split_manifest.json",
   "protocol_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
