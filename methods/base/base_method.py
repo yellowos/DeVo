@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import json
 import importlib
+import json
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, ClassVar, Mapping, Optional, Self
@@ -131,6 +131,10 @@ class BaseMethod(ABC):
                     method_cls = get_method_class(serialized_method_name)
                 else:
                     raise
+            base_loader = getattr(BaseMethod.load, "__func__", BaseMethod.load)
+            method_loader = getattr(method_cls.load, "__func__", method_cls.load)
+            if method_cls is not BaseMethod and method_loader is not base_loader:
+                return method_cls.load(source)
         else:
             if isinstance(serialized_method_name, str) and serialized_method_name.strip():
                 expected_name = cls.METHOD_NAME or cls.__name__.lower()
