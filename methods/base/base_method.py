@@ -40,8 +40,11 @@ class BaseMethod(ABC):
     ) -> None:
         self.config: dict[str, Any] = dict(config or {})
         self.runtime: DeviceContext = select_device(preferred_device=device, preferred_dtype=dtype)
+        self.device: Any = self.runtime.device
+        self.dtype: Any = self.runtime.dtype
         self.training_summary: dict[str, Any] = {}
         self.model_state_path: Optional[str] = None
+        self.bundle_meta: Any = None
         self.is_fitted: bool = False
 
     @staticmethod
@@ -152,6 +155,8 @@ class BaseMethod(ABC):
                 preferred_device=runtime_payload.get("device_type"),
                 preferred_dtype=runtime_payload.get("dtype"),
             )
+        instance.device = instance.runtime.device
+        instance.dtype = instance.runtime.dtype
         summary = payload.get("training_summary", {})
         if isinstance(summary, Mapping):
             instance.training_summary = dict(summary)

@@ -167,3 +167,9 @@ def select_device(
         mps_available=mps_available,
         fallback_reason=" ".join(fallback_reasons) if fallback_reasons else None,
     )
+
+
+def select_default_device(preferred: Optional[str] = None) -> Any:
+    """Backward-compatible device selection helper used by older methods code."""
+
+    return select_device(preferred_device=preferred).device

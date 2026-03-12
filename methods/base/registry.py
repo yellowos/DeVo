@@ -12,6 +12,7 @@ _DEFAULT_METHODS_IMPORTED = False
 
 _LAZY_IMPORT_CANDIDATES: dict[str, tuple[str, ...]] = {
     "arx": ("methods.baselines.arx_var",),
+    "devo": ("methods.devo",),
     "var": ("methods.baselines.arx_var",),
 }
 
