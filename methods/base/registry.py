@@ -96,6 +96,15 @@ class MethodRegistry:
 
 
 METHOD_REGISTRY = MethodRegistry()
+_BUILTIN_METHODS_LOADED = False
+
+
+def _ensure_builtin_methods_loaded() -> None:
+    global _BUILTIN_METHODS_LOADED
+    if _BUILTIN_METHODS_LOADED:
+        return
+    importlib.import_module("methods.baselines")
+    _BUILTIN_METHODS_LOADED = True
 
 
 def register_method(
@@ -110,12 +119,15 @@ def register_method(
 
 
 def get_method_class(name: str) -> type[BaseMethod]:
+    _ensure_builtin_methods_loaded()
     return METHOD_REGISTRY.get(name)
 
 
 def create_method(name: str, **kwargs: Any) -> BaseMethod:
+    _ensure_builtin_methods_loaded()
     return METHOD_REGISTRY.create(name, **kwargs)
 
 
 def list_registered_methods() -> list[str]:
+    _ensure_builtin_methods_loaded()
     return METHOD_REGISTRY.list()
