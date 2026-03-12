@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import importlib
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, ClassVar, Mapping, Optional, Self
@@ -84,6 +85,7 @@ class BaseMethod(ABC):
         payload = {
             "method_name": self.method_name,
             "class_name": self.__class__.__name__,
+            "module_name": self.__class__.__module__,
             "config": dict(self.config),
             "runtime": self.runtime.to_dict(),
             "training_summary": dict(self.training_summary),
@@ -120,7 +122,15 @@ class BaseMethod(ABC):
 
             if not isinstance(serialized_method_name, str) or not serialized_method_name.strip():
                 raise ValueError("Serialized payload missing method_name.")
-            method_cls = get_method_class(serialized_method_name)
+            try:
+                method_cls = get_method_class(serialized_method_name)
+            except KeyError:
+                module_name = payload.get("module_name")
+                if isinstance(module_name, str) and module_name.strip():
+                    importlib.import_module(module_name)
+                    method_cls = get_method_class(serialized_method_name)
+                else:
+                    raise
         else:
             if isinstance(serialized_method_name, str) and serialized_method_name.strip():
                 expected_name = cls.METHOD_NAME or cls.__name__.lower()
