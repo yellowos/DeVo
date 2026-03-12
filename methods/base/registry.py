@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import importlib
 from typing import Any, Callable, Dict, TypeVar
 
 from .base_method import BaseMethod
 
 MethodT = TypeVar("MethodT", bound=BaseMethod)
+_DEFAULT_METHODS_IMPORTED = False
 
 
 def _normalize_name(name: str) -> str:
@@ -14,6 +16,14 @@ def _normalize_name(name: str) -> str:
     if not normalized:
         raise ValueError("Method name must be a non-empty string.")
     return normalized
+
+
+def _ensure_default_methods_registered() -> None:
+    global _DEFAULT_METHODS_IMPORTED
+    if _DEFAULT_METHODS_IMPORTED:
+        return
+    importlib.import_module("methods.baselines")
+    _DEFAULT_METHODS_IMPORTED = True
 
 
 class MethodRegistry:
@@ -46,16 +56,19 @@ class MethodRegistry:
         return _wrap
 
     def get(self, name: str) -> type[BaseMethod]:
+        _ensure_default_methods_registered()
         key = _normalize_name(name)
         if key not in self._registry:
             raise KeyError(f"Unknown method: {name}")
         return self._registry[key]
 
     def create(self, name: str, **kwargs: Any) -> BaseMethod:
+        _ensure_default_methods_registered()
         method_cls = self.get(name)
         return method_cls(**kwargs)
 
     def list(self) -> list[str]:
+        _ensure_default_methods_registered()
         return sorted(self._registry)
 
 
