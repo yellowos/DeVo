@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 from typing import Any, Callable, Dict, TypeVar
 
 from .base_method import BaseMethod
@@ -14,6 +15,14 @@ def _normalize_name(name: str) -> str:
     if not normalized:
         raise ValueError("Method name must be a non-empty string.")
     return normalized
+
+
+def _lazy_import_candidates(name: str) -> tuple[str, ...]:
+    return (
+        f"methods.baselines.{name}",
+        f"methods.baselines.{name}.{name}_method",
+        f"methods.baselines.{name}.method",
+    )
 
 
 class MethodRegistry:
@@ -48,6 +57,8 @@ class MethodRegistry:
     def get(self, name: str) -> type[BaseMethod]:
         key = _normalize_name(name)
         if key not in self._registry:
+            self._attempt_lazy_import(key)
+        if key not in self._registry:
             raise KeyError(f"Unknown method: {name}")
         return self._registry[key]
 
@@ -57,6 +68,17 @@ class MethodRegistry:
 
     def list(self) -> list[str]:
         return sorted(self._registry)
+
+    def _attempt_lazy_import(self, key: str) -> None:
+        for module_name in _lazy_import_candidates(key):
+            try:
+                importlib.import_module(module_name)
+            except ModuleNotFoundError as exc:
+                if exc.name != module_name:
+                    raise
+                continue
+            if key in self._registry:
+                return
 
 
 METHOD_REGISTRY = MethodRegistry()
