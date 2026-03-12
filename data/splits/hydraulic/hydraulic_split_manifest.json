@@ -3,7 +3,7 @@
   "protocol_name": "hydraulic_single_fault_protocol_v2",
   "split_protocol": "hydraulic_cycle_bundle_holdout_v1",
   "split_kind": "bundle_scaffold_only",
-  "generated_at": "2026-03-12T12:34:22.036209Z",
+  "generated_at": "2026-03-12T12:55:55.646596Z",
   "split_indices": {
     "train": [
       0,

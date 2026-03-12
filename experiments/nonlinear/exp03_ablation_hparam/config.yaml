@@ -1,0 +1,127 @@
+experiment:
+  name: exp03_ablation_hparam
+  output_root: ../../../results/nonlinear/exp03_ablation_hparam
+  seeds: [7]
+
+datasets:
+  volterra_wiener:
+    manifest: ../../../data/processed/nonlinear/volterra_wiener/volterra_wiener_processed_manifest.json
+    evaluate:
+      predict: true
+      recover_kernels: true
+      compute_nmse: true
+      compute_knmse: true
+      compute_gfrf_re: false
+  duffing:
+    manifest: ../../../data/processed/nonlinear/duffing/duffing_processed_manifest.json
+    evaluate:
+      predict: true
+      recover_kernels: true
+      compute_nmse: true
+      compute_knmse: false
+      compute_gfrf_re: true
+  silverbox:
+    manifest: ../../../data/processed/nonlinear/silverbox/silverbox_processed_manifest.json
+    evaluate:
+      predict: true
+      recover_kernels: false
+      compute_nmse: true
+      compute_knmse: false
+      compute_gfrf_re: false
+
+method:
+  base:
+    orders: [1, 2, 3]
+    num_branches: 4
+    feature_mode: canonical
+    apply_multiplicity_correction: true
+    epochs: 8
+    batch_size: 128
+    eval_batch_size: 256
+    learning_rate: 0.001
+    weight_decay: 1.0e-6
+    grad_clip_norm: 1.0
+    early_stop_patience: 2
+    early_stop_min_delta: 0.0
+    feature_chunk_size: 4096
+    index_cache_limit: 500000
+    max_canonical_terms_per_order: 500000
+    max_full_recovery_elements: 4000000
+    include_bias: true
+    init_scale: 0.01
+    verbose: false
+    log_every: 1
+    device: auto
+    dtype: float32
+
+suites:
+  smoke:
+    slice:
+      train: 96
+      val: 48
+      test: 48
+    data_overrides:
+      memory_depth: 16
+    method_overrides:
+      epochs: 2
+      batch_size: 24
+      eval_batch_size: 48
+      feature_chunk_size: 512
+      max_canonical_terms_per_order: 50000
+      max_full_recovery_elements: 500000
+  full:
+    slice:
+      train: null
+      val: null
+      test: null
+    data_overrides: {}
+    method_overrides: {}
+
+ablation:
+  benchmarks: [volterra_wiener, duffing]
+  variants:
+    naive_full_tensor:
+      label: Naive full tensor
+      method_overrides:
+        feature_mode: full
+        apply_multiplicity_correction: true
+        num_branches: 1
+        max_canonical_terms_per_order: 5000000
+    ordered_only_no_multiplicity:
+      label: Ordered only w/o multiplicity correction
+      method_overrides:
+        feature_mode: canonical
+        apply_multiplicity_correction: false
+        num_branches: 1
+    devo_no_multi_branch:
+      label: DeVo w/o multi-branch
+      method_overrides:
+        feature_mode: canonical
+        apply_multiplicity_correction: true
+        num_branches: 1
+    devo_full:
+      label: DeVo (full setting)
+      method_overrides:
+        feature_mode: canonical
+        apply_multiplicity_correction: true
+        num_branches: 4
+
+hyperparameter:
+  benchmarks: [volterra_wiener, duffing, silverbox]
+  base_variant: devo_full
+  sweeps:
+    kernel_order:
+      label: Kernel order P
+      parameter: kernel_order
+      values: [1, 2, 3]
+      smoke_values: [2, 3]
+    memory_depth:
+      label: Memory depth M
+      parameter: memory_depth
+      values: [32, 64, 128]
+      smoke_values: [8, 16]
+    branch_number:
+      label: Branch number K
+      parameter: branch_number
+      values: [1, 2, 4]
+      smoke_values: [1, 2]

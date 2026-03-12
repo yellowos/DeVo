@@ -143,6 +143,8 @@ def _to_devo_kernel_recovery_result(bundle: RecoveredKernelBundle) -> KernelReco
             "orders": sorted(int(order) for order in bundle.metadata.get("orders", [])),
             "num_branches": int(bundle.metadata.get("num_branches", 1)),
             "feature_chunk_size": int(bundle.metadata.get("feature_chunk_size", 0)),
+            "feature_mode": str(bundle.metadata.get("feature_mode", "canonical")),
+            "apply_multiplicity_correction": bool(bundle.metadata.get("apply_multiplicity_correction", True)),
         },
         artifacts={},
     )
@@ -242,7 +244,17 @@ class DeVoMethod(BaseMethod):
 
         epochs = int(kwargs.get("epochs", self.devo_config.epochs))
         verbose = bool(kwargs.get("verbose", self.devo_config.verbose))
+        early_stop_patience = kwargs.get("early_stop_patience", self.devo_config.early_stop_patience)
+        if early_stop_patience is not None:
+            early_stop_patience = int(early_stop_patience)
+        early_stop_min_delta = float(kwargs.get("early_stop_min_delta", self.devo_config.early_stop_min_delta))
         self.training_history = []
+        best_val_loss = float("inf")
+        best_epoch = 0
+        best_state: Optional[Dict[str, torch.Tensor]] = None
+        epochs_completed = 0
+        nonfinite_detected = False
+        early_stopped = False
 
         for epoch in range(1, epochs + 1):
             self.model.train()
@@ -255,6 +267,9 @@ class DeVoMethod(BaseMethod):
                 optimizer.zero_grad(set_to_none=True)
                 pred = self.model(x_batch)
                 loss = torch.mean((pred - y_batch) ** 2)
+                if not torch.isfinite(loss):
+                    nonfinite_detected = True
+                    break
                 loss.backward()
                 if self.devo_config.grad_clip_norm is not None:
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.devo_config.grad_clip_norm)
@@ -262,14 +277,27 @@ class DeVoMethod(BaseMethod):
                 total += float(loss.item()) * x_batch.shape[0]
                 count += x_batch.shape[0]
 
-            train_loss = total / max(count, 1)
-            val_loss = self._evaluate_loss(val_loader)
+            epochs_completed = epoch
+            if nonfinite_detected:
+                train_loss = float("nan")
+                val_loss = float("nan")
+            else:
+                train_loss = total / max(count, 1)
+                val_loss = self._evaluate_loss(val_loader)
             record = {
                 "epoch": float(epoch),
                 "train_loss": float(train_loss),
                 "val_loss": float(val_loss),
             }
             self.training_history.append(record)
+
+            if np.isfinite(val_loss) and (val_loss + early_stop_min_delta) < best_val_loss:
+                best_val_loss = float(val_loss)
+                best_epoch = epoch
+                best_state = {
+                    key: value.detach().cpu().clone()
+                    for key, value in self.model.state_dict().items()
+                }
 
             if verbose and (epoch % max(self.devo_config.log_every, 1) == 0 or epoch == epochs):
                 device_label = getattr(self.device, "type", str(self.device))
@@ -278,17 +306,39 @@ class DeVoMethod(BaseMethod):
                     f"val_loss={val_loss:.6f} device={device_label}"
                 )
 
+            if nonfinite_detected:
+                break
+            if early_stop_patience is not None and best_epoch > 0 and (epoch - best_epoch) >= early_stop_patience:
+                early_stopped = True
+                break
+
+        if best_state is not None and (early_stopped or best_epoch > 0):
+            self.model.load_state_dict(best_state)
+
+        final_train_loss = float(self.training_history[-1]["train_loss"]) if self.training_history else float("nan")
+        final_val_loss = float(self.training_history[-1]["val_loss"]) if self.training_history else float("nan")
+        converged = bool(self.training_history) and np.isfinite(final_val_loss) and not nonfinite_detected
+
         self.training_summary = {
             "dataset_name": bundle.meta.dataset_name,
             "train_samples": int(bundle.train.num_samples),
             "val_samples": int(bundle.val.num_samples),
             "epochs": epochs,
-            "final_train_loss": float(self.training_history[-1]["train_loss"]),
-            "final_val_loss": float(self.training_history[-1]["val_loss"]),
+            "epochs_completed": int(epochs_completed),
+            "final_train_loss": final_train_loss,
+            "final_val_loss": final_val_loss,
+            "best_val_loss": float(best_val_loss) if np.isfinite(best_val_loss) else float("nan"),
+            "best_epoch": int(best_epoch),
+            "converged": converged,
+            "had_nonfinite": bool(nonfinite_detected),
+            "early_stopped": bool(early_stopped),
             "device_type": self.runtime.device_type,
             "dtype": self.runtime.dtype_name,
+            "feature_mode": self.devo_config.normalized_feature_mode(),
+            "apply_multiplicity_correction": bool(self.devo_config.apply_multiplicity_correction),
+            "num_branches": int(self.devo_config.num_branches),
         }
-        self.is_fitted = True
+        self.is_fitted = converged
         return MethodResult(
             predictions=None,
             model_state_path=self.model_state_path,
