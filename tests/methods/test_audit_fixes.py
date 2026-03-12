@@ -119,7 +119,7 @@ class DuplicateIndexCheckTest(unittest.TestCase):
 
         report = CheckReport()
         split_payloads = {
-            "train": {"X": np.zeros((3, 2)), "Y": np.zeros((3, 1))},
+            "train": {"X": np.zeros((4, 2)), "Y": np.zeros((4, 1))},
             "val": {"X": np.zeros((2, 2)), "Y": np.zeros((2, 1))},
             "test": {"X": np.zeros((2, 2)), "Y": np.zeros((2, 1))},
         }
