@@ -10,7 +10,7 @@ from typing import Any, Mapping, Optional, Sequence
 
 import numpy as np
 
-from methods.base.base_method import BaseMethod, PathLike
+from methods.base.base_method import BaseMethod, KernelRecoveryNotSupportedError, PathLike
 from methods.base.registry import register_method
 from methods.base.result_schema import ArtifactRef, KernelRecoveryResult, MethodResult
 
@@ -176,13 +176,8 @@ class TCNMethod(BaseMethod):
 
     def recover_kernels(self, **kwargs: Any) -> KernelRecoveryResult:
         del kwargs
-        return KernelRecoveryResult(
-            kernels=None,
-            summary={
-                "supported": False,
-                "reason": "TCN is a black-box baseline and does not implement kernel recovery.",
-            },
-            artifacts={},
+        raise KernelRecoveryNotSupportedError(
+            "TCN baseline does not support kernel recovery."
         )
 
     def fit(self, dataset_bundle: Any, **kwargs: Any) -> MethodResult:

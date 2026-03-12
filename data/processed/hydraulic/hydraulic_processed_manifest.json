@@ -1,0 +1,876 @@
+{
+  "dataset_name": "hydraulic",
+  "generated_at": "2026-03-12T12:24:59.775199Z",
+  "representation_name": "cycle_60",
+  "representation_role": "main_experiment",
+  "representation_description": "Main experiment representation with 60 points per cycle.",
+  "target_cycle_length": 60,
+  "target_sampling_rate_hz": 1,
+  "cycle_tensor_file": "cycle_60/hydraulic_cycle_tensor.npy",
+  "cycle_tensor_shape": [
+    2205,
+    60,
+    17
+  ],
+  "label_table_file": "cycle_60/hydraulic_cycle_labels.csv",
+  "split_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/splits/hydraulic/hydraulic_split_manifest.json",
+  "processed_files": {
+    "train_X": "cycle_60/train_X.npy",
+    "train_Y": "cycle_60/train_Y.npy",
+    "train_sample_id": "cycle_60/train_sample_id.npy",
+    "train_cycle_id": "cycle_60/train_cycle_id.npy",
+    "train_timestamp": "cycle_60/train_timestamp.npy",
+    "train_fault_label": "cycle_60/train_fault_label.npy",
+    "train_subsystem_label": "cycle_60/train_subsystem_label.npy",
+    "train_condition_type": "cycle_60/train_condition_type.npy",
+    "val_X": "cycle_60/val_X.npy",
+    "val_Y": "cycle_60/val_Y.npy",
+    "val_sample_id": "cycle_60/val_sample_id.npy",
+    "val_cycle_id": "cycle_60/val_cycle_id.npy",
+    "val_timestamp": "cycle_60/val_timestamp.npy",
+    "val_fault_label": "cycle_60/val_fault_label.npy",
+    "val_subsystem_label": "cycle_60/val_subsystem_label.npy",
+    "val_condition_type": "cycle_60/val_condition_type.npy",
+    "test_X": "cycle_60/test_X.npy",
+    "test_Y": "cycle_60/test_Y.npy",
+    "test_sample_id": "cycle_60/test_sample_id.npy",
+    "test_cycle_id": "cycle_60/test_cycle_id.npy",
+    "test_timestamp": "cycle_60/test_timestamp.npy",
+    "test_fault_label": "cycle_60/test_fault_label.npy",
+    "test_subsystem_label": "cycle_60/test_subsystem_label.npy",
+    "test_condition_type": "cycle_60/test_condition_type.npy"
+  },
+  "counts": {
+    "train": 1543,
+    "val": 330,
+    "test": 332
+  },
+  "raw_summary": {
+    "discovery": {
+      "sensor_files": {
+        "PS1": "PS1.txt",
+        "PS2": "PS2.txt",
+        "PS3": "PS3.txt",
+        "PS4": "PS4.txt",
+        "PS5": "PS5.txt",
+        "PS6": "PS6.txt",
+        "EPS1": "EPS1.txt",
+        "FS1": "FS1.txt",
+        "FS2": "FS2.txt",
+        "TS1": "TS1.txt",
+        "TS2": "TS2.txt",
+        "TS3": "TS3.txt",
+        "TS4": "TS4.txt",
+        "VS1": "VS1.txt",
+        "CE": "CE.txt",
+        "CP": "CP.txt",
+        "SE": "SE.txt"
+      },
+      "profile_file": "profile.txt",
+      "ignored_text_files": [
+        "description.txt",
+        "documentation.txt"
+      ]
+    },
+    "row_count": 2205,
+    "row_counts": {
+      "PS1": 2205,
+      "PS2": 2205,
+      "PS3": 2205,
+      "PS4": 2205,
+      "PS5": 2205,
+      "PS6": 2205,
+      "EPS1": 2205,
+      "FS1": 2205,
+      "FS2": 2205,
+      "TS1": 2205,
+      "TS2": 2205,
+      "TS3": 2205,
+      "TS4": 2205,
+      "VS1": 2205,
+      "CE": 2205,
+      "CP": 2205,
+      "SE": 2205
+    },
+    "column_counts": {
+      "PS1": 6000,
+      "PS2": 6000,
+      "PS3": 6000,
+      "PS4": 6000,
+      "PS5": 6000,
+      "PS6": 6000,
+      "EPS1": 6000,
+      "FS1": 600,
+      "FS2": 600,
+      "TS1": 60,
+      "TS2": 60,
+      "TS3": 60,
+      "TS4": 60,
+      "VS1": 60,
+      "CE": 60,
+      "CP": 60,
+      "SE": 60
+    },
+    "sampling_rates": {
+      "PS1": 100,
+      "PS2": 100,
+      "PS3": 100,
+      "PS4": 100,
+      "PS5": 100,
+      "PS6": 100,
+      "EPS1": 100,
+      "FS1": 10,
+      "FS2": 10,
+      "TS1": 1,
+      "TS2": 1,
+      "TS3": 1,
+      "TS4": 1,
+      "VS1": 1,
+      "CE": 1,
+      "CP": 1,
+      "SE": 1
+    }
+  },
+  "derived_protocol_summary": {
+    "healthy_count": 21,
+    "single_component_fault_count": 566,
+    "multi_component_count": 1618,
+    "fault_subsystems_present": [
+      "Accumulator",
+      "Cooler",
+      "Pump",
+      "Valve"
+    ]
+  },
+  "resampling": {
+    "representation_name": "cycle_60",
+    "representation_role": "main_experiment",
+    "description": "Main experiment representation with 60 points per cycle.",
+    "target_cycle_length": 60,
+    "target_sampling_rate_hz": 1,
+    "channels": {
+      "PS1": {
+        "source_file": "PS1.txt",
+        "source_sampling_rate_hz": 100,
+        "source_samples_per_cycle": 6000,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "mean_pool",
+        "factor": 100,
+        "notes": "Aggregate contiguous blocks of 100 samples by mean."
+      },
+      "PS2": {
+        "source_file": "PS2.txt",
+        "source_sampling_rate_hz": 100,
+        "source_samples_per_cycle": 6000,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "mean_pool",
+        "factor": 100,
+        "notes": "Aggregate contiguous blocks of 100 samples by mean."
+      },
+      "PS3": {
+        "source_file": "PS3.txt",
+        "source_sampling_rate_hz": 100,
+        "source_samples_per_cycle": 6000,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "mean_pool",
+        "factor": 100,
+        "notes": "Aggregate contiguous blocks of 100 samples by mean."
+      },
+      "PS4": {
+        "source_file": "PS4.txt",
+        "source_sampling_rate_hz": 100,
+        "source_samples_per_cycle": 6000,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "mean_pool",
+        "factor": 100,
+        "notes": "Aggregate contiguous blocks of 100 samples by mean."
+      },
+      "PS5": {
+        "source_file": "PS5.txt",
+        "source_sampling_rate_hz": 100,
+        "source_samples_per_cycle": 6000,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "mean_pool",
+        "factor": 100,
+        "notes": "Aggregate contiguous blocks of 100 samples by mean."
+      },
+      "PS6": {
+        "source_file": "PS6.txt",
+        "source_sampling_rate_hz": 100,
+        "source_samples_per_cycle": 6000,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "mean_pool",
+        "factor": 100,
+        "notes": "Aggregate contiguous blocks of 100 samples by mean."
+      },
+      "EPS1": {
+        "source_file": "EPS1.txt",
+        "source_sampling_rate_hz": 100,
+        "source_samples_per_cycle": 6000,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "mean_pool",
+        "factor": 100,
+        "notes": "Aggregate contiguous blocks of 100 samples by mean."
+      },
+      "FS1": {
+        "source_file": "FS1.txt",
+        "source_sampling_rate_hz": 10,
+        "source_samples_per_cycle": 600,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "mean_pool",
+        "factor": 10,
+        "notes": "Aggregate contiguous blocks of 10 samples by mean."
+      },
+      "FS2": {
+        "source_file": "FS2.txt",
+        "source_sampling_rate_hz": 10,
+        "source_samples_per_cycle": 600,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "mean_pool",
+        "factor": 10,
+        "notes": "Aggregate contiguous blocks of 10 samples by mean."
+      },
+      "TS1": {
+        "source_file": "TS1.txt",
+        "source_sampling_rate_hz": 1,
+        "source_samples_per_cycle": 60,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "identity",
+        "factor": 1,
+        "notes": "Retain source samples without modification."
+      },
+      "TS2": {
+        "source_file": "TS2.txt",
+        "source_sampling_rate_hz": 1,
+        "source_samples_per_cycle": 60,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "identity",
+        "factor": 1,
+        "notes": "Retain source samples without modification."
+      },
+      "TS3": {
+        "source_file": "TS3.txt",
+        "source_sampling_rate_hz": 1,
+        "source_samples_per_cycle": 60,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "identity",
+        "factor": 1,
+        "notes": "Retain source samples without modification."
+      },
+      "TS4": {
+        "source_file": "TS4.txt",
+        "source_sampling_rate_hz": 1,
+        "source_samples_per_cycle": 60,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "identity",
+        "factor": 1,
+        "notes": "Retain source samples without modification."
+      },
+      "VS1": {
+        "source_file": "VS1.txt",
+        "source_sampling_rate_hz": 1,
+        "source_samples_per_cycle": 60,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "identity",
+        "factor": 1,
+        "notes": "Retain source samples without modification."
+      },
+      "CE": {
+        "source_file": "CE.txt",
+        "source_sampling_rate_hz": 1,
+        "source_samples_per_cycle": 60,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "identity",
+        "factor": 1,
+        "notes": "Retain source samples without modification."
+      },
+      "CP": {
+        "source_file": "CP.txt",
+        "source_sampling_rate_hz": 1,
+        "source_samples_per_cycle": 60,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "identity",
+        "factor": 1,
+        "notes": "Retain source samples without modification."
+      },
+      "SE": {
+        "source_file": "SE.txt",
+        "source_sampling_rate_hz": 1,
+        "source_samples_per_cycle": 60,
+        "target_sampling_rate_hz": 1,
+        "target_cycle_length": 60,
+        "transform": "identity",
+        "factor": 1,
+        "notes": "Retain source samples without modification."
+      }
+    },
+    "output_shape": [
+      2205,
+      60,
+      17
+    ]
+  },
+  "bundle_meta": {
+    "dataset_name": "hydraulic",
+    "task_family": "hydraulic",
+    "input_dim": 17,
+    "output_dim": 6,
+    "window_length": 60,
+    "horizon": 1,
+    "split_protocol": "hydraulic_cycle_bundle_holdout_v1",
+    "has_ground_truth_kernel": false,
+    "has_ground_truth_gfrf": false,
+    "extras": {
+      "sample_granularity": "cycle",
+      "cycle_duration_seconds": 60,
+      "representation_name": "cycle_60",
+      "representation_role": "main_experiment",
+      "representation_description": "Main experiment representation with 60 points per cycle.",
+      "target_cycle_length": 60,
+      "target_sampling_rate_hz": 1,
+      "canonical_channel_order": [
+        "PS1",
+        "PS2",
+        "PS3",
+        "PS4",
+        "PS5",
+        "PS6",
+        "EPS1",
+        "FS1",
+        "FS2",
+        "TS1",
+        "TS2",
+        "TS3",
+        "TS4",
+        "VS1",
+        "CE",
+        "CP",
+        "SE"
+      ],
+      "channel_map": {
+        "dataset_name": "hydraulic",
+        "description": "Canonical 17-channel map for the cycle-wise hydraulic condition monitoring dataset.",
+        "sample_granularity": "cycle",
+        "cycle_duration_seconds": 60,
+        "n_channels": 17,
+        "default_representation": "cycle_60",
+        "supported_representations": {
+          "cycle_60": {
+            "target_cycle_length": 60,
+            "target_sampling_rate_hz": 1
+          },
+          "cycle_600": {
+            "target_cycle_length": 600,
+            "target_sampling_rate_hz": 10
+          }
+        },
+        "channels": [
+          "PS1",
+          "PS2",
+          "PS3",
+          "PS4",
+          "PS5",
+          "PS6",
+          "EPS1",
+          "FS1",
+          "FS2",
+          "TS1",
+          "TS2",
+          "TS3",
+          "TS4",
+          "VS1",
+          "CE",
+          "CP",
+          "SE"
+        ],
+        "channel_details": {
+          "PS1": {
+            "source_file": "PS1.txt",
+            "sampling_rate_hz": 100,
+            "samples_per_cycle": 6000,
+            "kind": "pressure"
+          },
+          "PS2": {
+            "source_file": "PS2.txt",
+            "sampling_rate_hz": 100,
+            "samples_per_cycle": 6000,
+            "kind": "pressure"
+          },
+          "PS3": {
+            "source_file": "PS3.txt",
+            "sampling_rate_hz": 100,
+            "samples_per_cycle": 6000,
+            "kind": "pressure"
+          },
+          "PS4": {
+            "source_file": "PS4.txt",
+            "sampling_rate_hz": 100,
+            "samples_per_cycle": 6000,
+            "kind": "pressure"
+          },
+          "PS5": {
+            "source_file": "PS5.txt",
+            "sampling_rate_hz": 100,
+            "samples_per_cycle": 6000,
+            "kind": "pressure"
+          },
+          "PS6": {
+            "source_file": "PS6.txt",
+            "sampling_rate_hz": 100,
+            "samples_per_cycle": 6000,
+            "kind": "pressure"
+          },
+          "EPS1": {
+            "source_file": "EPS1.txt",
+            "sampling_rate_hz": 100,
+            "samples_per_cycle": 6000,
+            "kind": "motor_power"
+          },
+          "FS1": {
+            "source_file": "FS1.txt",
+            "sampling_rate_hz": 10,
+            "samples_per_cycle": 600,
+            "kind": "flow"
+          },
+          "FS2": {
+            "source_file": "FS2.txt",
+            "sampling_rate_hz": 10,
+            "samples_per_cycle": 600,
+            "kind": "flow"
+          },
+          "TS1": {
+            "source_file": "TS1.txt",
+            "sampling_rate_hz": 1,
+            "samples_per_cycle": 60,
+            "kind": "temperature"
+          },
+          "TS2": {
+            "source_file": "TS2.txt",
+            "sampling_rate_hz": 1,
+            "samples_per_cycle": 60,
+            "kind": "temperature"
+          },
+          "TS3": {
+            "source_file": "TS3.txt",
+            "sampling_rate_hz": 1,
+            "samples_per_cycle": 60,
+            "kind": "temperature"
+          },
+          "TS4": {
+            "source_file": "TS4.txt",
+            "sampling_rate_hz": 1,
+            "samples_per_cycle": 60,
+            "kind": "temperature"
+          },
+          "VS1": {
+            "source_file": "VS1.txt",
+            "sampling_rate_hz": 1,
+            "samples_per_cycle": 60,
+            "kind": "vibration"
+          },
+          "CE": {
+            "source_file": "CE.txt",
+            "sampling_rate_hz": 1,
+            "samples_per_cycle": 60,
+            "kind": "virtual"
+          },
+          "CP": {
+            "source_file": "CP.txt",
+            "sampling_rate_hz": 1,
+            "samples_per_cycle": 60,
+            "kind": "virtual"
+          },
+          "SE": {
+            "source_file": "SE.txt",
+            "sampling_rate_hz": 1,
+            "samples_per_cycle": 60,
+            "kind": "virtual"
+          }
+        },
+        "profile_columns": [
+          "cooler_condition",
+          "valve_condition",
+          "pump_leakage",
+          "accumulator_pressure",
+          "stable_flag"
+        ]
+      },
+      "subsystem_groups": {
+        "dataset_name": "hydraulic",
+        "task_family": "hydraulic",
+        "task": "unsupervised_subsystem_fault_isolation",
+        "subsystems": {
+          "cooler": {
+            "display_name": "Cooler",
+            "channels": [
+              "TS1",
+              "CE",
+              "CP"
+            ],
+            "description": "Cooling-loop channels used for subsystem-level kernel shift aggregation."
+          },
+          "valve": {
+            "display_name": "Valve",
+            "channels": [
+              "FS1",
+              "PS2"
+            ],
+            "description": "Valve-related flow and pressure channels."
+          },
+          "pump": {
+            "display_name": "Pump",
+            "channels": [
+              "PS1",
+              "PS3",
+              "PS4",
+              "PS5",
+              "PS6",
+              "EPS1",
+              "VS1",
+              "SE"
+            ],
+            "description": "Pump subsystem channels including pressures, power, vibration, and efficiency."
+          },
+          "accumulator": {
+            "display_name": "Accumulator",
+            "channels": [
+              "TS2",
+              "TS3",
+              "TS4",
+              "FS2"
+            ],
+            "description": "Accumulator-related temperature and flow channels."
+          }
+        }
+      },
+      "single_fault_protocol": {
+        "dataset_name": "hydraulic",
+        "protocol_name": "hydraulic_single_fault_protocol_v2",
+        "description": "Protocol metadata for the hydraulic subsystem isolation study. The builder retains all cycles and derives healthy/single-fault/multi-fault fields at cycle level.",
+        "sample_granularity": "cycle",
+        "cycle_duration_seconds": 60,
+        "split_protocol": "hydraulic_cycle_bundle_holdout_v1",
+        "split_protocol_kind": "bundle_scaffold_only",
+        "split": {
+          "train": 0.7,
+          "val": 0.15,
+          "test": 0.15
+        },
+        "grouping": {
+          "level": "cycle",
+          "field": "cycle_id",
+          "notes": "Cycle-contiguous split for bundle scaffolding only. It is not the paper's final experiment protocol."
+        },
+        "data_fields": {
+          "cycle_field": "cycle_id",
+          "sample_id_field": "sample_id",
+          "stable_flag_field": "stable_flag",
+          "subsystem_field": "subsystem_label",
+          "fault_label_field": "fault_label",
+          "condition_field": "condition_type",
+          "fault_count_field": "num_degraded_components",
+          "single_fault_field": "is_single_component_fault",
+          "healthy_field": "is_healthy"
+        },
+        "nominal_conditions": {
+          "cooler_condition": 100,
+          "valve_condition": 100,
+          "pump_leakage": 0,
+          "accumulator_pressure": 130
+        },
+        "degraded_rules": {
+          "cooler": "cooler_condition != 100",
+          "valve": "valve_condition != 100",
+          "pump": "pump_leakage != 0",
+          "accumulator": "accumulator_pressure != 130"
+        },
+        "selection_logic": {
+          "healthy_rule": "All four component conditions match the nominal values.",
+          "single_component_rule": "Exactly one of cooler/valve/pump/accumulator deviates from nominal.",
+          "builder_keeps": "all_cycles",
+          "main_experiment_subset": "healthy or single_component_fault",
+          "stable_flag_filter_is_protocol_controlled": true
+        },
+        "stable_flag_policy": {
+          "field": "stable_flag",
+          "stable_value": 0,
+          "unstable_value": 1,
+          "builder_behavior": "retain_all_cycles",
+          "main_experiment_filter": "optional"
+        },
+        "labeling": {
+          "healthy_value": "healthy",
+          "single_component_value": "single_component_degraded",
+          "multi_component_value": "multi_component_degraded",
+          "allowed_fault_classes": [
+            "cooler",
+            "valve",
+            "pump",
+            "accumulator"
+          ],
+          "subsystem_class_order": [
+            "healthy",
+            "cooler",
+            "valve",
+            "pump",
+            "accumulator",
+            "multi_component"
+          ]
+        },
+        "single_fault_filter": {
+          "enable": false,
+          "allow_healthy": true,
+          "min_active_fault_count": 1,
+          "max_active_fault_count": 1,
+          "notes": "The builder only derives single-fault flags. Downstream experiments should filter by is_single_component_fault when needed."
+        }
+      },
+      "resampling": {
+        "representation_name": "cycle_60",
+        "representation_role": "main_experiment",
+        "description": "Main experiment representation with 60 points per cycle.",
+        "target_cycle_length": 60,
+        "target_sampling_rate_hz": 1,
+        "channels": {
+          "PS1": {
+            "source_file": "PS1.txt",
+            "source_sampling_rate_hz": 100,
+            "source_samples_per_cycle": 6000,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "mean_pool",
+            "factor": 100,
+            "notes": "Aggregate contiguous blocks of 100 samples by mean."
+          },
+          "PS2": {
+            "source_file": "PS2.txt",
+            "source_sampling_rate_hz": 100,
+            "source_samples_per_cycle": 6000,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "mean_pool",
+            "factor": 100,
+            "notes": "Aggregate contiguous blocks of 100 samples by mean."
+          },
+          "PS3": {
+            "source_file": "PS3.txt",
+            "source_sampling_rate_hz": 100,
+            "source_samples_per_cycle": 6000,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "mean_pool",
+            "factor": 100,
+            "notes": "Aggregate contiguous blocks of 100 samples by mean."
+          },
+          "PS4": {
+            "source_file": "PS4.txt",
+            "source_sampling_rate_hz": 100,
+            "source_samples_per_cycle": 6000,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "mean_pool",
+            "factor": 100,
+            "notes": "Aggregate contiguous blocks of 100 samples by mean."
+          },
+          "PS5": {
+            "source_file": "PS5.txt",
+            "source_sampling_rate_hz": 100,
+            "source_samples_per_cycle": 6000,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "mean_pool",
+            "factor": 100,
+            "notes": "Aggregate contiguous blocks of 100 samples by mean."
+          },
+          "PS6": {
+            "source_file": "PS6.txt",
+            "source_sampling_rate_hz": 100,
+            "source_samples_per_cycle": 6000,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "mean_pool",
+            "factor": 100,
+            "notes": "Aggregate contiguous blocks of 100 samples by mean."
+          },
+          "EPS1": {
+            "source_file": "EPS1.txt",
+            "source_sampling_rate_hz": 100,
+            "source_samples_per_cycle": 6000,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "mean_pool",
+            "factor": 100,
+            "notes": "Aggregate contiguous blocks of 100 samples by mean."
+          },
+          "FS1": {
+            "source_file": "FS1.txt",
+            "source_sampling_rate_hz": 10,
+            "source_samples_per_cycle": 600,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "mean_pool",
+            "factor": 10,
+            "notes": "Aggregate contiguous blocks of 10 samples by mean."
+          },
+          "FS2": {
+            "source_file": "FS2.txt",
+            "source_sampling_rate_hz": 10,
+            "source_samples_per_cycle": 600,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "mean_pool",
+            "factor": 10,
+            "notes": "Aggregate contiguous blocks of 10 samples by mean."
+          },
+          "TS1": {
+            "source_file": "TS1.txt",
+            "source_sampling_rate_hz": 1,
+            "source_samples_per_cycle": 60,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "identity",
+            "factor": 1,
+            "notes": "Retain source samples without modification."
+          },
+          "TS2": {
+            "source_file": "TS2.txt",
+            "source_sampling_rate_hz": 1,
+            "source_samples_per_cycle": 60,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "identity",
+            "factor": 1,
+            "notes": "Retain source samples without modification."
+          },
+          "TS3": {
+            "source_file": "TS3.txt",
+            "source_sampling_rate_hz": 1,
+            "source_samples_per_cycle": 60,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "identity",
+            "factor": 1,
+            "notes": "Retain source samples without modification."
+          },
+          "TS4": {
+            "source_file": "TS4.txt",
+            "source_sampling_rate_hz": 1,
+            "source_samples_per_cycle": 60,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "identity",
+            "factor": 1,
+            "notes": "Retain source samples without modification."
+          },
+          "VS1": {
+            "source_file": "VS1.txt",
+            "source_sampling_rate_hz": 1,
+            "source_samples_per_cycle": 60,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "identity",
+            "factor": 1,
+            "notes": "Retain source samples without modification."
+          },
+          "CE": {
+            "source_file": "CE.txt",
+            "source_sampling_rate_hz": 1,
+            "source_samples_per_cycle": 60,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "identity",
+            "factor": 1,
+            "notes": "Retain source samples without modification."
+          },
+          "CP": {
+            "source_file": "CP.txt",
+            "source_sampling_rate_hz": 1,
+            "source_samples_per_cycle": 60,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "identity",
+            "factor": 1,
+            "notes": "Retain source samples without modification."
+          },
+          "SE": {
+            "source_file": "SE.txt",
+            "source_sampling_rate_hz": 1,
+            "source_samples_per_cycle": 60,
+            "target_sampling_rate_hz": 1,
+            "target_cycle_length": 60,
+            "transform": "identity",
+            "factor": 1,
+            "notes": "Retain source samples without modification."
+          }
+        },
+        "output_shape": [
+          2205,
+          60,
+          17
+        ]
+      },
+      "label_table_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/hydraulic/cycle_60/hydraulic_cycle_labels.csv",
+      "stable_flag_retained": true,
+      "class_names": [
+        "healthy",
+        "cooler",
+        "valve",
+        "pump",
+        "accumulator",
+        "multi_component"
+      ],
+      "available_representations": [
+        "cycle_60",
+        "cycle_600"
+      ],
+      "task_note": "Y stores protocol support labels for bundle compatibility; the paper task remains unsupervised."
+    }
+  },
+  "bundle_artifacts": {
+    "truth_file": null,
+    "grouping_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/metadata/hydraulic/subsystem_groups.json",
+    "protocol_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/metadata/hydraulic/single_fault_protocol.json",
+    "extra": {
+      "channel_map_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/metadata/hydraulic/channel_map.json",
+      "split_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/splits/hydraulic/hydraulic_split_manifest.json",
+      "label_table_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/hydraulic/cycle_60/hydraulic_cycle_labels.csv",
+      "representation_name": "cycle_60"
+    }
+  },
+  "default_representation": "cycle_60",
+  "representations_manifest_file": "hydraulic_representations_manifest.json",
+  "available_representations": {
+    "cycle_60": {
+      "representation_role": "main_experiment",
+      "target_cycle_length": 60,
+      "target_sampling_rate_hz": 1,
+      "processed_manifest": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/hydraulic/cycle_60/hydraulic_processed_manifest.json",
+      "cycle_tensor_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/hydraulic/cycle_60/hydraulic_cycle_tensor.npy",
+      "label_table_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/hydraulic/cycle_60/hydraulic_cycle_labels.csv"
+    },
+    "cycle_600": {
+      "representation_role": "sensitivity_analysis",
+      "target_cycle_length": 600,
+      "target_sampling_rate_hz": 10,
+      "processed_manifest": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/hydraulic/cycle_600/hydraulic_processed_manifest.json",
+      "cycle_tensor_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/hydraulic/cycle_600/hydraulic_cycle_tensor.npy",
+      "label_table_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/hydraulic/cycle_600/hydraulic_cycle_labels.csv"
+    }
+  }
+}

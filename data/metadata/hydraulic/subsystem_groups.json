@@ -4,41 +4,24 @@
   "task": "unsupervised_subsystem_fault_isolation",
   "subsystems": {
     "cooler": {
-      "channels": [
-        "temperature_coolant_in",
-        "temperature_coolant_out",
-        "temperature_outlet"
-      ],
-      "description": "Cooling loop related pressures/temperatures/controls."
+      "display_name": "Cooler",
+      "channels": ["TS1", "CE", "CP"],
+      "description": "Cooling-loop channels used for subsystem-level kernel shift aggregation."
     },
     "valve": {
-      "channels": [
-        "flow_recirculation",
-        "valve_position",
-        "vibration_valve",
-        "pressure_outlet"
-      ],
-      "description": "Control/feedback path and downstream flow balancing components."
+      "display_name": "Valve",
+      "channels": ["FS1", "PS2"],
+      "description": "Valve-related flow and pressure channels."
     },
     "pump": {
-      "channels": [
-        "pressure_inlet",
-        "flow_in",
-        "flow_out",
-        "motor_power",
-        "temperature_inlet"
-      ],
-      "description": "Pump drive and delivery subcomponent channels."
+      "display_name": "Pump",
+      "channels": ["PS1", "PS3", "PS4", "PS5", "PS6", "EPS1", "VS1", "SE"],
+      "description": "Pump subsystem channels including pressures, power, vibration, and efficiency."
     },
     "accumulator": {
-      "channels": [
-        "pressure_accumulator",
-        "pressure_line",
-        "temperature_oil",
-        "vibration_motor_x",
-        "vibration_motor_y"
-      ],
-      "description": "Energy storage/storage balancing subcomponent channels."
+      "display_name": "Accumulator",
+      "channels": ["TS2", "TS3", "TS4", "FS2"],
+      "description": "Accumulator-related temperature and flow channels."
     }
   }
 }

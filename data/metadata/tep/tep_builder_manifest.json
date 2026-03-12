@@ -1,0 +1,14 @@
+{
+  "dataset_name": "tep",
+  "generated_at": "2026-03-12T12:24:51.993808Z",
+  "mode_holdout_protocol_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/metadata/tep/mode_holdout_protocol.json",
+  "five_unit_definition_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/metadata/tep/five_unit_definition.json",
+  "feed_side_definition_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/metadata/tep/feed_side_definition.json",
+  "fault_truth_table_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/metadata/tep/fault_truth_table.json",
+  "scenario_to_idv_map_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/metadata/tep/scenario_to_idv_map.json",
+  "channel_map_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/metadata/tep/channel_map.json",
+  "processed_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_processed_manifest.json",
+  "split_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/splits/tep/tep_mode_holdout_split_manifest.json",
+  "run_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_run_manifest.json",
+  "window_manifest_file": "/Users/yellowos/.codex/worktrees/8cda/EXPfinal/data/processed/tep/tep_window_manifest.json"
+}

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
-from methods.base import BaseMethod, create_method, get_method_class
+from methods.base import BaseMethod, KernelRecoveryNotSupportedError, create_method, get_method_class
 from methods.utils.device import is_mps_available
 
 try:
@@ -79,7 +79,8 @@ class TCNMethodSmokeTest(unittest.TestCase):
         result = method.fit(bundle)
         self.assertTrue(method.is_fitted)
         self.assertFalse(method.supports_kernel_recovery())
-        self.assertIsNone(method.recover_kernels().kernels)
+        with self.assertRaises(KernelRecoveryNotSupportedError):
+            method.recover_kernels()
         self.assertTrue(result.metadata["supports_local_input_gradients"])
 
         predictions = method.predict(bundle["test"]["X"])

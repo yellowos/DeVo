@@ -11,7 +11,7 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 from data.adapters.base import DatasetMeta
-from methods.base import BaseMethod, MethodResult, register_method
+from methods.base import BaseMethod, KernelRecoveryResult, MethodResult, register_method
 from methods.utils import coerce_dataset_bundle, set_random_seed
 
 from .attribution import prediction_error_gradient_attribution
@@ -98,6 +98,54 @@ def _config_from_mapping(value: Mapping[str, Any]) -> DeVoConfig:
 
 def _weights_path(target: Path) -> Path:
     return target.with_suffix(".pt")
+
+
+def _to_devo_kernel_recovery_result(bundle: RecoveredKernelBundle) -> KernelRecoveryResult:
+    orders: dict[str, Any] = {}
+    for order in bundle.orders:
+        orders[str(order.order)] = {
+            "order": order.order,
+            "flat_feature_dim": order.flattened_dim,
+            "feature_count": order.feature_count,
+            "window_length": order.window_length,
+            "input_dim": order.input_dim,
+            "output_dim": order.output_dim,
+            "horizon": order.horizon,
+            "full_tensor_shape": order.full_tensor_shape,
+            "canonical_indices": order.canonical_indices.detach().cpu().numpy(),
+            "lag_input_indices": order.lag_input_indices.detach().cpu().numpy(),
+            "multiplicity": order.multiplicity.detach().cpu().numpy(),
+            "effective_coefficients": order.effective_coefficients.detach().cpu().numpy(),
+            "symmetric_coefficients": order.symmetric_coefficients.detach().cpu().numpy(),
+            "full_tensor": (
+                None if order.full_tensor is None else order.full_tensor.detach().cpu().numpy()
+            ),
+        }
+
+    return KernelRecoveryResult(
+        kernels={
+            "method_name": bundle.method_name,
+            "window_length": bundle.window_length,
+            "input_dim": bundle.input_dim,
+            "output_dim": bundle.output_dim,
+            "horizon": bundle.horizon,
+            "bias": None if bundle.bias is None else bundle.bias.detach().cpu().numpy(),
+            "orders": orders,
+            "metadata": dict(bundle.metadata),
+            "semantics": (
+                "Canonical ordered monomial coefficients with multiplicity correction "
+                "to recover symmetric Volterra kernels."
+            ),
+        },
+        summary={
+            "method_name": bundle.method_name,
+            "supports_multiplicity_correction": True,
+            "orders": sorted(int(order) for order in bundle.metadata.get("orders", [])),
+            "num_branches": int(bundle.metadata.get("num_branches", 1)),
+            "feature_chunk_size": int(bundle.metadata.get("feature_chunk_size", 0)),
+        },
+        artifacts={},
+    )
 
 
 @register_method("devo")
@@ -270,10 +318,11 @@ class DeVoMethod(BaseMethod):
     def supports_kernel_recovery(self) -> bool:
         return True
 
-    def recover_kernels(self, **kwargs: Any) -> RecoveredKernelBundle:
+    def recover_kernels(self, **kwargs: Any) -> KernelRecoveryResult:
         if not self.is_fitted or self.model is None:
             raise RuntimeError("Call fit() before recover_kernels().")
-        return recover_devo_kernels(self.model, **kwargs)
+        recovered = recover_devo_kernels(self.model, **kwargs)
+        return _to_devo_kernel_recovery_result(recovered)
 
     def export_parameters(self) -> Dict[str, object]:
         if not self.is_fitted or self.model is None:

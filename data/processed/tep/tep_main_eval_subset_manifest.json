@@ -1,0 +1,8 @@
+{
+  "dataset_name": "tep",
+  "generated_at": "2026-03-12T12:24:51.822618Z",
+  "source": "fault_truth_table.included_in_main_eval",
+  "run_count": 0,
+  "runs": [],
+  "notes": "This subset depends entirely on curated truth metadata."
+}

@@ -1,7 +1,8 @@
-"""Build hydraulic dataset bundle.
+"""Build hydraulic dataset artifacts from the cycle-wise raw text matrices.
 
-This script only implements the data layer for the hydraulic benchmark:
-raw -> interim -> processed, plus DatasetBundle export.
+Outputs two unified temporal representations:
+- ``cycle_60``: main experiment representation, [N, 60, 17]
+- ``cycle_600``: sensitivity representation, [N, 600, 17]
 """
 
 from __future__ import annotations
@@ -10,9 +11,9 @@ import argparse
 import csv
 import json
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Sequence
 
 import numpy as np
 
@@ -22,23 +23,54 @@ from data.checks.bundle_checks import check_dataset_bundle
 
 
 class HydraulicBuilderError(DataProtocolError):
-    """Raised when hydraulic data construction fails."""
+    """Raised when the hydraulic raw data cannot satisfy the protocol."""
 
 
 @dataclass(frozen=True)
 class HydraulicBuilderConfig:
     dataset_name: str = "hydraulic"
-    raw_file_candidates: Tuple[str, ...] = (
-        "hydraulic.mat",
-        "hydraulic_raw.npz",
-        "hydraulic_processed.npz",
-        "hydraulic.csv",
-        "hydraulic.txt",
-    )
+    profile_file: str = "profile.txt"
+    default_representation: str = "cycle_60"
 
     def validate(self) -> None:
         if not self.dataset_name:
             raise HydraulicBuilderError("dataset_name must be non-empty.")
+
+
+@dataclass(frozen=True)
+class RepresentationSpec:
+    name: str
+    target_cycle_length: int
+    role: str
+    description: str
+
+    @property
+    def target_sampling_rate_hz(self) -> int:
+        if self.target_cycle_length % 60 != 0:
+            raise HydraulicBuilderError(
+                f"{self.name}: target_cycle_length must divide evenly over 60 s."
+            )
+        return self.target_cycle_length // 60
+
+
+REPRESENTATION_SPECS: tuple[RepresentationSpec, ...] = (
+    RepresentationSpec(
+        name="cycle_60",
+        target_cycle_length=60,
+        role="main_experiment",
+        description="Main experiment representation with 60 points per cycle.",
+    ),
+    RepresentationSpec(
+        name="cycle_600",
+        target_cycle_length=600,
+        role="sensitivity_analysis",
+        description="Sensitivity representation with 600 points per cycle.",
+    ),
+)
+
+
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
@@ -52,718 +84,637 @@ def _load_json(path: Path) -> Mapping[str, Any]:
         return json.load(f)
 
 
-def _to_float2d(value: Any, name: str) -> np.ndarray:
-    arr = np.asarray(value)
-    if arr.ndim == 1:
-        arr = arr.reshape(-1, 1)
-    if arr.ndim != 2:
-        raise HydraulicBuilderError(f"{name} must be 2D numeric data.")
-    if not np.issubdtype(arr.dtype, np.number):
-        raise HydraulicBuilderError(f"{name} contains non-numeric values.")
-    return arr.astype(np.float64)
-
-
-def _to_text_array(value: Any) -> Optional[np.ndarray]:
-    if value is None:
-        return None
-    arr = np.asarray(value)
-    if arr.size == 0:
-        return np.array([], dtype=object)
-    return arr.reshape(-1).astype(object)
-
-
-def _as_scalar_int(value: Any) -> Optional[int]:
-    if value is None:
-        return None
+def _load_matrix(path: Path, *, expected_rows: int | None, expected_cols: int, name: str) -> np.ndarray:
     try:
-        iv = int(np.asarray(value).reshape(-1)[0])
-    except Exception:
-        return None
-    return iv
+        arr = np.loadtxt(path, dtype=np.float32)
+    except Exception as exc:
+        raise HydraulicBuilderError(f"failed to read {name} from {path}") from exc
+
+    arr = np.asarray(arr, dtype=np.float32)
+    if arr.ndim != 2:
+        raise HydraulicBuilderError(f"{name} must be a 2D matrix, got shape={arr.shape}.")
+    if expected_rows is not None and arr.shape[0] != expected_rows:
+        raise HydraulicBuilderError(
+            f"{name} row count mismatch: expected {expected_rows}, got {arr.shape[0]}."
+        )
+    if arr.shape[1] != expected_cols:
+        raise HydraulicBuilderError(
+            f"{name} column count mismatch: expected {expected_cols}, got {arr.shape[1]}."
+        )
+    return arr
 
 
-def _find_raw_file(raw_root: Path, candidates: Sequence[str]) -> Optional[Path]:
-    for name in candidates:
-        candidate = raw_root / name
-        if candidate.exists():
-            return candidate
-    for path in raw_root.glob("**/*"):
-        if path.is_file() and path.suffix.lower() in {".mat", ".npz", ".npy", ".csv", ".txt"}:
-            if "hydraulic" in path.name.lower():
-                return path
-    return None
+def _as_object_array(values: Sequence[Any]) -> np.ndarray:
+    return np.asarray(list(values), dtype=object)
 
 
-def _load_channel_map(metadata_root: Path) -> Dict[str, Any]:
-    payload = _load_json(metadata_root / "channel_map.json")
-    channels = payload.get("channels")
-    if not isinstance(channels, list) or len(channels) != 17:
-        raise HydraulicBuilderError("channel_map.json must define exactly 17 channels.")
-    payload["channels"] = [str(c) for c in channels]
-    return payload
-
-
-def _load_subsystem_groups(metadata_root: Path) -> Dict[str, Any]:
-    payload = _load_json(metadata_root / "subsystem_groups.json")
-    subs = payload.get("subsystems")
-    if not isinstance(subs, Mapping):
-        raise HydraulicBuilderError("subsystem_groups.json must contain a 'subsystems' mapping.")
-    required = {"cooler", "valve", "pump", "accumulator"}
-    missing = required.difference(set(subs.keys()))
-    if missing:
-        raise HydraulicBuilderError(f"subsystem_groups missing keys: {', '.join(sorted(missing))}")
-    return payload
-
-
-def _load_single_fault_protocol(metadata_root: Path) -> Dict[str, Any]:
-    payload = _load_json(metadata_root / "single_fault_protocol.json")
-    required = {
-        "window_length",
-        "horizon",
-        "split_protocol",
-        "split",
-        "data_fields",
-        "labeling",
-        "single_fault_filter",
-    }
-    missing = required.difference(payload.keys())
-    if missing:
-        raise HydraulicBuilderError(f"single_fault_protocol missing fields: {', '.join(sorted(missing))}")
-    return payload
-
-
-def _select_x_matrix_from_columns(rows: Sequence[Mapping[str, Any]], channels: Sequence[str]) -> np.ndarray:
+def _write_cycle_label_table(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
     if not rows:
-        return np.empty((0, len(channels)), dtype=float)
-    row0 = rows[0]
-    missing = [c for c in channels if c not in row0]
+        raise HydraulicBuilderError("cycle label table cannot be empty.")
+    fieldnames = list(rows[0].keys())
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+
+
+def _transform_channel(
+    value: np.ndarray,
+    *,
+    target_cycle_length: int,
+    source_samples_per_cycle: int,
+    channel_name: str,
+) -> tuple[np.ndarray, Dict[str, Any]]:
+    if source_samples_per_cycle == target_cycle_length:
+        return np.asarray(value, dtype=np.float32), {
+            "transform": "identity",
+            "factor": 1,
+            "notes": "Retain source samples without modification.",
+        }
+
+    if source_samples_per_cycle > target_cycle_length:
+        if source_samples_per_cycle % target_cycle_length != 0:
+            raise HydraulicBuilderError(
+                f"{channel_name}: cannot aggregate {source_samples_per_cycle} -> {target_cycle_length} evenly."
+            )
+        factor = source_samples_per_cycle // target_cycle_length
+        if value.shape[1] % factor != 0:
+            raise HydraulicBuilderError(
+                f"{channel_name}: sample axis {value.shape[1]} is not divisible by {factor}."
+            )
+        transformed = value.reshape(value.shape[0], target_cycle_length, factor).mean(axis=2)
+        return np.asarray(transformed, dtype=np.float32), {
+            "transform": "mean_pool",
+            "factor": int(factor),
+            "notes": f"Aggregate contiguous blocks of {factor} samples by mean.",
+        }
+
+    if target_cycle_length % source_samples_per_cycle != 0:
+        raise HydraulicBuilderError(
+            f"{channel_name}: cannot repeat-expand {source_samples_per_cycle} -> {target_cycle_length} evenly."
+        )
+    factor = target_cycle_length // source_samples_per_cycle
+    transformed = np.repeat(value, repeats=factor, axis=1)
+    return np.asarray(transformed, dtype=np.float32), {
+        "transform": "repeat_hold",
+        "factor": int(factor),
+        "notes": f"Repeat each source sample {factor} times without interpolation.",
+    }
+
+
+def discover_raw_files(raw_root: Path, channel_map: Mapping[str, Any], cfg: HydraulicBuilderConfig) -> Dict[str, Any]:
+    channels = channel_map.get("channels")
+    details = channel_map.get("channel_details")
+    if not isinstance(channels, list) or not isinstance(details, Mapping):
+        raise HydraulicBuilderError("channel_map must define `channels` and `channel_details`.")
+
+    sensor_files: Dict[str, str] = {}
+    missing: List[str] = []
+    for channel_name in channels:
+        spec = details.get(channel_name)
+        if not isinstance(spec, Mapping):
+            raise HydraulicBuilderError(f"channel_map.channel_details missing spec for {channel_name}.")
+        source_file = spec.get("source_file")
+        if not isinstance(source_file, str) or not source_file.endswith(".txt"):
+            raise HydraulicBuilderError(f"{channel_name}: source_file must be a `.txt` filename.")
+        path = raw_root / source_file
+        if not path.exists():
+            missing.append(source_file)
+            continue
+        sensor_files[channel_name] = source_file
+
+    profile_path = raw_root / cfg.profile_file
+    if not profile_path.exists():
+        missing.append(cfg.profile_file)
     if missing:
         raise HydraulicBuilderError(
-            f"Raw CSV header missing channel columns: {', '.join(missing)}. "
-            f"Expected canonical 17-channel order from metadata/channel_map.json."
-        )
-    x = np.asarray(
-        [[float(r.get(c)) for c in channels] for r in rows],
-        dtype=float,
-    )
-    return x
-
-
-def load_raw(raw_root: Path, protocol: Mapping[str, Any], channel_map: Mapping[str, Any]) -> Dict[str, Any]:
-    cfg = HydraulicBuilderConfig()
-    raw_path = _find_raw_file(raw_root, cfg.raw_file_candidates)
-    if raw_path is None:
-        raise HydraulicBuilderError(
-            f"No hydraulic raw file found under {raw_root}. Checked candidates: {list(cfg.raw_file_candidates)}."
+            "missing required hydraulic raw files: " + ", ".join(sorted(missing))
         )
 
-    channels = channel_map["channels"]
-    data = fields_cfg = protocol["data_fields"]
-
-    u = None
-    cycle_id = None
-    subsystem_label = None
-    fault_label = None
-    condition_type = None
-    fault_count = None
-    sample_id = None
-
-    suffix = raw_path.suffix.lower()
-    if suffix == ".npz":
-        payload = np.load(raw_path, allow_pickle=True)
-        if "X" in payload:
-            u = _to_float2d(payload.get("X"), "X")
-        elif "data" in payload:
-            u = _to_float2d(payload.get("data"), "data")
-        elif "signals" in payload:
-            u = _to_float2d(payload.get("signals"), "signals")
-        else:
-            # fallback key scan for numeric arrays
-            arr_candidates = [
-                payload[k] for k in payload.files if isinstance(payload[k], np.ndarray) and np.asarray(payload[k]).ndim >= 2
-            ]
-            if arr_candidates:
-                u = _to_float2d(arr_candidates[0], "array")
-            else:
-                raise HydraulicBuilderError(f"{raw_path} does not include 2D numeric signal array.")
-
-        if u.shape[1] < len(channels):
-            raise HydraulicBuilderError(
-                f"Hydraulic signal array has {u.shape[1]} channels, expected at least {len(channels)}."
-            )
-        u = u[:, : len(channels)]
-
-        cycle_id = payload.get(data["cycle_field"]) if isinstance(payload, Mapping) else None
-        subsystem_label = payload.get(data["subsystem_field"]) if isinstance(payload, Mapping) else None
-        fault_label = payload.get(data["fault_label_field"]) if isinstance(payload, Mapping) else None
-        condition_type = payload.get(data["condition_field"]) if isinstance(payload, Mapping) else None
-        fault_count = payload.get(data["fault_count_field"]) if isinstance(payload, Mapping) else None
-        sample_id = payload.get(data.get("sample_id_field", "sample_id")) if isinstance(payload, Mapping) else None
-
-    elif suffix == ".npy":
-        arr = np.load(raw_path)
-        if arr.ndim == 1:
-            raise HydraulicBuilderError(".npy input must be 2D [time, channels] for hydraulic.")
-        u = _to_float2d(arr, "hydraulic npy")
-        if u.shape[1] < len(channels):
-            raise HydraulicBuilderError(
-                f"Hydraulic npy has {u.shape[1]} channels, expected at least {len(channels)}."
-            )
-        u = u[:, : len(channels)]
-        n = len(u)
-        cycle_id = np.array([f"cycle_{i}" for i in range(n)], dtype=object)
-        subsystem_label = np.full(n, "healthy", dtype=object)
-        fault_label = np.full(n, "healthy", dtype=object)
-        condition_type = np.full(n, "healthy", dtype=object)
-        fault_count = np.zeros(n, dtype=np.int64)
-        sample_id = np.arange(n, dtype=object)
-
-    elif suffix in {".csv", ".txt"}:
-        with raw_path.open("r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            rows = list(reader)
-
-        if not rows:
-            raise HydraulicBuilderError(f"{raw_path} is empty.")
-
-        u = _select_x_matrix_from_columns(rows, channels)
-
-        n = len(rows)
-        cycle_key = data.get("cycle_field", "cycle_id")
-        subsystem_key = data.get("subsystem_field", "subsystem_label")
-        fault_key = data.get("fault_label_field", "fault_label")
-        condition_key = data.get("condition_field", "condition_type")
-        fault_count_key = data.get("fault_count_field", "fault_count")
-        sample_key = data.get("sample_id_field", "sample_id")
-
-        cycle_id = np.asarray([r.get(cycle_key) for r in rows], dtype=object)
-        subsystem_label = np.asarray([r.get(subsystem_key) for r in rows], dtype=object)
-        fault_label = np.asarray([r.get(fault_key) for r in rows], dtype=object)
-        condition_type = np.asarray([r.get(condition_key) for r in rows], dtype=object)
-        fault_count = np.asarray([r.get(fault_count_key) for r in rows], dtype=object)
-        sample_id = np.asarray([r.get(sample_key) for r in rows], dtype=object)
-
-    elif suffix == ".mat":
-        try:
-            import scipy.io
-
-            payload = scipy.io.loadmat(raw_path)
-        except Exception as exc:
-            raise HydraulicBuilderError("Cannot read .mat without scipy." ) from exc
-
-        if "signals" in payload:
-            u = _to_float2d(payload["signals"], "signals")
-        elif "X" in payload:
-            u = _to_float2d(payload["X"], "X")
-        elif "data" in payload:
-            u = _to_float2d(payload["data"], "data")
-        else:
-            # first numeric 2d matrix
-            for key, value in payload.items():
-                if key.startswith("__"):
-                    continue
-                arr = np.asarray(value)
-                if arr.ndim == 2 and arr.shape[1] >= len(channels):
-                    u = arr
-                    break
-            if u is None:
-                raise HydraulicBuilderError(f"{raw_path} does not include usable hydraulic matrix.")
-            u = _to_float2d(u, "matrix")
-
-        if u.shape[1] < len(channels):
-            raise HydraulicBuilderError(
-                f"Hydraulic mat has {u.shape[1]} channels, expected at least {len(channels)}."
-            )
-        u = u[:, : len(channels)]
-
-        cycle_id = payload.get(data["cycle_field"]) if isinstance(payload, Mapping) else None
-        subsystem_label = payload.get(data["subsystem_field"]) if isinstance(payload, Mapping) else None
-        fault_label = payload.get(data["fault_label_field"]) if isinstance(payload, Mapping) else None
-        condition_type = payload.get(data["condition_field"]) if isinstance(payload, Mapping) else None
-        fault_count = payload.get(data["fault_count_field"]) if isinstance(payload, Mapping) else None
-        sample_id = payload.get(data.get("sample_id_field", "sample_id")) if isinstance(payload, Mapping) else None
-    else:
-        raise HydraulicBuilderError(f"Unsupported raw file format: {suffix}")
-
-    if cycle_id is None:
-        cycle_id = np.arange(len(u), dtype=object)
-    if sample_id is None:
-        sample_id = np.arange(len(u), dtype=object)
-    if fault_label is None:
-        fault_label = np.full(len(u), "healthy", dtype=object)
-    if subsystem_label is None:
-        subsystem_label = np.full(len(u), "healthy", dtype=object)
-    if condition_type is None:
-        condition_type = np.array(["healthy" for _ in range(len(u))], dtype=object)
-    if fault_count is None:
-        fault_count = np.zeros(len(u), dtype=np.int64)
-
-    if isinstance(fault_count, np.ndarray) and fault_count.dtype.kind in {"U", "S", "O"}:
-        fault_count = np.array([_as_scalar_int(v) if v not in (None, "") else 0 for v in fault_count], dtype=object)
+    ignored_docs = [
+        str(path.name)
+        for path in sorted(raw_root.glob("*.txt"))
+        if path.name not in set(sensor_files.values()) | {cfg.profile_file}
+    ]
 
     return {
-        "u": _to_float2d(u, "u"),
-        "cycle_id": _to_text_array(cycle_id),
-        "subsystem_label": _to_text_array(subsystem_label),
-        "fault_label": _to_text_array(fault_label),
-        "condition_type": _to_text_array(condition_type),
-        "fault_count": np.asarray(fault_count, dtype=object),
-        "sample_id": _to_text_array(sample_id),
+        "sensor_files": sensor_files,
+        "profile_file": cfg.profile_file,
+        "ignored_text_files": ignored_docs,
     }
 
 
-def _encode_labels(
-    subsystem_label: np.ndarray,
-    condition_type: np.ndarray,
-    fault_count: np.ndarray,
-    classes: Sequence[str],
-) -> np.ndarray:
-    n = len(subsystem_label)
-    out = np.zeros((n, len(classes)), dtype=float)
-    class_to_idx = {c: i for i, c in enumerate(classes)}
-
-    for i, (subsys, cond) in enumerate(zip(subsystem_label, condition_type)):
-        key = "healthy"
-        if cond is not None and str(cond).lower() in {"degraded", "fault", "abnormal", "anomaly"}:
-            if subsys is not None and str(subsys).strip() and str(subsys) in class_to_idx and str(subsys) != "healthy":
-                key = str(subsys)
-            else:
-                fc = fault_count[i]
-                if fc is None:
-                    key = "healthy"
-                else:
-                    try:
-                        k = int(fc)
-                        if k > 1:
-                            key = "healthy"
-                    except Exception:
-                        key = "healthy"
-        else:
-            key = "healthy"
-
-        idx = class_to_idx.get(key)
-        if idx is None:
-            idx = class_to_idx.get("healthy", 0)
-        out[i, idx] = 1.0
-
-    return out
-
-
-def select_single_fault_rows(
-    protocol: Mapping[str, Any],
-    cycle_id: np.ndarray,
-    subsystem_label: np.ndarray,
-    fault_label: np.ndarray,
-    condition_type: np.ndarray,
-    fault_count: np.ndarray,
-    classes: Sequence[str],
-) -> np.ndarray:
-    sf = protocol["single_fault_filter"]
-    labeling = protocol["labeling"]
-
-    enable = bool(sf.get("enable", True))
-    if not enable:
-        return np.ones(len(cycle_id), dtype=bool)
-
-    min_fault = int(sf.get("min_active_fault_count", 1))
-    max_fault = int(sf.get("max_active_fault_count", 1))
-    include_healthy = bool(sf.get("allow_healthy", True))
-    degraded_value = str(labeling.get("degraded_value", "degraded"))
-    healthy_value = str(labeling.get("healthy_value", "healthy"))
-
-    cond_ok = np.array([str(v).lower() == healthy_value for v in condition_type], dtype=bool)
-    deg_ok = np.array([str(v).lower() == degraded_value for v in condition_type], dtype=bool)
-
-    # if fault_count not available, infer from subsystem label string.
-    counts = np.full(len(fault_count), 1, dtype=int)
-    parsed_count = np.zeros(len(fault_count), dtype=int)
-    has_count = 0
-    for i, c in enumerate(fault_count):
-        if c is None:
-            continue
-        if isinstance(c, (int, np.integer)):
-            parsed_count[i] = int(c)
-            has_count += 1
-        else:
-            try:
-                parsed_count[i] = int(str(c))
-                has_count += 1
-            except Exception:
-                parsed_count[i] = 0
-    if has_count > 0:
-        counts = parsed_count
-    else:
-        allowed = set(classes)
-        counts = np.array([0 if str(s).lower() == healthy_value else 1 for s in subsystem_label], dtype=int)
-
-    degraded_single = (
-        deg_ok
-        & (counts >= min_fault)
-        & (counts <= max_fault)
-        & np.array([str(ss) in set(labeling.get("allowed_fault_classes", classes[1:])) or str(ss) == "" for ss in subsystem_label], dtype=bool)
-    )
-
-    subsys_ok = np.array([str(ss).strip() != "" for ss in subsystem_label], dtype=bool)
-
-    return (cond_ok | degraded_single) if include_healthy else (degraded_single & subsys_ok)
-
-
-def build_windows(
-    x: np.ndarray,
-    y_onehot: np.ndarray,
-    cycle_id: np.ndarray,
-    fault_label: np.ndarray,
-    subsystem_label: np.ndarray,
-    condition_type: np.ndarray,
-    sample_id: np.ndarray,
-    window_length: int,
-    horizon: int,
+def load_raw(
+    raw_root: Path,
+    channel_map: Mapping[str, Any],
+    cfg: HydraulicBuilderConfig,
 ) -> Dict[str, Any]:
-    n = len(x)
-    if n <= window_length + horizon:
-        raise HydraulicBuilderError(
-            f"Not enough points for windowing: n={n}, window_length={window_length}, horizon={horizon}."
+    discovery = discover_raw_files(raw_root, channel_map, cfg)
+    channels = channel_map["channels"]
+    details = channel_map["channel_details"]
+
+    sensor_data: Dict[str, np.ndarray] = {}
+    expected_rows: int | None = None
+    row_counts: Dict[str, int] = {}
+    column_counts: Dict[str, int] = {}
+    sampling_rates: Dict[str, int] = {}
+
+    for channel_name in channels:
+        spec = details[channel_name]
+        path = raw_root / discovery["sensor_files"][channel_name]
+        arr = _load_matrix(
+            path,
+            expected_rows=expected_rows,
+            expected_cols=int(spec["samples_per_cycle"]),
+            name=channel_name,
         )
+        if expected_rows is None:
+            expected_rows = int(arr.shape[0])
+        sensor_data[channel_name] = arr
+        row_counts[channel_name] = int(arr.shape[0])
+        column_counts[channel_name] = int(arr.shape[1])
+        sampling_rates[channel_name] = int(spec["sampling_rate_hz"])
 
-    X_list = []
-    Y_list = []
-    sample_ids = []
-    cycle_list = []
-    fault_list = []
-    subsystem_list = []
-    condition_list = []
+    if expected_rows is None:
+        raise HydraulicBuilderError("no hydraulic sensor matrices were loaded.")
 
-    for idx in range(0, n - window_length - horizon + 1):
-        X_list.append(x[idx : idx + window_length])
-        Y_list.append(y_onehot[idx + window_length : idx + window_length + horizon])
-
-        t = idx + window_length - 1
-        sample_ids.append(sample_id[t])
-        cycle_list.append(cycle_id[t])
-        fault_list.append(fault_label[t])
-        subsystem_list.append(subsystem_label[t])
-        condition_list.append(condition_type[t])
+    profile = _load_matrix(
+        raw_root / discovery["profile_file"],
+        expected_rows=expected_rows,
+        expected_cols=5,
+        name="profile",
+    )
 
     return {
-        "X": np.asarray(X_list, dtype=np.float64),
-        "Y": np.asarray(Y_list, dtype=np.float64),
-        "sample_id": np.asarray(sample_ids, dtype=object),
-        "cycle_id": np.asarray(cycle_list, dtype=object),
-        "fault_label": np.asarray(fault_list, dtype=object),
-        "subsystem_label": np.asarray(subsystem_list, dtype=object),
-        "condition_type": np.asarray(condition_list, dtype=object),
+        "sensor_data": sensor_data,
+        "profile": profile,
+        "row_count": expected_rows,
+        "row_counts": row_counts,
+        "column_counts": column_counts,
+        "sampling_rates": sampling_rates,
+        "discovery": discovery,
     }
 
 
-def _split_indices_by_cycle_or_ratio(
-    windows: Mapping[str, Any],
-    protocol: Mapping[str, Any],
-) -> Dict[str, np.ndarray]:
-    x = np.asarray(windows["X"])
-    cycle_id = np.asarray(windows.get("cycle_id", np.array([], dtype=object)), dtype=object)
+def _derive_protocol_rows(profile: np.ndarray, protocol: Mapping[str, Any]) -> List[Dict[str, Any]]:
+    nominal = protocol.get("nominal_conditions", {})
+    if not isinstance(nominal, Mapping):
+        raise HydraulicBuilderError("single_fault_protocol.nominal_conditions must be a mapping.")
 
-    split_cfg = protocol.get("split", {})
-    tr = float(split_cfg.get("train", 0.70))
-    va = float(split_cfg.get("val", 0.15))
-    te = float(split_cfg.get("test", 0.15))
-    total = tr + va + te
+    rows: List[Dict[str, Any]] = []
+    for idx, raw_row in enumerate(profile, start=1):
+        cooler_condition = int(raw_row[0])
+        valve_condition = int(raw_row[1])
+        pump_leakage = int(raw_row[2])
+        accumulator_pressure = int(raw_row[3])
+        stable_flag = int(raw_row[4])
+
+        degraded_components: List[str] = []
+        if cooler_condition != int(nominal["cooler_condition"]):
+            degraded_components.append("Cooler")
+        if valve_condition != int(nominal["valve_condition"]):
+            degraded_components.append("Valve")
+        if pump_leakage != int(nominal["pump_leakage"]):
+            degraded_components.append("Pump")
+        if accumulator_pressure != int(nominal["accumulator_pressure"]):
+            degraded_components.append("Accumulator")
+
+        is_healthy = len(degraded_components) == 0
+        is_single_component_fault = len(degraded_components) == 1
+        if is_healthy:
+            condition_type = "healthy"
+            subsystem_label = "healthy"
+            fault_label = "healthy"
+            fault_subsystem = ""
+        elif is_single_component_fault:
+            condition_type = "single_component_degraded"
+            subsystem_label = degraded_components[0].lower()
+            fault_label = degraded_components[0]
+            fault_subsystem = degraded_components[0]
+        else:
+            condition_type = "multi_component_degraded"
+            subsystem_label = "multi_component"
+            fault_label = "multi_component"
+            fault_subsystem = ""
+
+        rows.append(
+            {
+                "cycle_id": idx,
+                "sample_id": idx,
+                "cooler_condition": cooler_condition,
+                "valve_condition": valve_condition,
+                "pump_leakage": pump_leakage,
+                "accumulator_pressure": accumulator_pressure,
+                "stable_flag": stable_flag,
+                "is_stable_cycle": int(stable_flag == 0),
+                "is_healthy": int(is_healthy),
+                "num_degraded_components": len(degraded_components),
+                "degraded_components": "|".join(degraded_components),
+                "is_single_component_fault": int(is_single_component_fault),
+                "fault_subsystem": fault_subsystem,
+                "fault_label": fault_label,
+                "subsystem_label": subsystem_label,
+                "condition_type": condition_type,
+            }
+        )
+    return rows
+
+
+def _encode_labels(rows: Sequence[Mapping[str, Any]], class_names: Sequence[str]) -> np.ndarray:
+    class_to_idx = {name: idx for idx, name in enumerate(class_names)}
+    encoded = np.zeros((len(rows), len(class_names)), dtype=np.float32)
+    for row_idx, row in enumerate(rows):
+        label = str(row["subsystem_label"])
+        if label not in class_to_idx:
+            raise HydraulicBuilderError(f"unknown subsystem_label `{label}` in derived rows.")
+        encoded[row_idx, class_to_idx[label]] = 1.0
+    return encoded
+
+
+def build_cycle_tensor(
+    sensor_data: Mapping[str, np.ndarray],
+    channel_map: Mapping[str, Any],
+    spec: RepresentationSpec,
+) -> tuple[np.ndarray, Dict[str, Any]]:
+    channels = channel_map["channels"]
+    details = channel_map["channel_details"]
+    resampled_channels: List[np.ndarray] = []
+    transforms: Dict[str, Any] = {}
+
+    for channel_name in channels:
+        channel_spec = details[channel_name]
+        source = np.asarray(sensor_data[channel_name], dtype=np.float32)
+        transformed, transform_info = _transform_channel(
+            source,
+            target_cycle_length=spec.target_cycle_length,
+            source_samples_per_cycle=int(channel_spec["samples_per_cycle"]),
+            channel_name=channel_name,
+        )
+        if transformed.shape[1] != spec.target_cycle_length:
+            raise HydraulicBuilderError(
+                f"{channel_name}: transformed cycle length {transformed.shape[1]} != {spec.target_cycle_length}."
+            )
+        resampled_channels.append(transformed)
+        transforms[channel_name] = {
+            "source_file": channel_spec["source_file"],
+            "source_sampling_rate_hz": int(channel_spec["sampling_rate_hz"]),
+            "source_samples_per_cycle": int(channel_spec["samples_per_cycle"]),
+            "target_sampling_rate_hz": spec.target_sampling_rate_hz,
+            "target_cycle_length": spec.target_cycle_length,
+            **transform_info,
+        }
+
+    tensor = np.stack(resampled_channels, axis=-1).astype(np.float32, copy=False)
+    summary = {
+        "representation_name": spec.name,
+        "representation_role": spec.role,
+        "description": spec.description,
+        "target_cycle_length": spec.target_cycle_length,
+        "target_sampling_rate_hz": spec.target_sampling_rate_hz,
+        "channels": transforms,
+        "output_shape": [int(tensor.shape[0]), int(tensor.shape[1]), int(tensor.shape[2])],
+    }
+    return tensor, summary
+
+
+def _split_indices(n_samples: int, split_cfg: Mapping[str, Any]) -> Dict[str, np.ndarray]:
+    train_ratio = float(split_cfg.get("train", 0.70))
+    val_ratio = float(split_cfg.get("val", 0.15))
+    test_ratio = float(split_cfg.get("test", 0.15))
+    total = train_ratio + val_ratio + test_ratio
     if total <= 0:
-        raise HydraulicBuilderError("invalid split ratio sum <=0")
-    if abs(total - 1.0) > 1e-9:
-        tr, va, te = tr / total, va / total, te / total
+        raise HydraulicBuilderError("invalid hydraulic split ratios.")
+    train_ratio /= total
+    val_ratio /= total
+    test_ratio /= total
 
-    if protocol.get("grouping", {}).get("level") == "cycle" and cycle_id.size == len(x):
-        valid = np.array([c is not None and str(c) != "" for c in cycle_id], dtype=bool)
-        if valid.any():
-            cycles = cycle_id[valid]
-            unique_cycles = [c for c in dict.fromkeys(cycles.tolist())]
-            if unique_cycles:
-                n_c = len(unique_cycles)
-                n_tr = max(1, int(n_c * tr))
-                n_va = max(0, int(n_c * va))
-                n_te = max(0, n_c - n_tr - n_va)
-                if n_tr + n_va + n_te > n_c:
-                    n_te = n_c - n_tr - n_va
-
-                train_cycles = set(unique_cycles[:n_tr])
-                val_cycles = set(unique_cycles[n_tr : n_tr + n_va])
-                test_cycles = set(unique_cycles[n_tr + n_va : n_tr + n_va + n_te])
-
-                idx_train = np.array([i for i, c in enumerate(cycle_id) if c in train_cycles], dtype=int)
-                idx_val = np.array([i for i, c in enumerate(cycle_id) if c in val_cycles], dtype=int)
-                idx_test = np.array([i for i, c in enumerate(cycle_id) if c in test_cycles], dtype=int)
-
-                if len(idx_train) > 0 and len(idx_val) > 0 and len(idx_test) > 0:
-                    return {"train": idx_train, "val": idx_val, "test": idx_test}
-
-    n = len(x)
-    tr_end = int(n * tr)
-    va_end = tr_end + int(n * va)
-    idx_train = np.arange(0, max(1, tr_end), dtype=int)
-    idx_val = np.arange(max(1, tr_end), min(n, max(1, va_end)), dtype=int)
-    idx_test = np.arange(min(n, max(1, va_end)), n, dtype=int)
-    if len(idx_val) == 0 and n - idx_val.size > idx_train.size:
-        idx_val = np.array([idx_train[-1]], dtype=int)
-    if len(idx_test) == 0 and n > idx_val.size:
-        idx_test = np.array([n - 1], dtype=int)
-    return {"train": idx_train, "val": idx_val, "test": idx_test}
-
-
-def build_split(window_payload: Mapping[str, Any], protocol: Mapping[str, Any], split_path: Path) -> Dict[str, Dict[str, Any]]:
-    x = np.asarray(window_payload["X"])
-    idx_map = _split_indices_by_cycle_or_ratio(window_payload, protocol)
-
-    split_payload = {
-        "dataset_name": "hydraulic",
-        "protocol_name": protocol.get("protocol_name"),
-        "split_indices": {k: v.tolist() for k, v in idx_map.items()},
-        "counts": {k: int(len(v)) for k, v in idx_map.items()},
-        "protocol": protocol,
-        "generated_at": datetime.utcnow().isoformat() + "Z",
-        "window_count": int(len(x)),
-        "grouping": protocol.get("grouping", {}),
-    }
-    _write_json(split_path, split_payload)
+    n_train = int(n_samples * train_ratio)
+    n_val = int(n_samples * val_ratio)
+    n_test = n_samples - n_train - n_val
+    if min(n_train, n_val, n_test) <= 0:
+        raise HydraulicBuilderError("hydraulic bundle split produced an empty split.")
 
     return {
-        "train": {
-            "X": x[idx_map["train"]],
-            "Y": np.asarray(window_payload["Y"])[idx_map["train"]],
-            "sample_id": np.asarray(window_payload["sample_id"])[idx_map["train"]],
-            "cycle_id": np.asarray(window_payload["cycle_id"])[idx_map["train"]],
-            "fault_label": np.asarray(window_payload["fault_label"])[idx_map["train"]],
-            "subsystem_label": np.asarray(window_payload["subsystem_label"])[idx_map["train"]],
-            "condition_type": np.asarray(window_payload["condition_type"])[idx_map["train"]],
-        },
-        "val": {
-            "X": x[idx_map["val"]],
-            "Y": np.asarray(window_payload["Y"])[idx_map["val"]],
-            "sample_id": np.asarray(window_payload["sample_id"])[idx_map["val"]],
-            "cycle_id": np.asarray(window_payload["cycle_id"])[idx_map["val"]],
-            "fault_label": np.asarray(window_payload["fault_label"])[idx_map["val"]],
-            "subsystem_label": np.asarray(window_payload["subsystem_label"])[idx_map["val"]],
-            "condition_type": np.asarray(window_payload["condition_type"])[idx_map["val"]],
-        },
-        "test": {
-            "X": x[idx_map["test"]],
-            "Y": np.asarray(window_payload["Y"])[idx_map["test"]],
-            "sample_id": np.asarray(window_payload["sample_id"])[idx_map["test"]],
-            "cycle_id": np.asarray(window_payload["cycle_id"])[idx_map["test"]],
-            "fault_label": np.asarray(window_payload["fault_label"])[idx_map["test"]],
-            "subsystem_label": np.asarray(window_payload["subsystem_label"])[idx_map["test"]],
-            "condition_type": np.asarray(window_payload["condition_type"])[idx_map["test"]],
-        },
+        "train": np.arange(0, n_train, dtype=np.int64),
+        "val": np.arange(n_train, n_train + n_val, dtype=np.int64),
+        "test": np.arange(n_train + n_val, n_samples, dtype=np.int64),
     }
+
+
+def _write_split_manifest(
+    split_root: Path,
+    *,
+    dataset_name: str,
+    protocol: Mapping[str, Any],
+    split_indices: Mapping[str, np.ndarray],
+    representation_names: Sequence[str],
+) -> Path:
+    split_root.mkdir(parents=True, exist_ok=True)
+    split_path = split_root / "hydraulic_split_manifest.json"
+    _write_json(
+        split_path,
+        {
+            "dataset_name": dataset_name,
+            "protocol_name": protocol["protocol_name"],
+            "split_protocol": protocol["split_protocol"],
+            "split_kind": protocol.get("split_protocol_kind", "bundle_scaffold_only"),
+            "generated_at": _utc_now(),
+            "split_indices": {name: idx.tolist() for name, idx in split_indices.items()},
+            "counts": {name: int(len(idx)) for name, idx in split_indices.items()},
+            "grouping": protocol.get("grouping", {}),
+            "compatible_representations": list(representation_names),
+            "notes": "Cycle-contiguous deterministic split for bundle scaffolding; not the paper experiment split.",
+        },
+    )
+    return split_path
+
+
+def _make_split_payload(
+    cycle_tensor: np.ndarray,
+    labels: np.ndarray,
+    rows: Sequence[Mapping[str, Any]],
+    indices: Mapping[str, np.ndarray],
+) -> Dict[str, Dict[str, Any]]:
+    cycle_ids = np.asarray([int(row["cycle_id"]) for row in rows], dtype=np.int64)
+    sample_ids = np.asarray([int(row["sample_id"]) for row in rows], dtype=np.int64)
+    timestamps = cycle_ids.astype(np.float64, copy=False)
+    fault_labels = _as_object_array([str(row["fault_label"]) for row in rows])
+    subsystem_labels = _as_object_array([str(row["subsystem_label"]) for row in rows])
+    condition_types = _as_object_array([str(row["condition_type"]) for row in rows])
+
+    payload: Dict[str, Dict[str, Any]] = {}
+    for split_name, split_idx in indices.items():
+        payload[split_name] = {
+            "X": cycle_tensor[split_idx],
+            "Y": labels[split_idx],
+            "sample_id": sample_ids[split_idx],
+            "cycle_id": cycle_ids[split_idx],
+            "timestamp": timestamps[split_idx],
+            "fault_label": fault_labels[split_idx],
+            "subsystem_label": subsystem_labels[split_idx],
+            "condition_type": condition_types[split_idx],
+        }
+    return payload
+
+
+def _save_split_arrays(version_root: Path, splits: Mapping[str, Mapping[str, Any]]) -> Dict[str, str]:
+    processed_files: Dict[str, str] = {}
+    object_keys = {"fault_label", "subsystem_label", "condition_type"}
+    for split_name, payload in splits.items():
+        for key in ("X", "Y", "sample_id", "cycle_id", "timestamp", "fault_label", "subsystem_label", "condition_type"):
+            value = payload.get(key)
+            if value is None:
+                continue
+            filename = f"{split_name}_{key}.npy"
+            array = np.asarray(value, dtype=object if key in object_keys else None)
+            np.save(version_root / filename, array)
+            processed_files[f"{split_name}_{key}"] = filename
+    return processed_files
+
+
+def _make_root_relative_manifest(
+    version_manifest: Mapping[str, Any],
+    *,
+    representation_name: str,
+) -> Dict[str, Any]:
+    root_manifest = dict(version_manifest)
+    root_manifest["representation_name"] = representation_name
+    root_manifest["default_representation"] = representation_name
+    files = version_manifest.get("processed_files", {})
+    if isinstance(files, Mapping):
+        root_manifest["processed_files"] = {
+            key: f"{representation_name}/{value}" for key, value in files.items()
+        }
+    cycle_tensor_file = version_manifest.get("cycle_tensor_file")
+    if isinstance(cycle_tensor_file, str):
+        root_manifest["cycle_tensor_file"] = f"{representation_name}/{cycle_tensor_file}"
+    label_table_file = version_manifest.get("label_table_file")
+    if isinstance(label_table_file, str):
+        root_manifest["label_table_file"] = f"{representation_name}/{label_table_file}"
+    return root_manifest
 
 
 def export_bundle(
+    *,
     cfg: HydraulicBuilderConfig,
-    splits: Mapping[str, Mapping[str, Any]],
-    protocol: Mapping[str, Any],
+    processed_root: Path,
+    split_root: Path,
+    metadata_root: Path,
     channel_map: Mapping[str, Any],
     subsystem_groups: Mapping[str, Any],
-    processed_root: Path,
-    split_path: Path,
-    metadata_root: Path,
+    protocol: Mapping[str, Any],
+    raw_summary: Mapping[str, Any],
+    rows: Sequence[Mapping[str, Any]],
+    labels: np.ndarray,
 ) -> DatasetBundle:
     processed_root.mkdir(parents=True, exist_ok=True)
-    processed_files: Dict[str, str] = {}
+    split_root.mkdir(parents=True, exist_ok=True)
 
-    for split_name, payload in splits.items():
-        x = np.asarray(payload["X"], dtype=float)
-        y = np.asarray(payload["Y"], dtype=float)
-        np.save(processed_root / f"{split_name}_X.npy", x)
-        np.save(processed_root / f"{split_name}_Y.npy", y)
-        processed_files[f"{split_name}_X"] = f"{split_name}_X.npy"
-        processed_files[f"{split_name}_Y"] = f"{split_name}_Y.npy"
-
-        for key in ("sample_id", "cycle_id", "fault_label", "subsystem_label", "condition_type"):
-            if key in payload and payload[key] is not None:
-                np.save(processed_root / f"{split_name}_{key}.npy", np.asarray(payload[key], dtype=object))
-                processed_files[f"{split_name}_{key}"] = f"{split_name}_{key}.npy"
-
-    train_x = np.asarray(splits["train"]["X"])
-    train_y = np.asarray(splits["train"]["Y"])
-    input_dim = int(train_x.shape[-1]) if train_x.size else int(0)
-    output_dim = int(train_y.shape[-1]) if train_y.size else int(0)
-
-    bundle = HydraulicAdapter.build_bundle(
+    split_indices = _split_indices(len(rows), protocol.get("split", {}))
+    split_path = _write_split_manifest(
+        split_root,
         dataset_name=cfg.dataset_name,
-        train={k: v for k, v in splits["train"].items()},
-        val={k: v for k, v in splits["val"].items()},
-        test={k: v for k, v in splits["test"].items()},
-        meta={
-            "dataset_name": cfg.dataset_name,
-            "task_family": "hydraulic",
-            "input_dim": input_dim,
-            "output_dim": output_dim,
-            "window_length": int(protocol["window_length"]),
-            "horizon": int(protocol["horizon"]),
-            "split_protocol": protocol["split_protocol"],
-            "has_ground_truth_kernel": False,
-            "has_ground_truth_gfrf": False,
-            "extras": {
-                "channel_map": channel_map,
-                "subsystem_groups": subsystem_groups,
-                "single_fault_protocol": protocol,
-                "class_names": protocol["labeling"].get("subsystem_class_order", []),
-            },
-        },
-        artifacts={
-            "truth_file": None,
-            "grouping_file": str(metadata_root / "subsystem_groups.json"),
-            "protocol_file": str(metadata_root / "single_fault_protocol.json"),
-            "extra": {
-                "split_file": str(split_path),
-                "condition_field": protocol["data_fields"].get("condition_field"),
-                "subsystem_field": protocol["data_fields"].get("subsystem_field"),
-                "cycle_field": protocol["data_fields"].get("cycle_field"),
-                "labeling": protocol["labeling"],
-            },
-        },
+        protocol=protocol,
+        split_indices=split_indices,
+        representation_names=[spec.name for spec in REPRESENTATION_SPECS],
     )
 
-    _write_json(
-        processed_root / "hydraulic_processed_manifest.json",
-        {
+    class_names = list(protocol["labeling"]["subsystem_class_order"])
+    healthy_count = int(sum(int(row["is_healthy"]) for row in rows))
+    single_fault_count = int(sum(int(row["is_single_component_fault"]) for row in rows))
+    multi_component_count = int(sum(1 for row in rows if row["condition_type"] == "multi_component_degraded"))
+
+    representation_index: Dict[str, Any] = {}
+    version_manifests: Dict[str, Dict[str, Any]] = {}
+    bundles: Dict[str, DatasetBundle] = {}
+
+    for spec in REPRESENTATION_SPECS:
+        version_root = processed_root / spec.name
+        version_root.mkdir(parents=True, exist_ok=True)
+        cycle_tensor, resampling_summary = build_cycle_tensor(raw_summary["sensor_data"], channel_map, spec)
+        split_payload = _make_split_payload(cycle_tensor, labels, rows, split_indices)
+        processed_files = _save_split_arrays(version_root, split_payload)
+
+        cycle_tensor_file = "hydraulic_cycle_tensor.npy"
+        np.save(version_root / cycle_tensor_file, cycle_tensor)
+
+        label_table_name = "hydraulic_cycle_labels.csv"
+        _write_cycle_label_table(version_root / label_table_name, rows)
+
+        bundle = HydraulicAdapter.build_bundle(
+            dataset_name=cfg.dataset_name,
+            train=split_payload["train"],
+            val=split_payload["val"],
+            test=split_payload["test"],
+            meta={
+                "dataset_name": cfg.dataset_name,
+                "task_family": "hydraulic",
+                "input_dim": int(cycle_tensor.shape[-1]),
+                "output_dim": len(class_names),
+                "window_length": int(spec.target_cycle_length),
+                "horizon": 1,
+                "split_protocol": str(protocol["split_protocol"]),
+                "has_ground_truth_kernel": False,
+                "has_ground_truth_gfrf": False,
+                "extras": {
+                    "sample_granularity": "cycle",
+                    "cycle_duration_seconds": int(protocol["cycle_duration_seconds"]),
+                    "representation_name": spec.name,
+                    "representation_role": spec.role,
+                    "representation_description": spec.description,
+                    "target_cycle_length": int(spec.target_cycle_length),
+                    "target_sampling_rate_hz": int(spec.target_sampling_rate_hz),
+                    "canonical_channel_order": list(channel_map["channels"]),
+                    "channel_map": channel_map,
+                    "subsystem_groups": subsystem_groups,
+                    "single_fault_protocol": protocol,
+                    "resampling": resampling_summary,
+                    "label_table_file": str(version_root / label_table_name),
+                    "stable_flag_retained": True,
+                    "class_names": class_names,
+                    "available_representations": [item.name for item in REPRESENTATION_SPECS],
+                    "task_note": "Y stores protocol support labels for bundle compatibility; the paper task remains unsupervised.",
+                },
+            },
+            artifacts={
+                "truth_file": None,
+                "grouping_file": str(metadata_root / "subsystem_groups.json"),
+                "protocol_file": str(metadata_root / "single_fault_protocol.json"),
+                "extra": {
+                    "channel_map_file": str(metadata_root / "channel_map.json"),
+                    "split_file": str(split_path),
+                    "label_table_file": str(version_root / label_table_name),
+                    "representation_name": spec.name,
+                },
+            },
+        )
+        check_dataset_bundle(bundle)
+        bundles[spec.name] = bundle
+
+        version_manifest = {
             "dataset_name": cfg.dataset_name,
-            "generated_at": datetime.utcnow().isoformat() + "Z",
-            "protocol": protocol,
+            "generated_at": _utc_now(),
+            "representation_name": spec.name,
+            "representation_role": spec.role,
+            "representation_description": spec.description,
+            "target_cycle_length": int(spec.target_cycle_length),
+            "target_sampling_rate_hz": int(spec.target_sampling_rate_hz),
+            "cycle_tensor_file": cycle_tensor_file,
+            "cycle_tensor_shape": [int(cycle_tensor.shape[0]), int(cycle_tensor.shape[1]), int(cycle_tensor.shape[2])],
+            "label_table_file": label_table_name,
             "split_file": str(split_path),
             "processed_files": processed_files,
-            "counts": {
-                "train": int(len(splits["train"]["X"])),
-                "val": int(len(splits["val"]["X"])),
-                "test": int(len(splits["test"]["X"])),
+            "counts": {name: int(len(payload["X"])) for name, payload in split_payload.items()},
+            "raw_summary": {
+                "discovery": dict(raw_summary["discovery"]),
+                "row_count": int(raw_summary["row_count"]),
+                "row_counts": dict(raw_summary["row_counts"]),
+                "column_counts": dict(raw_summary["column_counts"]),
+                "sampling_rates": dict(raw_summary["sampling_rates"]),
             },
+            "derived_protocol_summary": {
+                "healthy_count": healthy_count,
+                "single_component_fault_count": single_fault_count,
+                "multi_component_count": multi_component_count,
+                "fault_subsystems_present": sorted(
+                    {str(row["fault_subsystem"]) for row in rows if str(row["fault_subsystem"])}
+                ),
+            },
+            "resampling": resampling_summary,
             "bundle_meta": bundle.meta.to_dict(),
             "bundle_artifacts": bundle.artifacts.to_dict(),
+        }
+        _write_json(version_root / "hydraulic_processed_manifest.json", version_manifest)
+        version_manifests[spec.name] = version_manifest
+        representation_index[spec.name] = {
+            "representation_role": spec.role,
+            "target_cycle_length": int(spec.target_cycle_length),
+            "target_sampling_rate_hz": int(spec.target_sampling_rate_hz),
+            "processed_manifest": str(version_root / "hydraulic_processed_manifest.json"),
+            "cycle_tensor_file": str(version_root / cycle_tensor_file),
+            "label_table_file": str(version_root / label_table_name),
+        }
+
+    representations_manifest_path = processed_root / "hydraulic_representations_manifest.json"
+    _write_json(
+        representations_manifest_path,
+        {
+            "dataset_name": cfg.dataset_name,
+            "generated_at": _utc_now(),
+            "default_representation": cfg.default_representation,
+            "representations": representation_index,
         },
     )
+
+    default_manifest = _make_root_relative_manifest(
+        version_manifests[cfg.default_representation],
+        representation_name=cfg.default_representation,
+    )
+    default_manifest["representations_manifest_file"] = "hydraulic_representations_manifest.json"
+    default_manifest["available_representations"] = representation_index
+    _write_json(processed_root / "hydraulic_processed_manifest.json", default_manifest)
 
     _write_json(
         metadata_root / "hydraulic_builder_manifest.json",
         {
             "dataset_name": cfg.dataset_name,
-            "protocol": protocol["protocol_name"],
-            "single_fault_mode": "single_degraded_or_healthy",
-            "filter_summary": {
-                "allowed_fault_classes": protocol["labeling"].get("allowed_fault_classes", []),
-                "window_length": int(protocol["window_length"]),
-                "horizon": int(protocol["horizon"]),
+            "generated_at": _utc_now(),
+            "raw_discovery": dict(raw_summary["discovery"]),
+            "cycle_count": int(raw_summary["row_count"]),
+            "split_file": str(split_path),
+            "default_representation": cfg.default_representation,
+            "representations": {
+                spec.name: {
+                    "target_cycle_length": int(spec.target_cycle_length),
+                    "target_sampling_rate_hz": int(spec.target_sampling_rate_hz),
+                    "role": spec.role,
+                    "description": spec.description,
+                }
+                for spec in REPRESENTATION_SPECS
             },
-            "source_channels": channel_map["channels"],
-            "subsystem_groups": subsystem_groups,
-            "bundle_meta": bundle.meta.to_dict(),
+            "protocol_name": protocol["protocol_name"],
         },
     )
 
-    check_dataset_bundle(bundle)
-    return bundle
+    return bundles[cfg.default_representation]
 
 
 def run_build(project_root: Path) -> DatasetBundle:
-    metadata_root = project_root / "data" / "metadata" / "hydraulic"
-    raw_root = project_root / "data" / "raw" / "hydraulic"
-    interim_root = project_root / "data" / "interim" / "hydraulic"
-    processed_root = project_root / "data" / "processed" / "hydraulic"
-    splits_root = project_root / "data" / "splits" / "hydraulic"
-
     cfg = HydraulicBuilderConfig()
     cfg.validate()
 
-    channel_map = _load_channel_map(metadata_root)
-    subsystem_groups = _load_subsystem_groups(metadata_root)
-    protocol = _load_single_fault_protocol(metadata_root)
+    project_root = project_root.expanduser().resolve()
+    raw_root = project_root / "data" / "raw" / "hydraulic"
+    processed_root = project_root / "data" / "processed" / "hydraulic"
+    split_root = project_root / "data" / "splits" / "hydraulic"
+    metadata_root = project_root / "data" / "metadata" / "hydraulic"
 
-    raw = load_raw(raw_root, protocol, channel_map)
+    channel_map = _load_json(metadata_root / "channel_map.json")
+    subsystem_groups = _load_json(metadata_root / "subsystem_groups.json")
+    protocol = _load_json(metadata_root / "single_fault_protocol.json")
 
-    cycle_id = raw["cycle_id"]
-    subsystem_label = raw["subsystem_label"]
-    fault_label = raw["fault_label"]
-    condition_type = raw["condition_type"]
-    fault_count = np.asarray(raw["fault_count"], dtype=object)
-    sample_id = raw["sample_id"]
-    x_raw = raw["u"]
+    raw = load_raw(raw_root, channel_map, cfg)
+    cycle_rows = _derive_protocol_rows(np.asarray(raw["profile"], dtype=np.float32), protocol)
+    labels = _encode_labels(cycle_rows, protocol["labeling"]["subsystem_class_order"])
 
-    classes = protocol["labeling"].get("subsystem_class_order", ["healthy", "cooler", "valve", "pump", "accumulator"])
-    y_onehot = _encode_labels(subsystem_label, condition_type, fault_count, classes)
-
-    # filter to single-fault + healthy samples.
-    keep = select_single_fault_rows(
-        protocol,
-        cycle_id,
-        subsystem_label,
-        fault_label,
-        condition_type,
-        fault_count,
-        classes,
-    )
-
-    x = x_raw[keep]
-    y_onehot = y_onehot[keep]
-    cycle_id = cycle_id[keep]
-    fault_label = fault_label[keep]
-    subsystem_label = subsystem_label[keep]
-    condition_type = condition_type[keep]
-    sample_id = sample_id[keep]
-
-    # save interim for traceability
-    interim_root.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(
-        interim_root / "hydraulic_preprocessed.npz",
-        X=x,
-        Y=y_onehot,
-        cycle_id=cycle_id,
-        fault_label=fault_label,
-        subsystem_label=subsystem_label,
-        condition_type=condition_type,
-        sample_id=sample_id,
-        window_length=np.array([protocol["window_length"]], dtype=np.int64),
-        horizon=np.array([protocol["horizon"]], dtype=np.int64),
-    )
-    _write_json(
-        interim_root / "hydraulic_interim_manifest.json",
-        {
-            "dataset_name": cfg.dataset_name,
-            "generated_at": datetime.utcnow().isoformat() + "Z",
-            "raw_files_checked": cfg.raw_file_candidates,
-            "kept_samples": int(len(x)),
-            "raw_samples": int(len(x_raw)),
-            "filter_kept_ratio": float(len(x)) / max(1, len(x_raw)),
-            "filter_rule": protocol["single_fault_filter"],
-            "labeling": protocol["labeling"],
-            "window_length": int(protocol["window_length"]),
-            "horizon": int(protocol["horizon"]),
-            "channels": channel_map["channels"],
-            "n_channels": len(channel_map["channels"]),
-        },
-    )
-
-    windows = build_windows(
-        x=x,
-        y_onehot=y_onehot,
-        cycle_id=cycle_id,
-        fault_label=fault_label,
-        subsystem_label=subsystem_label,
-        condition_type=condition_type,
-        sample_id=sample_id,
-        window_length=int(protocol["window_length"]),
-        horizon=int(protocol["horizon"]),
-    )
-
-    splits_path = splits_root / "hydraulic_split_manifest.json"
-    split_payload = build_split(windows, protocol, splits_path)
+    if len(cycle_rows) != int(raw["row_count"]):
+        raise HydraulicBuilderError(
+            f"cycle label row count {len(cycle_rows)} != raw cycle count {raw['row_count']}."
+        )
 
     return export_bundle(
         cfg=cfg,
-        splits={"train": split_payload["train"], "val": split_payload["val"], "test": split_payload["test"]},
-        protocol=protocol,
+        processed_root=processed_root,
+        split_root=split_root,
+        metadata_root=metadata_root,
         channel_map=channel_map,
         subsystem_groups=subsystem_groups,
-        processed_root=processed_root,
-        split_path=splits_path,
-        metadata_root=metadata_root,
+        protocol=protocol,
+        raw_summary=raw,
+        rows=cycle_rows,
+        labels=labels,
     )
 
 
@@ -775,7 +726,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    run_build(args.project_root.expanduser().resolve())
+    run_build(args.project_root)
 
 
 if __name__ == "__main__":

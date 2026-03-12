@@ -137,7 +137,7 @@ def _load_split_arrays(
     split_name: str,
 ) -> Dict[str, np.ndarray]:
     payload: Dict[str, np.ndarray] = {}
-    required = ["X", "Y", "sample_id", "run_id", "timestamp", "mode", "fault_id", "scenario_id", "window_idx", "idv_aux", "cycle_id", "fault_label", "subsystem_label", "condition_type"]
+    required = ["X", "Y", "sample_id", "run_id", "timestamp", "mode", "fault_id", "scenario_id", "window_idx", "window_start", "window_end", "idv_aux", "idv_label", "cycle_id", "fault_label", "subsystem_label", "condition_type"]
     for key in required:
         candidate_names = [
             f"{split_name}_{key}",
@@ -323,7 +323,7 @@ def validate_generic_bundle(
         report.error(f"{dataset}: cannot construct DatasetBundle for checks: {exc}")
         return False
 
-    return True
+    return report.ok
 
 
 def validate_nonlinear_dataset(
@@ -607,6 +607,28 @@ def validate_hydraulic_dataset(report: CheckReport, data_root: Path) -> bool:
     channels = channel_map.get("channels")
     if not isinstance(channels, list) or len(channels) != 17:
         report.error("hydraulic: channel_map.channels must be a list of exactly 17 entries.")
+    else:
+        expected_channel_order = [
+            "PS1",
+            "PS2",
+            "PS3",
+            "PS4",
+            "PS5",
+            "PS6",
+            "EPS1",
+            "FS1",
+            "FS2",
+            "TS1",
+            "TS2",
+            "TS3",
+            "TS4",
+            "VS1",
+            "CE",
+            "CP",
+            "SE",
+        ]
+        if channels != expected_channel_order:
+            report.error("hydraulic: channel_map.channels does not match the canonical 17-channel order.")
 
     subsystem_map = subsystem_groups.get("subsystems")
     if not isinstance(subsystem_map, Mapping):
@@ -624,6 +646,17 @@ def validate_hydraulic_dataset(report: CheckReport, data_root: Path) -> bool:
                 absent = [c for c in chans if c not in channels]
                 if absent:
                     report.error(f"hydraulic: subsystem '{name}' references unknown channels: {absent}")
+        expected_groups = {
+            "cooler": ["TS1", "CE", "CP"],
+            "valve": ["FS1", "PS2"],
+            "pump": ["PS1", "PS3", "PS4", "PS5", "PS6", "EPS1", "VS1", "SE"],
+            "accumulator": ["TS2", "TS3", "TS4", "FS2"],
+        }
+        for name, expected_channels in expected_groups.items():
+            spec = subsystem_map.get(name)
+            actual = spec.get("channels") if isinstance(spec, Mapping) else None
+            if actual != expected_channels:
+                report.error(f"hydraulic: subsystem '{name}' channels do not match the paper-defined grouping.")
 
     split_protocol = single_fault_protocol.get("split_protocol")
     if split_protocol is None:
@@ -631,9 +664,34 @@ def validate_hydraulic_dataset(report: CheckReport, data_root: Path) -> bool:
 
     if single_fault_protocol.get("labeling", {}).get("subsystem_class_order") is None:
         report.error("hydraulic: single_fault_protocol.labeling.subsystem_class_order missing.")
+    nominal = single_fault_protocol.get("nominal_conditions")
+    if nominal != {
+        "cooler_condition": 100,
+        "valve_condition": 100,
+        "pump_leakage": 0,
+        "accumulator_pressure": 130,
+    }:
+        report.error("hydraulic: nominal_conditions must match the paper-defined healthy state.")
+
+    stable_flag_policy = single_fault_protocol.get("stable_flag_policy")
+    if not isinstance(stable_flag_policy, Mapping):
+        report.error("hydraulic: stable_flag_policy missing from single_fault_protocol.")
+    else:
+        if stable_flag_policy.get("builder_behavior") != "retain_all_cycles":
+            report.error("hydraulic: stable_flag_policy.builder_behavior must be `retain_all_cycles`.")
 
     # load built split payloads to verify dimensional consistency and required fields
     manifest = _read_json(_find_processed_manifest(processed_root, dataset))
+    available_representations = manifest.get("available_representations")
+    if not isinstance(available_representations, Mapping):
+        report.error("hydraulic: processed manifest missing available_representations.")
+    else:
+        expected_reps = {"cycle_60", "cycle_600"}
+        if set(available_representations.keys()) != expected_reps:
+            report.error("hydraulic: available_representations must expose cycle_60 and cycle_600.")
+    if manifest.get("representation_name") != "cycle_60":
+        report.error("hydraulic: top-level processed manifest must default to representation cycle_60.")
+
     split_payload = _read_json((data_root / manifest.get("split_file") if isinstance(manifest.get("split_file"), str) else split_root / "hydraulic_split_manifest.json"))
     processed_files = _processed_file_map(manifest)
     split_arrays = _load_split_payloads(processed_root, manifest, dataset)
@@ -688,9 +746,11 @@ def validate_tep_dataset(report: CheckReport, data_root: Path) -> bool:
     metadata_root = data_root / "metadata" / dataset
     channel_map = _load_json_or_warning(report, data_root, f"metadata/{dataset}/channel_map.json", dataset)
     five_unit = _load_json_or_warning(report, data_root, f"metadata/{dataset}/five_unit_definition.json", dataset)
+    feed_side = _load_json_or_warning(report, data_root, f"metadata/{dataset}/feed_side_definition.json", dataset)
     truth_table = _load_json_or_warning(report, data_root, f"metadata/{dataset}/fault_truth_table.json", dataset)
     protocol = _load_json_or_warning(report, data_root, f"metadata/{dataset}/mode_holdout_protocol.json", dataset)
-    if channel_map is None or five_unit is None or truth_table is None or protocol is None:
+    scenario_map = _load_json_or_warning(report, data_root, f"metadata/{dataset}/scenario_to_idv_map.json", dataset)
+    if channel_map is None or five_unit is None or feed_side is None or truth_table is None or protocol is None or scenario_map is None:
         return False
 
     obs = channel_map.get("observable_variables", {})
@@ -714,6 +774,10 @@ def validate_tep_dataset(report: CheckReport, data_root: Path) -> bool:
         report.error("tep: channel_map.observable_variables.names missing.")
     if not idv.get("names"):
         report.error("tep: channel_map.idv_variables.names missing.")
+    if list(channel_map.get("model_input_columns", [])) != list(obs.get("names", [])):
+        report.error("tep: channel_map.model_input_columns must exactly match v01-v53 observable columns.")
+    if list(channel_map.get("metadata_only_columns", [])) != list(idv.get("names", [])):
+        report.error("tep: channel_map.metadata_only_columns must exactly match v54-v81 IDV columns.")
 
     five_units = five_unit.get("five_units")
     if not isinstance(five_units, Mapping) or len(five_units) != 5:
@@ -721,6 +785,28 @@ def validate_tep_dataset(report: CheckReport, data_root: Path) -> bool:
     eval_cfg = five_unit.get("evaluation", {}) if isinstance(five_unit, Mapping) else {}
     if not bool(eval_cfg.get("exclude_feed_side_unit", False)):
         report.warning("tep: five_unit_definition.evaluation.exclude_feed_side_unit should be true.")
+    expected_five_units = {
+        "Reactor": {"v05", "v06", "v07", "v08", "v09", "v20", "v23", "v24", "v25", "v26", "v27", "v28", "v46", "v47"},
+        "Condenser": {"v32", "v33", "v34", "v48", "v49"},
+        "Separator": {"v10", "v11", "v12", "v13", "v14", "v22", "v29", "v30", "v31", "v35", "v36"},
+        "Compressor": {"v21", "v42", "v43", "v44", "v45"},
+        "Stripper": {"v15", "v16", "v17", "v18", "v19", "v37", "v38", "v39", "v40", "v41"},
+    }
+    if isinstance(five_units, Mapping):
+        for unit_name, expected_vars in expected_five_units.items():
+            actual = five_units.get(unit_name, {})
+            actual_vars = set(actual.get("variables", [])) if isinstance(actual, Mapping) else set()
+            if actual_vars != expected_vars:
+                report.error(f"tep: five_unit_definition for {unit_name} does not match required variable set.")
+
+    expected_feed_side = {"v01", "v02", "v03", "v04", "v50", "v51", "v52", "v53"}
+    actual_feed_side = set(feed_side.get("feed_side_variables", [])) if isinstance(feed_side, Mapping) else set()
+    if actual_feed_side != expected_feed_side:
+        report.error("tep: feed_side_definition must match v01-v04 and v50-v53.")
+    if bool(feed_side.get("included_in_unit_scoring", True)):
+        report.error("tep: feed-side variables must not be included in unit scoring.")
+    if actual_feed_side & {var for vars_ in expected_five_units.values() for var in vars_}:
+        report.error("tep: feed-side variables must not overlap any five-unit variable set.")
 
     # split-level mode protocol checks
     mode_names = protocol.get("modes") if isinstance(protocol, Mapping) else {}
@@ -729,6 +815,26 @@ def validate_tep_dataset(report: CheckReport, data_root: Path) -> bool:
     test_normal_modes = set(mode_names.get("test_normal_modes", [])) if isinstance(mode_names, Mapping) else set()
     if not train_modes or not val_modes or not test_normal_modes:
         report.warning("tep: mode-holdout protocol mode lists (train/val/test) incomplete.")
+    if train_modes != {"M1", "M2", "M3", "M4"}:
+        report.error("tep: mode-holdout train_modes must be M1-M4.")
+    if val_modes != {"M5"}:
+        report.error("tep: mode-holdout val_modes must be M5.")
+    if test_normal_modes != {"M6"}:
+        report.error("tep: mode-holdout test_normal_modes must be M6.")
+    run_sets = protocol.get("run_sets", {}) if isinstance(protocol, Mapping) else {}
+    if set(run_sets.get("train_normal_run_keys", [])) != {"M1_d00", "M2_d00", "M3_d00", "M4_d00"}:
+        report.error("tep: mode-holdout train_normal_run_keys must be M1_d00..M4_d00.")
+    if set(run_sets.get("val_normal_run_keys", [])) != {"M5_d00"}:
+        report.error("tep: mode-holdout val_normal_run_keys must be M5_d00.")
+    if set(run_sets.get("normal_test_run_keys", [])) != {"M6_d00"}:
+        report.error("tep: mode-holdout normal_test_run_keys must be M6_d00.")
+    if set(run_sets.get("fault_eval_scenarios", [])) != {f"d{i:02d}" for i in range(1, 29)}:
+        report.error("tep: mode-holdout fault_eval_scenarios must cover d01-d28.")
+    windowing = protocol.get("windowing", {}) if isinstance(protocol, Mapping) else {}
+    if not bool(windowing.get("window_within_run_only", False)):
+        report.error("tep: windowing.window_within_run_only must be true.")
+    if bool(windowing.get("cross_run_windows", True)):
+        report.error("tep: windowing.cross_run_windows must be false.")
 
     # load actual split arrays and check mode constraints
     processed_files = _processed_file_map(manifest)
@@ -745,33 +851,64 @@ def validate_tep_dataset(report: CheckReport, data_root: Path) -> bool:
         if split_name == "val" and val_modes and not split_modes.issubset(val_modes):
             diff = sorted(split_modes - val_modes)
             report.error(f"tep: val split contains unexpected modes not in val_modes: {diff}")
+        if "scenario_id" in payload:
+            scenarios = set(_to_set(payload["scenario_id"]))
+            if scenarios != {"d00"}:
+                report.error(f"tep: {split_name} split must contain only d00 windows, got {sorted(scenarios)}")
+        if "fault_id" in payload:
+            fault_values = set(_to_set(payload["fault_id"]))
+            if fault_values != {"healthy"}:
+                report.error(f"tep: {split_name} split must contain only healthy labels, got {sorted(fault_values)}")
 
     if "test" in split_arrays and "mode" in split_arrays["test"]:
-        fault_modes = set(mode_names.get("test_fault_modes", []))
-        if mode_names.get("test_fault_mode_pattern"):
-            fault_modes |= set(_to_set([m for m in split_arrays["test"]["mode"] if "FAULT" in str(m)]))
         test_mode_set = set(_to_set(split_arrays["test"]["mode"]))
         normal_ok = bool(test_normal_modes)
-        if normal_ok and not test_mode_set.issubset(fault_modes.union(test_normal_modes)):
-            diff = sorted(test_mode_set - fault_modes - test_normal_modes)
+        if normal_ok and not test_mode_set.issubset(test_normal_modes):
+            diff = sorted(test_mode_set - test_normal_modes)
             report.error(f"tep: test split contains unexpected modes: {diff}")
 
     # five-unit and truth-table consistency
     rows = truth_table.get("rows") if isinstance(truth_table, Mapping) else []
     if not rows:
         report.error("tep: fault_truth_table.rows missing.")
+    scenario_rows: Dict[str, Mapping[str, Any]] = {}
     if isinstance(rows, list):
         known_units = set(five_units.keys()) if isinstance(five_units, Mapping) else set()
         for row in rows:
             if not isinstance(row, Mapping):
                 report.warning("tep: fault_truth_table row is not a mapping.")
                 continue
+            scenario = row.get("scenario")
+            if not isinstance(scenario, str) or not scenario.startswith("d"):
+                report.error("tep: fault_truth_table rows must be keyed by raw dxx scenario.")
+                continue
+            scenario_rows[scenario] = row
             pu = row.get("primary_unit")
             exp = row.get("expected_units", [])
             if pu is not None and pu not in known_units:
                 report.error(f"tep: fault_truth_table primary_unit '{pu}' is not defined in five_unit_definition.five_units.")
             if not isinstance(exp, list) or any(u not in known_units for u in exp):
-                report.error(f"tep: fault_truth_table expected_units invalid for fault_id={row.get('fault_id')}.")
+                report.error(f"tep: fault_truth_table expected_units invalid for scenario={row.get('scenario')}.")
+        if set(scenario_rows.keys()) != {f"d{i:02d}" for i in range(1, 29)}:
+            report.error("tep: fault_truth_table must contain rows for d01-d28.")
+        if not any(bool(row.get("included_in_main_eval", False)) for row in scenario_rows.values()):
+            report.warning("tep: fault_truth_table has no included_in_main_eval=true rows; main five-unit subset will be empty until curated truth is provided.")
+
+    scenario_mapping = scenario_map.get("mapping", {}) if isinstance(scenario_map, Mapping) else {}
+    if not isinstance(scenario_mapping, Mapping):
+        report.error("tep: scenario_to_idv_map.mapping missing.")
+    else:
+        expected_map = {f"d{i:02d}": f"idv{29 - i:02d}" for i in range(1, 29)}
+        actual_map = {
+            key: str(value.get("idv"))
+            for key, value in scenario_mapping.items()
+            if isinstance(value, Mapping)
+        }
+        if actual_map != expected_map:
+            report.error("tep: scenario_to_idv_map must implement reverse mapping d01->idv28 ... d28->idv01.")
+    healthy = scenario_map.get("healthy", {}) if isinstance(scenario_map, Mapping) else {}
+    if str(healthy.get("scenario")) != "d00" or str(healthy.get("idv")) != "healthy":
+        report.error("tep: scenario_to_idv_map.healthy must describe d00 -> healthy.")
 
     # leakage check: v54-v81 must remain auxiliary metadata
     manifest_files = _processed_file_map(manifest)
@@ -784,18 +921,51 @@ def validate_tep_dataset(report: CheckReport, data_root: Path) -> bool:
     else:
         if train_payload["idv_aux"].ndim >= 2 and train_payload["idv_aux"].shape[-1] != 28:
             report.error(f"tep: idv_aux must have 28 IDV channels, got {train_payload['idv_aux'].shape[-1]}.")
+    if "idv_label" not in train_payload:
+        report.warning("tep: idv_label missing from train split.")
 
     # protocol/truth references in manifest for reproducibility
     _artifact_path_ok(report, dataset, artifact_payload.get("protocol_file"), "artifacts.protocol_file", data_root)
     _artifact_path_ok(report, dataset, artifact_payload.get("grouping_file"), "artifacts.grouping_file", data_root)
     if isinstance(artifact_payload.get("extra"), Mapping):
         _artifact_path_ok(report, dataset, artifact_payload["extra"].get("split_file"), "artifacts.extra.split_file", data_root)
+        _artifact_path_ok(report, dataset, artifact_payload["extra"].get("scenario_to_idv_map_file"), "artifacts.extra.scenario_to_idv_map_file", data_root)
+        _artifact_path_ok(report, dataset, artifact_payload["extra"].get("feed_side_definition_file"), "artifacts.extra.feed_side_definition_file", data_root)
+        _artifact_path_ok(report, dataset, artifact_payload["extra"].get("run_manifest_file"), "artifacts.extra.run_manifest_file", data_root)
+        _artifact_path_ok(report, dataset, artifact_payload["extra"].get("fault_eval_manifest_file"), "artifacts.extra.fault_eval_manifest_file", data_root)
+
+    extras = manifest_meta.extras if isinstance(manifest_meta.extras, Mapping) else {}
+    if extras.get("variable_length_fault_runs") is not True:
+        report.error("tep: bundle meta.extras.variable_length_fault_runs must be true.")
+    if int(extras.get("normal_run_n_steps", 0)) != 7201:
+        report.error("tep: bundle meta.extras.normal_run_n_steps must be 7201.")
+
+    run_manifest_path = _resolve_path(data_root, manifest.get("run_manifest_file")) or _resolve_path(data_root, extras.get("run_manifest_file"))
+    if run_manifest_path is None or not run_manifest_path.exists():
+        report.error("tep: run_manifest_file missing from processed outputs.")
+    else:
+        run_manifest = _read_json(run_manifest_path)
+        runs = run_manifest.get("runs", [])
+        if len(runs) != 174:
+            report.error(f"tep: run manifest should contain 174 runs, got {len(runs)}.")
+        normal_steps = {int(run.get("n_steps", -1)) for run in runs if isinstance(run, Mapping) and not bool(run.get("is_fault"))}
+        if normal_steps != {7201}:
+            report.error(f"tep: all normal d00 runs must have 7201 steps, got {sorted(normal_steps)}.")
+        fault_steps = {int(run.get("n_steps", -1)) for run in runs if isinstance(run, Mapping) and bool(run.get("is_fault"))}
+        if fault_steps == {7201}:
+            report.error("tep: run manifest incorrectly implies all fault runs are equal length.")
+
+    fault_manifest_path = _resolve_path(data_root, manifest.get("fault_eval_manifest_file")) or _resolve_path(data_root, extras.get("fault_eval_manifest_file"))
+    if fault_manifest_path is None or not fault_manifest_path.exists():
+        report.error("tep: fault_eval_manifest_file missing from processed outputs.")
+    else:
+        fault_manifest = _read_json(fault_manifest_path)
+        fault_runs = fault_manifest.get("runs", [])
+        if len(fault_runs) != 168:
+            report.error(f"tep: fault eval manifest should contain 168 fault runs, got {len(fault_runs)}.")
 
     # fault ids in split should be covered by truth table (when fault mode)
-    truth_faults = set()
-    for row in rows:
-        if isinstance(row, Mapping) and row.get("fault_id"):
-            truth_faults.add(str(row["fault_id"]))
+    truth_faults = {str(row["fault_id"]) for row in rows if isinstance(row, Mapping) and row.get("fault_id")}
     for split_name in ("train", "val", "test"):
         payload = split_arrays[split_name]
         if "fault_id" not in payload:
