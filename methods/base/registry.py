@@ -9,6 +9,7 @@ from .base_method import BaseMethod
 
 MethodT = TypeVar("MethodT", bound=BaseMethod)
 _DEFAULT_METHODS_IMPORTED = False
+_BUILTIN_METHOD_MODULES: tuple[str, ...] = ("methods.baselines", "methods.devo")
 
 _LAZY_IMPORT_CANDIDATES: dict[str, tuple[str, ...]] = {
     "arx": ("methods.baselines.arx_var",),
@@ -33,11 +34,20 @@ def _lazy_import_candidates(name: str) -> tuple[str, ...]:
     )
 
 
+def _import_builtin_method_modules() -> None:
+    for module_name in _BUILTIN_METHOD_MODULES:
+        try:
+            importlib.import_module(module_name)
+        except ModuleNotFoundError as exc:
+            if exc.name != "torch":
+                raise
+
+
 def _ensure_default_methods_registered() -> None:
     global _DEFAULT_METHODS_IMPORTED
     if _DEFAULT_METHODS_IMPORTED:
         return
-    importlib.import_module("methods.baselines")
+    _import_builtin_method_modules()
     _DEFAULT_METHODS_IMPORTED = True
 
 
@@ -108,11 +118,7 @@ def _load_builtin_methods() -> None:
     global _BUILTIN_METHODS_LOADED
     if _BUILTIN_METHODS_LOADED:
         return
-    try:
-        importlib.import_module("methods.baselines")
-    except ModuleNotFoundError as exc:
-        if exc.name != "torch":
-            raise
+    _import_builtin_method_modules()
     _BUILTIN_METHODS_LOADED = True
 
 

@@ -12,6 +12,7 @@ from .base import (
     MethodResult,
     create_method,
     get_method_class,
+    list_registered_methods,
     load_dataset_bundle,
     register_method,
 )
@@ -28,6 +29,7 @@ __all__ = [
     "baselines",
     "create_method",
     "get_method_class",
+    "list_registered_methods",
     "load_dataset_bundle",
     "register_method",
 ]
