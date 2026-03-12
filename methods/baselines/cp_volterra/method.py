@@ -411,8 +411,11 @@ class CPVolterraMethod(BaseMethod):
         if train_x.shape[0] == 0:
             raise ValueError("Training split is empty.")
         if val_x.shape[0] == 0:
-            val_x = train_x
-            val_y = train_y
+            raise ValueError(
+                "Validation split is empty.  CP-Volterra requires a non-empty "
+                "validation set for early-stopping model selection; falling back "
+                "to training data would leak information and bias results."
+            )
 
         self.window_length = int(train_x.shape[1])
         self.input_dim = int(train_x.shape[2])

@@ -13,6 +13,7 @@ from torch import nn
 from torch.utils.data import DataLoader, Dataset
 
 from methods.base import BaseMethod, KernelRecoveryNotSupportedError, MethodResult, register_method
+from methods.utils.runtime import set_random_seed
 
 
 PathLike = str | Path
@@ -30,6 +31,7 @@ _DEFAULT_CONFIG = {
     "log_every": 10,
     "verbose": True,
     "loss": "mse",
+    "seed": 42,
 }
 
 
@@ -121,6 +123,9 @@ class MLPMethod(BaseMethod):
         bundle = self.normalize_dataset_bundle(dataset_bundle)
         train_cfg = self._resolve_training_config(kwargs)
         self.model_state_path = None
+
+        seed = int(train_cfg["seed"])
+        set_random_seed(seed)
 
         train_x = np.asarray(bundle.train.X, dtype=np.float32)
         train_y = np.asarray(bundle.train.Y, dtype=np.float32)
