@@ -1,0 +1,78 @@
+paths:
+  project_root: ../../..
+  processed_root: data/processed/tep
+  bundle_path: data/processed/tep/tep_processed_manifest.json
+  five_unit_definition: data/metadata/tep/five_unit_definition.json
+  fault_truth_table: data/metadata/tep/fault_truth_table.json
+  propagation_subset: data/processed/tep/tep_propagation_subset_manifest.json
+  output_root: experiments/tep/exp02_fault_propagation_analysis/results
+
+experiment:
+  name: tep_exp02_fault_propagation_analysis
+  representative_subset:
+    scenarios:
+      - d01
+      - d02
+      - d10
+      - d16
+      - d17
+    run_keys: []
+    modes: []
+    mode_preference:
+      - M1
+      - M2
+      - M3
+      - M4
+      - M5
+      - M6
+    max_runs_per_scenario: 1
+  variable_length:
+    full_run_steps: 7201
+    min_windows_to_process: 16
+    short_run_policy: truncate
+    early_window_cap: 256
+  attribution:
+    batch_size: 256
+    mode: gradient
+    window_stride: 1
+    normalize_scores: true
+    time_reduction: abs_mean
+    unit_reduction: sum
+
+method:
+  name: devo
+  state_path: experiments/tep/exp02_fault_propagation_analysis/results/method/method_state.json
+  train_if_missing: true
+  save_trained_state: true
+  fit:
+    orders:
+      - 1
+    num_branches: 1
+    epochs: 3
+    batch_size: 128
+    eval_batch_size: 256
+    learning_rate: 0.001
+    weight_decay: 0.000001
+    grad_clip_norm: 1.0
+    feature_chunk_size: 4096
+    max_canonical_terms_per_order: 1000000
+    verbose: true
+    log_every: 1
+    device: null
+
+collect:
+  stage_boundaries:
+    early_end_fraction: 0.2
+    mid_end_fraction: 0.6
+  diffusion_threshold: 0.2
+  secondary_unit_threshold: 0.15
+
+plot:
+  score_field: normalized
+  timeline:
+    figsize: [11, 4.5]
+    dpi: 180
+  heatmap:
+    figsize: [11, 3.6]
+    dpi: 180
+    cmap: YlOrRd
