@@ -8,6 +8,7 @@ from typing import Any, Callable, Dict, TypeVar
 from .base_method import BaseMethod
 
 MethodT = TypeVar("MethodT", bound=BaseMethod)
+_DEFAULT_METHODS_IMPORTED = False
 
 _LAZY_IMPORT_CANDIDATES: dict[str, tuple[str, ...]] = {
     "arx": ("methods.baselines.arx_var",),
@@ -24,10 +25,19 @@ def _normalize_name(name: str) -> str:
 
 def _lazy_import_candidates(name: str) -> tuple[str, ...]:
     return (
+        *_LAZY_IMPORT_CANDIDATES.get(name, ()),
         f"methods.baselines.{name}",
         f"methods.baselines.{name}.{name}_method",
         f"methods.baselines.{name}.method",
     )
+
+
+def _ensure_default_methods_registered() -> None:
+    global _DEFAULT_METHODS_IMPORTED
+    if _DEFAULT_METHODS_IMPORTED:
+        return
+    importlib.import_module("methods.baselines")
+    _DEFAULT_METHODS_IMPORTED = True
 
 
 class MethodRegistry:
@@ -60,28 +70,13 @@ class MethodRegistry:
         return _wrap
 
     def get(self, name: str) -> type[BaseMethod]:
+        _ensure_default_methods_registered()
         key = _normalize_name(name)
         if key not in self._registry:
             self._attempt_lazy_import(key)
         if key not in self._registry:
             raise KeyError(f"Unknown method: {name}")
         return self._registry[key]
-
-    def _attempt_lazy_import(self, key: str) -> None:
-        for module_name in _LAZY_IMPORT_CANDIDATES.get(key, ()):
-            try:
-                importlib.import_module(module_name)
-            except ModuleNotFoundError as exc:
-                if exc.name != module_name:
-                    raise
-                continue
-
-    def create(self, name: str, **kwargs: Any) -> BaseMethod:
-        method_cls = self.get(name)
-        return method_cls(**kwargs)
-
-    def list(self) -> list[str]:
-        return sorted(self._registry)
 
     def _attempt_lazy_import(self, key: str) -> None:
         for module_name in _lazy_import_candidates(key):
@@ -94,17 +89,17 @@ class MethodRegistry:
             if key in self._registry:
                 return
 
+    def create(self, name: str, **kwargs: Any) -> BaseMethod:
+        _ensure_default_methods_registered()
+        method_cls = self.get(name)
+        return method_cls(**kwargs)
+
+    def list(self) -> list[str]:
+        _ensure_default_methods_registered()
+        return sorted(self._registry)
+
 
 METHOD_REGISTRY = MethodRegistry()
-_BUILTIN_METHODS_LOADED = False
-
-
-def _ensure_builtin_methods_loaded() -> None:
-    global _BUILTIN_METHODS_LOADED
-    if _BUILTIN_METHODS_LOADED:
-        return
-    importlib.import_module("methods.baselines")
-    _BUILTIN_METHODS_LOADED = True
 
 
 def register_method(
@@ -119,15 +114,12 @@ def register_method(
 
 
 def get_method_class(name: str) -> type[BaseMethod]:
-    _ensure_builtin_methods_loaded()
     return METHOD_REGISTRY.get(name)
 
 
 def create_method(name: str, **kwargs: Any) -> BaseMethod:
-    _ensure_builtin_methods_loaded()
     return METHOD_REGISTRY.create(name, **kwargs)
 
 
 def list_registered_methods() -> list[str]:
-    _ensure_builtin_methods_loaded()
     return METHOD_REGISTRY.list()
