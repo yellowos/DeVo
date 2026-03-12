@@ -1,10 +1,10 @@
 {
   "dataset_name": "volterra_wiener",
-  "generated_at": "2026-03-12T09:07:39.627922Z",
+  "generated_at": "2026-03-12T13:11:13.403736Z",
   "window_length": 128,
   "horizon": 1,
   "split_protocol": "nonlinear_temporal_grouped_holdout_v1",
-  "split_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/nonlinear/volterra_wiener_split_manifest.json",
+  "split_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/splits/nonlinear/volterra_wiener_split_manifest.json",
   "processed_files": {
     "train_X": "train_X.npy",
     "train_Y": "train_Y.npy",
@@ -39,19 +39,19 @@
         "gfrf_consistency"
       ],
       "system_type": "volterra_wiener",
-      "split_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/nonlinear/volterra_wiener_split_manifest.json",
-      "protocol_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+      "split_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/splits/nonlinear/volterra_wiener_split_manifest.json",
+      "protocol_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
       "truth_artifacts": {
         "kernel_reference": "data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
-        "kernel_reference_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
+        "kernel_reference_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
         "gfrf_reference_available": true
       }
     }
   },
   "bundle_artifacts": {
-    "truth_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
-    "grouping_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/nonlinear/volterra_wiener_split_manifest.json",
-    "protocol_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+    "truth_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
+    "grouping_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/splits/nonlinear/volterra_wiener_split_manifest.json",
+    "protocol_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
     "extra": {
       "kernel_reference_uri": "data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
       "gfrf_available": true,

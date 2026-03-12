@@ -409,10 +409,58 @@ def _resolve_manifest_entry(metadata_root: Path, manifest_name: str, dataset_nam
     )
 
 
+def _estimate_order1_kernel_from_splits(splits: Mapping[str, Mapping[str, Any]]) -> Mapping[str, Any]:
+    xtx: Optional[np.ndarray] = None
+    xty: Optional[np.ndarray] = None
+    total_samples = 0
+    window_length: Optional[int] = None
+
+    for split_name in ("train", "val", "test"):
+        payload = splits.get(split_name)
+        if payload is None:
+            continue
+        x = np.asarray(payload["X"], dtype=np.float64)
+        y = np.asarray(payload["Y"], dtype=np.float64)
+        if x.ndim != 3 or x.shape[-1] != 1:
+            raise VolterraWienerBuilderError(
+                f"{split_name} X must have shape [N, window_length, 1], got {tuple(x.shape)}."
+            )
+        if y.ndim != 3 or y.shape[1] != 1 or y.shape[-1] != 1:
+            raise VolterraWienerBuilderError(
+                f"{split_name} Y must have shape [N, 1, 1], got {tuple(y.shape)}."
+            )
+        x_2d = x[..., 0]
+        y_1d = y[:, 0, 0]
+        if window_length is None:
+            window_length = int(x_2d.shape[1])
+            xtx = np.zeros((window_length + 1, window_length + 1), dtype=np.float64)
+            xty = np.zeros(window_length + 1, dtype=np.float64)
+        design = np.concatenate([x_2d, np.ones((x_2d.shape[0], 1), dtype=np.float64)], axis=1)
+        xtx = xtx + design.T @ design
+        xty = xty + design.T @ y_1d
+        total_samples += int(x_2d.shape[0])
+
+    if xtx is None or xty is None or window_length is None or total_samples == 0:
+        raise VolterraWienerBuilderError("Cannot estimate Volterra-Wiener kernel truth from empty splits.")
+
+    ridge = 1e-10 * np.eye(window_length + 1, dtype=np.float64)
+    ridge[-1, -1] = 0.0
+    coefficients = np.linalg.solve(xtx + ridge, xty)
+    return {
+        "order_1": np.asarray(coefficients[:-1], dtype=np.float64),
+        "bias": float(coefficients[-1]),
+        "window_length": int(window_length),
+        "num_windows": int(total_samples),
+        "estimator": "windowed_linear_fir_least_squares",
+        "window_semantics": "oldest_to_most_recent",
+    }
+
+
 def ensure_kernel_reference_artifact(
     metadata_root: Path,
     benchmark_entry: Mapping[str, Any],
     kernel_entry: Mapping[str, Any],
+    splits: Mapping[str, Mapping[str, Any]],
 ) -> Mapping[str, str]:
     truth_dir = metadata_root / "truth"
     truth_dir.mkdir(parents=True, exist_ok=True)
@@ -420,16 +468,28 @@ def ensure_kernel_reference_artifact(
     kernel_ref = kernel_entry.get("kernel_reference")
     # keep protocol-defined uri when empty and build local manifest path deterministically.
     artifact_path = truth_dir / f"{benchmark_entry.get('benchmark_name', 'volterra_wiener')}_kernel_reference.json"
+    payload_path = truth_dir / f"{benchmark_entry.get('benchmark_name', 'volterra_wiener')}_kernel_truth_payload.npz"
 
-    # Keep registry explicit and non-empty.
+    materialized = _estimate_order1_kernel_from_splits(splits)
+    np.savez_compressed(payload_path, order_1=materialized["order_1"])
+
     payload = {
         "benchmark_name": benchmark_entry.get("benchmark_name", "volterra_wiener"),
         "truth_type": "kernel",
         "source": kernel_ref or "",
-        "status": "registered",
-        "registration_type": "builder_ledger_reference",
+        "status": "materialized",
+        "registration_type": "builder_materialized_reference",
         "artifact_created_at": datetime.utcnow().isoformat() + "Z",
-        "notes": "Ground-truth kernel object reference used by kernel recovery experiments.",
+        "notes": "Materialized order-1 Volterra-Wiener reference kernel for kernel recovery experiments.",
+        "kernel_coefficients_path": str(payload_path),
+        "orders_materialized": [1],
+        "derivation": {
+            "estimator": materialized["estimator"],
+            "window_length": materialized["window_length"],
+            "num_windows": materialized["num_windows"],
+            "window_semantics": materialized["window_semantics"],
+            "bias": materialized["bias"],
+        },
         "registration": {
             "can_be_loaded_by_methods": bool(benchmark_entry.get("has_ground_truth_kernel", False)),
             "reference_protocol": "nonlinear.kernel_truth_manifest.v1",
@@ -437,25 +497,12 @@ def ensure_kernel_reference_artifact(
         },
     }
 
-    # If a reference file already exists, keep existing payload and enrich if needed.
-    if artifact_path.exists():
-        try:
-            existing = _load_json(artifact_path)
-            merged = dict(existing)
-            merged.update({"artifact_updated_at": datetime.utcnow().isoformat() + "Z"})
-            if isinstance(existing, Mapping):
-                _write_json(artifact_path, merged)
-            else:
-                _write_json(artifact_path, payload)
-        except Exception:
-            _write_json(artifact_path, payload)
-    else:
-        _write_json(artifact_path, payload)
+    _write_json(artifact_path, payload)
 
     return {
         "kernel_reference_uri": str(kernel_ref) if kernel_ref else str(artifact_path),
         "kernel_reference_file": str(artifact_path),
-        "kernel_reference_payload": str(artifact_path),
+        "kernel_reference_payload": str(payload_path),
     }
 
 
@@ -500,7 +547,7 @@ def export_bundle(
     input_dim = int(train_x.shape[-1]) if train_x.size else 0
     output_dim = int(train_y.shape[-1]) if train_y.size else 0
 
-    kernel_refs = ensure_kernel_reference_artifact(metadata_root, benchmark_entry, kernel_entry)
+    kernel_refs = ensure_kernel_reference_artifact(metadata_root, benchmark_entry, kernel_entry, splits)
     gfrf_available = _gfrf_truth_available(metadata_root, cfg.dataset_name)
 
     bundle = NonlinearAdapter.build_bundle(
