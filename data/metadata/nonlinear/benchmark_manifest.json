@@ -91,7 +91,71 @@
           "source_type": "nonlinearbenchmark_official",
           "nonlinearbenchmark_name": "Coupled Electric Drives (CED)",
           "nonlinearbenchmark_url": "https://www.nonlinearbenchmark.org/benchmarks/coupled-electric-drives",
-          "canonical_reference_name": "Coupled Electric Drives (CED)"
+          "canonical_reference_name": "Coupled Electric Drives (CED)",
+          "raw_sources": [
+            {
+              "path": "DATAUNIF.MAT",
+              "format": "mat",
+              "priority": 1,
+              "role": "identification_source",
+              "preferred": true
+            },
+            {
+              "path": "DATAPRBS.MAT",
+              "format": "mat",
+              "priority": 2,
+              "role": "holdout_source",
+              "preferred": true
+            },
+            {
+              "path": "DATAUNIF.csv",
+              "format": "csv",
+              "priority": 3,
+              "role": "identification_fallback",
+              "preferred": false
+            },
+            {
+              "path": "DATAPRBS.csv",
+              "format": "csv",
+              "priority": 4,
+              "role": "holdout_fallback",
+              "preferred": false
+            }
+          ],
+          "trajectory_field_mapping": {
+            "uniform_1": {
+              "file": "DATAUNIF.MAT",
+              "input": "u11",
+              "output": "z11",
+              "default_split": "train"
+            },
+            "uniform_2": {
+              "file": "DATAUNIF.MAT",
+              "input": "u12",
+              "output": "z12",
+              "default_split": "train"
+            },
+            "prbs_1": {
+              "file": "DATAPRBS.MAT",
+              "input": "u1",
+              "output": "z1",
+              "default_split": "val"
+            },
+            "prbs_2": {
+              "file": "DATAPRBS.MAT",
+              "input": "u2",
+              "output": "z2",
+              "default_split": "test"
+            },
+            "prbs_3": {
+              "file": "DATAPRBS.MAT",
+              "input": "u3",
+              "output": "z3",
+              "default_split": "test"
+            }
+          },
+          "split_strategy": "uniform_for_identification_prbs_for_holdout",
+          "sampling_period_seconds": 0.02
         }
       }
     },

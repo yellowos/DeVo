@@ -1,0 +1,66 @@
+{
+  "dataset_name": "volterra_wiener",
+  "generated_at": "2026-03-12T09:07:39.627922Z",
+  "window_length": 128,
+  "horizon": 1,
+  "split_protocol": "nonlinear_temporal_grouped_holdout_v1",
+  "split_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/nonlinear/volterra_wiener_split_manifest.json",
+  "processed_files": {
+    "train_X": "train_X.npy",
+    "train_Y": "train_Y.npy",
+    "train_sample_id": "train_sample_id.npy",
+    "train_run_id": "train_run_id.npy",
+    "train_timestamp": "train_timestamp.npy",
+    "val_X": "val_X.npy",
+    "val_Y": "val_Y.npy",
+    "val_sample_id": "val_sample_id.npy",
+    "val_run_id": "val_run_id.npy",
+    "val_timestamp": "val_timestamp.npy",
+    "test_X": "test_X.npy",
+    "test_Y": "test_Y.npy",
+    "test_sample_id": "test_sample_id.npy",
+    "test_run_id": "test_run_id.npy",
+    "test_timestamp": "test_timestamp.npy"
+  },
+  "bundle_meta": {
+    "dataset_name": "volterra_wiener",
+    "task_family": "nonlinear",
+    "input_dim": 1,
+    "output_dim": 1,
+    "window_length": 128,
+    "horizon": 1,
+    "split_protocol": "nonlinear_temporal_grouped_holdout_v1",
+    "has_ground_truth_kernel": true,
+    "has_ground_truth_gfrf": true,
+    "extras": {
+      "task_usage": [
+        "prediction",
+        "kernel_recovery",
+        "gfrf_consistency"
+      ],
+      "system_type": "volterra_wiener",
+      "split_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/nonlinear/volterra_wiener_split_manifest.json",
+      "protocol_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+      "truth_artifacts": {
+        "kernel_reference": "data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
+        "kernel_reference_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
+        "gfrf_reference_available": true
+      }
+    }
+  },
+  "bundle_artifacts": {
+    "truth_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
+    "grouping_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/splits/nonlinear/volterra_wiener_split_manifest.json",
+    "protocol_file": "/Users/yellowos/Desktop/OfflineWorkSpace/Paper/2026ESWA/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+    "extra": {
+      "kernel_reference_uri": "data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
+      "gfrf_available": true,
+      "task_family": "nonlinear"
+    }
+  },
+  "counts": {
+    "train": 131510,
+    "val": 28180,
+    "test": 28182
+  }
+}

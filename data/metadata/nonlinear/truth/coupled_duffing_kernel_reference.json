@@ -1,0 +1,9 @@
+{
+  "benchmark_name": "coupled_duffing",
+  "truth_type": "kernel",
+  "reference_uri": "nonlinear://truth/coupled_duffing/kernel/v1",
+  "status": "registered",
+  "source": "nonlinear_benchmark_manifest",
+  "build_time": "2026-03-12T09:52:34.835641Z",
+  "notes": "kernel truth registration for coupled_duffing."
+}
