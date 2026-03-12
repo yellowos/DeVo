@@ -1,0 +1,242 @@
+{
+  "dataset_name": "cascaded_tanks",
+  "interim_root": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/interim/nonlinear/cascaded_tanks",
+  "processed_root": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/processed/nonlinear/cascaded_tanks",
+  "split_path": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/splits/nonlinear/cascaded_tanks_split_manifest.json",
+  "split_protocol": "nonlinear_temporal_grouped_holdout_v1",
+  "raw_source": {
+    "selected_path": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/raw/nonlinear/cascaded_tanks/CascadedTanksFiles/dataBenchmark.mat",
+    "relative_path": "CascadedTanksFiles/dataBenchmark.mat",
+    "discovery_method": "whitelist",
+    "raw_format": "mat",
+    "matched_candidate": "CascadedTanksFiles/dataBenchmark.mat",
+    "candidate_rank": 1
+  },
+  "raw_field_mapping": {
+    "estimation": {
+      "u": "uEst",
+      "y": "yEst"
+    },
+    "validation": {
+      "u": "uVal",
+      "y": "yVal"
+    },
+    "sampling_period": "Ts"
+  },
+  "segment_roles": {
+    "estimation": {
+      "role": "train_source",
+      "split_targets": [
+        "train"
+      ],
+      "raw_fields": {
+        "u": "uEst",
+        "y": "yEst"
+      },
+      "raw_samples": 1024,
+      "window_count": 896
+    },
+    "validation": {
+      "role": "holdout_source",
+      "split_targets": [
+        "val",
+        "test"
+      ],
+      "raw_fields": {
+        "u": "uVal",
+        "y": "yVal"
+      },
+      "raw_samples": 1024,
+      "window_count": 896
+    }
+  },
+  "segment_window_counts": {
+    "estimation": 896,
+    "validation": 896
+  },
+  "bundle_meta": {
+    "dataset_name": "cascaded_tanks",
+    "task_family": "nonlinear",
+    "input_dim": 1,
+    "output_dim": 1,
+    "window_length": 128,
+    "horizon": 1,
+    "split_protocol": "nonlinear_temporal_grouped_holdout_v1",
+    "has_ground_truth_kernel": false,
+    "has_ground_truth_gfrf": false,
+    "extras": {
+      "system_type": "cascaded_tanks_process",
+      "task_usage": [
+        "prediction"
+      ],
+      "input_channels": [
+        "u"
+      ],
+      "output_channels": [
+        "y"
+      ],
+      "split_path": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/splits/nonlinear/cascaded_tanks_split_manifest.json",
+      "protocol_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+      "protocol_name": "nonlinear_temporal_grouped_holdout_v1",
+      "grouping_reference": "nonlinear://grouping/cascaded_tanks/v1",
+      "kernel_truth_reference": {
+        "reference_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/truth/cascaded_tanks_kernel_reference.json",
+        "reference_uri": null
+      },
+      "gfrf_truth_reference": {
+        "reference_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/truth/cascaded_tanks_gfrf_reference.json",
+        "reference_uri": null
+      },
+      "kernel_manifest_entry": {
+        "reference_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/truth/cascaded_tanks_kernel_reference.json",
+        "reference_uri": null
+      },
+      "gfrf_manifest_entry": {
+        "reference_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/truth/cascaded_tanks_gfrf_reference.json",
+        "reference_uri": null
+      },
+      "raw_source": {
+        "selected_path": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/raw/nonlinear/cascaded_tanks/CascadedTanksFiles/dataBenchmark.mat",
+        "relative_path": "CascadedTanksFiles/dataBenchmark.mat",
+        "discovery_method": "whitelist",
+        "raw_format": "mat",
+        "matched_candidate": "CascadedTanksFiles/dataBenchmark.mat",
+        "candidate_rank": 1
+      },
+      "raw_field_mapping": {
+        "estimation": {
+          "u": "uEst",
+          "y": "yEst"
+        },
+        "validation": {
+          "u": "uVal",
+          "y": "yVal"
+        },
+        "sampling_period": "Ts"
+      },
+      "segment_roles": {
+        "estimation": {
+          "role": "train_source",
+          "split_targets": [
+            "train"
+          ],
+          "raw_fields": {
+            "u": "uEst",
+            "y": "yEst"
+          },
+          "raw_samples": 1024,
+          "window_count": 896
+        },
+        "validation": {
+          "role": "holdout_source",
+          "split_targets": [
+            "val",
+            "test"
+          ],
+          "raw_fields": {
+            "u": "uVal",
+            "y": "yVal"
+          },
+          "raw_samples": 1024,
+          "window_count": 896
+        }
+      },
+      "split_sources": {
+        "train": "estimation",
+        "val": "validation",
+        "test": "validation"
+      }
+    }
+  },
+  "bundle_artifacts": {
+    "truth_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/truth/cascaded_tanks_kernel_reference.json",
+    "grouping_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/splits/nonlinear/cascaded_tanks_split_manifest.json",
+    "protocol_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+    "extra": {
+      "kernel_reference": null,
+      "gfrf_reference": null,
+      "kernel_reference_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/truth/cascaded_tanks_kernel_reference.json",
+      "gfrf_reference_file": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/metadata/nonlinear/truth/cascaded_tanks_gfrf_reference.json",
+      "input_file_candidates": [
+        "CascadedTanksFiles/dataBenchmark.mat",
+        "dataBenchmark.mat",
+        "CascadedTanksFiles/dataBenchmark.csv",
+        "dataBenchmark.csv"
+      ],
+      "raw_source": {
+        "selected_path": "/Users/yellowos/.codex/worktrees/0306/EXPfinal/data/raw/nonlinear/cascaded_tanks/CascadedTanksFiles/dataBenchmark.mat",
+        "relative_path": "CascadedTanksFiles/dataBenchmark.mat",
+        "discovery_method": "whitelist",
+        "raw_format": "mat",
+        "matched_candidate": "CascadedTanksFiles/dataBenchmark.mat",
+        "candidate_rank": 1
+      },
+      "raw_field_mapping": {
+        "estimation": {
+          "u": "uEst",
+          "y": "yEst"
+        },
+        "validation": {
+          "u": "uVal",
+          "y": "yVal"
+        },
+        "sampling_period": "Ts"
+      },
+      "segment_roles": {
+        "estimation": {
+          "role": "train_source",
+          "split_targets": [
+            "train"
+          ],
+          "raw_fields": {
+            "u": "uEst",
+            "y": "yEst"
+          },
+          "raw_samples": 1024,
+          "window_count": 896
+        },
+        "validation": {
+          "role": "holdout_source",
+          "split_targets": [
+            "val",
+            "test"
+          ],
+          "raw_fields": {
+            "u": "uVal",
+            "y": "yVal"
+          },
+          "raw_samples": 1024,
+          "window_count": 896
+        }
+      },
+      "split_sources": {
+        "train": "estimation",
+        "val": "validation",
+        "test": "validation"
+      }
+    }
+  },
+  "has_ground_truth_kernel": false,
+  "has_ground_truth_gfrf": false,
+  "kernel_manifest_entry": {
+    "benchmark_name": "cascaded_tanks",
+    "has_ground_truth_kernel": false,
+    "kernel_reference": null,
+    "registration": {
+      "source": "n/a",
+      "format": "n/a",
+      "notes": "No kernel truth registered in current protocol version."
+    }
+  },
+  "gfrf_manifest_entry": {
+    "benchmark_name": "cascaded_tanks",
+    "has_ground_truth_gfrf": false,
+    "can_derive_from_kernel": false,
+    "gfrf_reference": null,
+    "registration": {
+      "source": "n/a",
+      "format": "n/a",
+      "notes": "No GFRF truth registered in current protocol version."
+    }
+  }
+}

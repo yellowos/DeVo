@@ -1,0 +1,96 @@
+{
+  "dataset_name": "duffing",
+  "generated_at": "2026-03-12T13:11:13.439336Z",
+  "processed_root": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/processed/nonlinear/duffing",
+  "split_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/splits/nonlinear/duffing_split_manifest.json",
+  "protocol_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+  "processed_files": {
+    "train_X": "train_x.npy",
+    "train_Y": "train_y.npy",
+    "train_sample_id": "train_sample_id.npy",
+    "val_X": "val_x.npy",
+    "val_Y": "val_y.npy",
+    "val_sample_id": "val_sample_id.npy",
+    "test_X": "test_x.npy",
+    "test_Y": "test_y.npy",
+    "test_sample_id": "test_sample_id.npy"
+  },
+  "bundle_meta": {
+    "dataset_name": "duffing",
+    "task_family": "nonlinear",
+    "input_dim": 1,
+    "output_dim": 1,
+    "window_length": 128,
+    "horizon": 1,
+    "split_protocol": "nonlinear_temporal_grouped_holdout_v1",
+    "has_ground_truth_kernel": true,
+    "has_ground_truth_gfrf": true,
+    "extras": {
+      "system_type": "single_oscillator",
+      "task_usage": [
+        "prediction",
+        "kernel_recovery",
+        "gfrf_consistency"
+      ],
+      "input_channels": [
+        "u"
+      ],
+      "output_channels": [
+        "y"
+      ],
+      "split_path": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/splits/nonlinear/duffing_split_manifest.json",
+      "protocol_name": "nonlinear_temporal_grouped_holdout_v1",
+      "protocol_reference": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+      "artifacts": {
+        "kernel_reference": "nonlinear://truth/duffing/kernel/v1",
+        "gfrf_reference": "nonlinear://truth/duffing/gfrf/v1",
+        "grouping_reference": "nonlinear://grouping/duffing/v1"
+      },
+      "kernel_entry": {
+        "benchmark_name": "duffing",
+        "has_ground_truth_kernel": true,
+        "kernel_reference": "nonlinear://truth/duffing/kernel/v1",
+        "registration": {
+          "source": "analytic_or_simulator_reference",
+          "format": "kernel_object_reference",
+          "notes": "Populate with coefficient files or structured dictionaries when available."
+        }
+      },
+      "gfrf_entry": {
+        "benchmark_name": "duffing",
+        "has_ground_truth_gfrf": true,
+        "can_derive_from_kernel": false,
+        "gfrf_reference": "nonlinear://truth/duffing/gfrf/v1",
+        "registration": {
+          "source": "truth_file_or_reference",
+          "format": "gfrf_object_reference"
+        }
+      }
+    }
+  },
+  "bundle_artifacts": {
+    "truth_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/truth/duffing_gfrf_bundle_reference.json",
+    "grouping_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/splits/nonlinear/duffing_split_manifest.json",
+    "protocol_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/protocols/nonlinear_temporal_grouped_holdout_v1.json",
+    "extra": {
+      "kernel_reference_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/truth/duffing_kernel_bundle_reference.json",
+      "gfrf_reference_file": "/Users/yellowos/.codex/worktrees/aac6/EXPfinal/data/metadata/nonlinear/truth/duffing_gfrf_bundle_reference.json",
+      "input_file_candidates": [
+        "duffing.mat",
+        "duffing_raw.npz",
+        "duffing_processed.npz",
+        "duffing.csv",
+        "duffing.txt",
+        "DATA_EMPS.mat",
+        "DATA_EMPS_PULSES.mat"
+      ]
+    }
+  },
+  "sample_counts": {
+    "train": 17299,
+    "val": 3706,
+    "test": 3708
+  },
+  "input_dim": 1,
+  "output_dim": 1
+}

@@ -1,0 +1,8 @@
+{
+  "dataset_name": "tep",
+  "task_family": "tep",
+  "feed_side_variables": ["v01", "v02", "v03", "v04", "v50", "v51", "v52", "v53"],
+  "included_in_model_input": true,
+  "included_in_unit_scoring": false,
+  "notes": "Feed-side variables are retained in v01-v53 model inputs but must not be treated as a sixth five-unit evaluation group."
+}

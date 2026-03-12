@@ -1,0 +1,97 @@
+experiment:
+  processed_root: data/processed/hydraulic
+  representation: cycle_60
+  subsystem_groups_file: data/metadata/hydraulic/subsystem_groups.json
+  output_root: experiments/hydraulic/exp01_unsupervised_subsystem_fault_isolation/outputs
+  methods:
+    - arx
+    - var
+    - narmax
+    - lstm
+    - tcn
+    - devo
+  max_eval_cycles: null
+  seed: 7
+
+evaluation:
+  lag_window: 8
+  horizon: 1
+  healthy_reference_split: [0.7, 0.15, 0.15]
+  single_cycle_split: [0.6, 0.2, 0.2]
+  subsystem_order:
+    - Cooler
+    - Valve
+    - Pump
+    - Accumulator
+
+methods:
+  arx:
+    alpha: 1.0e-4
+    fit_intercept: true
+  var:
+    alpha: 1.0e-4
+    fit_intercept: true
+  narmax:
+    input_lags: 8
+    output_lags: 0
+    moving_average_lags: 0
+    polynomial_order: 2
+    include_bias: true
+    max_base_terms: 12
+    max_terms: 128
+    ranking_sample_size: 2000
+    ridge_alpha: 1.0e-4
+  lstm:
+    hidden_size: 32
+    num_layers: 1
+    dropout: 0.0
+    bidirectional: false
+    batch_size: 32
+    max_epochs: 8
+    learning_rate: 1.0e-3
+    weight_decay: 0.0
+    gradient_clip_norm: 1.0
+    early_stopping_patience: 3
+    early_stopping_min_delta: 1.0e-6
+    seed: 7
+  tcn:
+    num_channels: [32, 32]
+    kernel_size: 3
+    dilation_schedule: [1, 2]
+    dropout: 0.0
+    epochs: 8
+    batch_size: 32
+    learning_rate: 1.0e-3
+    weight_decay: 0.0
+    shuffle: true
+    grad_clip_norm: 1.0
+  devo:
+    orders: [1, 2]
+    num_branches: 1
+    epochs: 8
+    batch_size: 32
+    eval_batch_size: 64
+    learning_rate: 1.0e-3
+    weight_decay: 1.0e-6
+    grad_clip_norm: 1.0
+    feature_chunk_size: 4096
+    index_cache_limit: 500000
+    max_canonical_terms_per_order: 1000000
+    max_full_recovery_elements: 4000000
+    seed: 7
+    include_bias: true
+    init_scale: 1.0e-2
+    verbose: false
+    log_every: 1
+
+smoke_overrides:
+  experiment:
+    methods:
+      - devo
+    max_eval_cycles: 1
+  methods:
+    devo:
+      epochs: 2
+      batch_size: 16
+      eval_batch_size: 32
+      feature_chunk_size: 2048

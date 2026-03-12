@@ -1,0 +1,63 @@
+{
+  "dataset_name": "hydraulic",
+  "description": "Canonical 17-channel map for the cycle-wise hydraulic condition monitoring dataset.",
+  "sample_granularity": "cycle",
+  "cycle_duration_seconds": 60,
+  "n_channels": 17,
+  "default_representation": "cycle_60",
+  "supported_representations": {
+    "cycle_60": {
+      "target_cycle_length": 60,
+      "target_sampling_rate_hz": 1
+    },
+    "cycle_600": {
+      "target_cycle_length": 600,
+      "target_sampling_rate_hz": 10
+    }
+  },
+  "channels": [
+    "PS1",
+    "PS2",
+    "PS3",
+    "PS4",
+    "PS5",
+    "PS6",
+    "EPS1",
+    "FS1",
+    "FS2",
+    "TS1",
+    "TS2",
+    "TS3",
+    "TS4",
+    "VS1",
+    "CE",
+    "CP",
+    "SE"
+  ],
+  "channel_details": {
+    "PS1": {"source_file": "PS1.txt", "sampling_rate_hz": 100, "samples_per_cycle": 6000, "kind": "pressure"},
+    "PS2": {"source_file": "PS2.txt", "sampling_rate_hz": 100, "samples_per_cycle": 6000, "kind": "pressure"},
+    "PS3": {"source_file": "PS3.txt", "sampling_rate_hz": 100, "samples_per_cycle": 6000, "kind": "pressure"},
+    "PS4": {"source_file": "PS4.txt", "sampling_rate_hz": 100, "samples_per_cycle": 6000, "kind": "pressure"},
+    "PS5": {"source_file": "PS5.txt", "sampling_rate_hz": 100, "samples_per_cycle": 6000, "kind": "pressure"},
+    "PS6": {"source_file": "PS6.txt", "sampling_rate_hz": 100, "samples_per_cycle": 6000, "kind": "pressure"},
+    "EPS1": {"source_file": "EPS1.txt", "sampling_rate_hz": 100, "samples_per_cycle": 6000, "kind": "motor_power"},
+    "FS1": {"source_file": "FS1.txt", "sampling_rate_hz": 10, "samples_per_cycle": 600, "kind": "flow"},
+    "FS2": {"source_file": "FS2.txt", "sampling_rate_hz": 10, "samples_per_cycle": 600, "kind": "flow"},
+    "TS1": {"source_file": "TS1.txt", "sampling_rate_hz": 1, "samples_per_cycle": 60, "kind": "temperature"},
+    "TS2": {"source_file": "TS2.txt", "sampling_rate_hz": 1, "samples_per_cycle": 60, "kind": "temperature"},
+    "TS3": {"source_file": "TS3.txt", "sampling_rate_hz": 1, "samples_per_cycle": 60, "kind": "temperature"},
+    "TS4": {"source_file": "TS4.txt", "sampling_rate_hz": 1, "samples_per_cycle": 60, "kind": "temperature"},
+    "VS1": {"source_file": "VS1.txt", "sampling_rate_hz": 1, "samples_per_cycle": 60, "kind": "vibration"},
+    "CE": {"source_file": "CE.txt", "sampling_rate_hz": 1, "samples_per_cycle": 60, "kind": "virtual"},
+    "CP": {"source_file": "CP.txt", "sampling_rate_hz": 1, "samples_per_cycle": 60, "kind": "virtual"},
+    "SE": {"source_file": "SE.txt", "sampling_rate_hz": 1, "samples_per_cycle": 60, "kind": "virtual"}
+  },
+  "profile_columns": [
+    "cooler_condition",
+    "valve_condition",
+    "pump_leakage",
+    "accumulator_pressure",
+    "stable_flag"
+  ]
+}

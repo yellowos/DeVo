@@ -1,0 +1,57 @@
+{
+  "manifest_version": "1.0.0",
+  "manifest_name": "nonlinear_kernel_truth",
+  "benchmarks": [
+    {
+      "benchmark_name": "duffing",
+      "has_ground_truth_kernel": true,
+      "kernel_reference": "nonlinear://truth/duffing/kernel/v1",
+      "registration": {
+        "source": "analytic_or_simulator_reference",
+        "format": "kernel_object_reference",
+        "notes": "Populate with coefficient files or structured dictionaries when available."
+      }
+    },
+    {
+      "benchmark_name": "silverbox",
+      "has_ground_truth_kernel": false,
+      "kernel_reference": null,
+      "registration": {
+        "source": "n/a",
+        "format": "n/a",
+        "notes": "No kernel truth registered in current protocol version."
+      }
+    },
+    {
+      "benchmark_name": "volterra_wiener",
+      "has_ground_truth_kernel": true,
+      "kernel_reference": "data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
+      "registration": {
+        "source": "explicit_kernel_artifact",
+        "format": "kernel_bundle_reference_json",
+        "reference_file": "data/metadata/nonlinear/truth/volterra_wiener_kernel_reference.json",
+        "notes": "Structured kernel truth location managed by Volterra–Wiener builder."
+      }
+    },
+    {
+      "benchmark_name": "coupled_duffing",
+      "has_ground_truth_kernel": false,
+      "kernel_reference": "nonlinear://truth/coupled_duffing/kernel/v1",
+      "registration": {
+        "source": "analytic_or_simulator_reference",
+        "format": "kernel_object_reference",
+        "notes": "Populate with coupled-oscillator kernel truth reference when available."
+      }
+    },
+    {
+      "benchmark_name": "cascaded_tanks",
+      "has_ground_truth_kernel": false,
+      "kernel_reference": null,
+      "registration": {
+        "source": "n/a",
+        "format": "n/a",
+        "notes": "No kernel truth registered in current protocol version."
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "dataset_name": "hydraulic",
+  "task_family": "hydraulic",
+  "task": "unsupervised_subsystem_fault_isolation",
+  "subsystems": {
+    "cooler": {
+      "display_name": "Cooler",
+      "channels": ["TS1", "CE", "CP"],
+      "description": "Cooling-loop channels used for subsystem-level kernel shift aggregation."
+    },
+    "valve": {
+      "display_name": "Valve",
+      "channels": ["FS1", "PS2"],
+      "description": "Valve-related flow and pressure channels."
+    },
+    "pump": {
+      "display_name": "Pump",
+      "channels": ["PS1", "PS3", "PS4", "PS5", "PS6", "EPS1", "VS1", "SE"],
+      "description": "Pump subsystem channels including pressures, power, vibration, and efficiency."
+    },
+    "accumulator": {
+      "display_name": "Accumulator",
+      "channels": ["TS2", "TS3", "TS4", "FS2"],
+      "description": "Accumulator-related temperature and flow channels."
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "dataset_name": "hydraulic",
+  "generated_at": "2026-03-12T12:55:56.166369Z",
+  "raw_discovery": {
+    "sensor_files": {
+      "PS1": "PS1.txt",
+      "PS2": "PS2.txt",
+      "PS3": "PS3.txt",
+      "PS4": "PS4.txt",
+      "PS5": "PS5.txt",
+      "PS6": "PS6.txt",
+      "EPS1": "EPS1.txt",
+      "FS1": "FS1.txt",
+      "FS2": "FS2.txt",
+      "TS1": "TS1.txt",
+      "TS2": "TS2.txt",
+      "TS3": "TS3.txt",
+      "TS4": "TS4.txt",
+      "VS1": "VS1.txt",
+      "CE": "CE.txt",
+      "CP": "CP.txt",
+      "SE": "SE.txt"
+    },
+    "profile_file": "profile.txt",
+    "ignored_text_files": [
+      "description.txt",
+      "documentation.txt"
+    ]
+  },
+  "cycle_count": 2205,
+  "split_file": "/Users/yellowos/.codex/worktrees/a7b0/EXPfinal/data/splits/hydraulic/hydraulic_split_manifest.json",
+  "default_representation": "cycle_60",
+  "representations": {
+    "cycle_60": {
+      "target_cycle_length": 60,
+      "target_sampling_rate_hz": 1,
+      "role": "main_experiment",
+      "description": "Main experiment representation with 60 points per cycle."
+    },
+    "cycle_600": {
+      "target_cycle_length": 600,
+      "target_sampling_rate_hz": 10,
+      "role": "sensitivity_analysis",
+      "description": "Sensitivity representation with 600 points per cycle."
+    }
+  },
+  "protocol_name": "hydraulic_single_fault_protocol_v2"
+}
