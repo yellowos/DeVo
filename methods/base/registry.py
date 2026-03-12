@@ -100,6 +100,19 @@ class MethodRegistry:
 
 
 METHOD_REGISTRY = MethodRegistry()
+_BUILTIN_METHODS_LOADED = False
+
+
+def _load_builtin_methods() -> None:
+    global _BUILTIN_METHODS_LOADED
+    if _BUILTIN_METHODS_LOADED:
+        return
+    try:
+        importlib.import_module("methods.baselines")
+    except ModuleNotFoundError as exc:
+        if exc.name != "torch":
+            raise
+    _BUILTIN_METHODS_LOADED = True
 
 
 def register_method(
@@ -114,12 +127,18 @@ def register_method(
 
 
 def get_method_class(name: str) -> type[BaseMethod]:
-    return METHOD_REGISTRY.get(name)
+    try:
+        return METHOD_REGISTRY.get(name)
+    except KeyError:
+        _load_builtin_methods()
+        return METHOD_REGISTRY.get(name)
 
 
 def create_method(name: str, **kwargs: Any) -> BaseMethod:
-    return METHOD_REGISTRY.create(name, **kwargs)
+    method_cls = get_method_class(name)
+    return method_cls(**kwargs)
 
 
 def list_registered_methods() -> list[str]:
+    _load_builtin_methods()
     return METHOD_REGISTRY.list()
