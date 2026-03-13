@@ -1,6 +1,6 @@
 {
   "dataset_name": "tep",
-  "generated_at": "2026-03-12T12:34:25.618545Z",
+  "generated_at": "2026-03-13T03:22:07.692291Z",
   "window_length": 128,
   "horizon": 1,
   "run_count": 168,
@@ -15,9 +15,11 @@
       "window_count": 7073,
       "observable_file": "runs/M1_d01_X_obs.npy",
       "idv_file": "runs/M1_d01_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M1_d02",
@@ -28,9 +30,11 @@
       "window_count": 7073,
       "observable_file": "runs/M1_d02_X_obs.npy",
       "idv_file": "runs/M1_d02_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M1_d03",
@@ -106,9 +110,11 @@
       "window_count": 7073,
       "observable_file": "runs/M1_d08_X_obs.npy",
       "idv_file": "runs/M1_d08_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M1_d09",
@@ -145,9 +151,11 @@
       "window_count": 7073,
       "observable_file": "runs/M1_d11_X_obs.npy",
       "idv_file": "runs/M1_d11_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M1_d12",
@@ -158,9 +166,11 @@
       "window_count": 7073,
       "observable_file": "runs/M1_d12_X_obs.npy",
       "idv_file": "runs/M1_d12_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M1_d13",
@@ -171,9 +181,11 @@
       "window_count": 7073,
       "observable_file": "runs/M1_d13_X_obs.npy",
       "idv_file": "runs/M1_d13_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Stripper",
+      "expected_units": [
+        "Stripper"
+      ]
     },
     {
       "run_key": "M1_d14",
@@ -184,9 +196,11 @@
       "window_count": 7073,
       "observable_file": "runs/M1_d14_X_obs.npy",
       "idv_file": "runs/M1_d14_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M1_d15",
@@ -197,9 +211,11 @@
       "window_count": 7073,
       "observable_file": "runs/M1_d15_X_obs.npy",
       "idv_file": "runs/M1_d15_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M1_d16",
@@ -210,9 +226,11 @@
       "window_count": 7073,
       "observable_file": "runs/M1_d16_X_obs.npy",
       "idv_file": "runs/M1_d16_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M1_d17",
@@ -223,9 +241,11 @@
       "window_count": 7073,
       "observable_file": "runs/M1_d17_X_obs.npy",
       "idv_file": "runs/M1_d17_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M1_d18",
@@ -236,9 +256,11 @@
       "window_count": 7073,
       "observable_file": "runs/M1_d18_X_obs.npy",
       "idv_file": "runs/M1_d18_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M1_d19",
@@ -314,9 +336,11 @@
       "window_count": 7073,
       "observable_file": "runs/M1_d24_X_obs.npy",
       "idv_file": "runs/M1_d24_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M1_d25",
@@ -327,9 +351,11 @@
       "window_count": 7073,
       "observable_file": "runs/M1_d25_X_obs.npy",
       "idv_file": "runs/M1_d25_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M1_d26",
@@ -379,9 +405,11 @@
       "window_count": 7073,
       "observable_file": "runs/M2_d01_X_obs.npy",
       "idv_file": "runs/M2_d01_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M2_d02",
@@ -392,9 +420,11 @@
       "window_count": 7073,
       "observable_file": "runs/M2_d02_X_obs.npy",
       "idv_file": "runs/M2_d02_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M2_d03",
@@ -470,9 +500,11 @@
       "window_count": 7073,
       "observable_file": "runs/M2_d08_X_obs.npy",
       "idv_file": "runs/M2_d08_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M2_d09",
@@ -509,9 +541,11 @@
       "window_count": 7073,
       "observable_file": "runs/M2_d11_X_obs.npy",
       "idv_file": "runs/M2_d11_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M2_d12",
@@ -522,9 +556,11 @@
       "window_count": 7073,
       "observable_file": "runs/M2_d12_X_obs.npy",
       "idv_file": "runs/M2_d12_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M2_d13",
@@ -535,9 +571,11 @@
       "window_count": 5342,
       "observable_file": "runs/M2_d13_X_obs.npy",
       "idv_file": "runs/M2_d13_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Stripper",
+      "expected_units": [
+        "Stripper"
+      ]
     },
     {
       "run_key": "M2_d14",
@@ -548,9 +586,11 @@
       "window_count": 7073,
       "observable_file": "runs/M2_d14_X_obs.npy",
       "idv_file": "runs/M2_d14_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M2_d15",
@@ -561,9 +601,11 @@
       "window_count": 7073,
       "observable_file": "runs/M2_d15_X_obs.npy",
       "idv_file": "runs/M2_d15_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M2_d16",
@@ -574,9 +616,11 @@
       "window_count": 7073,
       "observable_file": "runs/M2_d16_X_obs.npy",
       "idv_file": "runs/M2_d16_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M2_d17",
@@ -587,9 +631,11 @@
       "window_count": 7073,
       "observable_file": "runs/M2_d17_X_obs.npy",
       "idv_file": "runs/M2_d17_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M2_d18",
@@ -600,9 +646,11 @@
       "window_count": 7073,
       "observable_file": "runs/M2_d18_X_obs.npy",
       "idv_file": "runs/M2_d18_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M2_d19",
@@ -678,9 +726,11 @@
       "window_count": 7073,
       "observable_file": "runs/M2_d24_X_obs.npy",
       "idv_file": "runs/M2_d24_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M2_d25",
@@ -691,9 +741,11 @@
       "window_count": 7073,
       "observable_file": "runs/M2_d25_X_obs.npy",
       "idv_file": "runs/M2_d25_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M2_d26",
@@ -743,9 +795,11 @@
       "window_count": 7073,
       "observable_file": "runs/M3_d01_X_obs.npy",
       "idv_file": "runs/M3_d01_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M3_d02",
@@ -756,9 +810,11 @@
       "window_count": 7073,
       "observable_file": "runs/M3_d02_X_obs.npy",
       "idv_file": "runs/M3_d02_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M3_d03",
@@ -834,9 +890,11 @@
       "window_count": 5554,
       "observable_file": "runs/M3_d08_X_obs.npy",
       "idv_file": "runs/M3_d08_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M3_d09",
@@ -873,9 +931,11 @@
       "window_count": 7073,
       "observable_file": "runs/M3_d11_X_obs.npy",
       "idv_file": "runs/M3_d11_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M3_d12",
@@ -886,9 +946,11 @@
       "window_count": 7073,
       "observable_file": "runs/M3_d12_X_obs.npy",
       "idv_file": "runs/M3_d12_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M3_d13",
@@ -899,9 +961,11 @@
       "window_count": 7073,
       "observable_file": "runs/M3_d13_X_obs.npy",
       "idv_file": "runs/M3_d13_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Stripper",
+      "expected_units": [
+        "Stripper"
+      ]
     },
     {
       "run_key": "M3_d14",
@@ -912,9 +976,11 @@
       "window_count": 7073,
       "observable_file": "runs/M3_d14_X_obs.npy",
       "idv_file": "runs/M3_d14_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M3_d15",
@@ -925,9 +991,11 @@
       "window_count": 7073,
       "observable_file": "runs/M3_d15_X_obs.npy",
       "idv_file": "runs/M3_d15_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M3_d16",
@@ -938,9 +1006,11 @@
       "window_count": 7073,
       "observable_file": "runs/M3_d16_X_obs.npy",
       "idv_file": "runs/M3_d16_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M3_d17",
@@ -951,9 +1021,11 @@
       "window_count": 7073,
       "observable_file": "runs/M3_d17_X_obs.npy",
       "idv_file": "runs/M3_d17_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M3_d18",
@@ -964,9 +1036,11 @@
       "window_count": 7073,
       "observable_file": "runs/M3_d18_X_obs.npy",
       "idv_file": "runs/M3_d18_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M3_d19",
@@ -1042,9 +1116,11 @@
       "window_count": 7073,
       "observable_file": "runs/M3_d24_X_obs.npy",
       "idv_file": "runs/M3_d24_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M3_d25",
@@ -1055,9 +1131,11 @@
       "window_count": 7073,
       "observable_file": "runs/M3_d25_X_obs.npy",
       "idv_file": "runs/M3_d25_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M3_d26",
@@ -1107,9 +1185,11 @@
       "window_count": 503,
       "observable_file": "runs/M4_d01_X_obs.npy",
       "idv_file": "runs/M4_d01_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M4_d02",
@@ -1120,9 +1200,11 @@
       "window_count": 7073,
       "observable_file": "runs/M4_d02_X_obs.npy",
       "idv_file": "runs/M4_d02_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M4_d03",
@@ -1198,9 +1280,11 @@
       "window_count": 7073,
       "observable_file": "runs/M4_d08_X_obs.npy",
       "idv_file": "runs/M4_d08_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M4_d09",
@@ -1237,9 +1321,11 @@
       "window_count": 7073,
       "observable_file": "runs/M4_d11_X_obs.npy",
       "idv_file": "runs/M4_d11_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M4_d12",
@@ -1250,9 +1336,11 @@
       "window_count": 7073,
       "observable_file": "runs/M4_d12_X_obs.npy",
       "idv_file": "runs/M4_d12_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M4_d13",
@@ -1263,9 +1351,11 @@
       "window_count": 7073,
       "observable_file": "runs/M4_d13_X_obs.npy",
       "idv_file": "runs/M4_d13_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Stripper",
+      "expected_units": [
+        "Stripper"
+      ]
     },
     {
       "run_key": "M4_d14",
@@ -1276,9 +1366,11 @@
       "window_count": 7073,
       "observable_file": "runs/M4_d14_X_obs.npy",
       "idv_file": "runs/M4_d14_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M4_d15",
@@ -1289,9 +1381,11 @@
       "window_count": 7073,
       "observable_file": "runs/M4_d15_X_obs.npy",
       "idv_file": "runs/M4_d15_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M4_d16",
@@ -1302,9 +1396,11 @@
       "window_count": 7073,
       "observable_file": "runs/M4_d16_X_obs.npy",
       "idv_file": "runs/M4_d16_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M4_d17",
@@ -1315,9 +1411,11 @@
       "window_count": 7073,
       "observable_file": "runs/M4_d17_X_obs.npy",
       "idv_file": "runs/M4_d17_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M4_d18",
@@ -1328,9 +1426,11 @@
       "window_count": 7073,
       "observable_file": "runs/M4_d18_X_obs.npy",
       "idv_file": "runs/M4_d18_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M4_d19",
@@ -1406,9 +1506,11 @@
       "window_count": 7073,
       "observable_file": "runs/M4_d24_X_obs.npy",
       "idv_file": "runs/M4_d24_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M4_d25",
@@ -1419,9 +1521,11 @@
       "window_count": 7073,
       "observable_file": "runs/M4_d25_X_obs.npy",
       "idv_file": "runs/M4_d25_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M4_d26",
@@ -1471,9 +1575,11 @@
       "window_count": 7073,
       "observable_file": "runs/M5_d01_X_obs.npy",
       "idv_file": "runs/M5_d01_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M5_d02",
@@ -1484,9 +1590,11 @@
       "window_count": 7073,
       "observable_file": "runs/M5_d02_X_obs.npy",
       "idv_file": "runs/M5_d02_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M5_d03",
@@ -1562,9 +1670,11 @@
       "window_count": 7073,
       "observable_file": "runs/M5_d08_X_obs.npy",
       "idv_file": "runs/M5_d08_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M5_d09",
@@ -1601,9 +1711,11 @@
       "window_count": 7073,
       "observable_file": "runs/M5_d11_X_obs.npy",
       "idv_file": "runs/M5_d11_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M5_d12",
@@ -1614,9 +1726,11 @@
       "window_count": 7073,
       "observable_file": "runs/M5_d12_X_obs.npy",
       "idv_file": "runs/M5_d12_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M5_d13",
@@ -1627,9 +1741,11 @@
       "window_count": 7073,
       "observable_file": "runs/M5_d13_X_obs.npy",
       "idv_file": "runs/M5_d13_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Stripper",
+      "expected_units": [
+        "Stripper"
+      ]
     },
     {
       "run_key": "M5_d14",
@@ -1640,9 +1756,11 @@
       "window_count": 7073,
       "observable_file": "runs/M5_d14_X_obs.npy",
       "idv_file": "runs/M5_d14_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M5_d15",
@@ -1653,9 +1771,11 @@
       "window_count": 7073,
       "observable_file": "runs/M5_d15_X_obs.npy",
       "idv_file": "runs/M5_d15_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M5_d16",
@@ -1666,9 +1786,11 @@
       "window_count": 7073,
       "observable_file": "runs/M5_d16_X_obs.npy",
       "idv_file": "runs/M5_d16_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M5_d17",
@@ -1679,9 +1801,11 @@
       "window_count": 7073,
       "observable_file": "runs/M5_d17_X_obs.npy",
       "idv_file": "runs/M5_d17_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M5_d18",
@@ -1692,9 +1816,11 @@
       "window_count": 7073,
       "observable_file": "runs/M5_d18_X_obs.npy",
       "idv_file": "runs/M5_d18_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M5_d19",
@@ -1770,9 +1896,11 @@
       "window_count": 7073,
       "observable_file": "runs/M5_d24_X_obs.npy",
       "idv_file": "runs/M5_d24_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M5_d25",
@@ -1783,9 +1911,11 @@
       "window_count": 7073,
       "observable_file": "runs/M5_d25_X_obs.npy",
       "idv_file": "runs/M5_d25_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M5_d26",
@@ -1835,9 +1965,11 @@
       "window_count": 7073,
       "observable_file": "runs/M6_d01_X_obs.npy",
       "idv_file": "runs/M6_d01_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M6_d02",
@@ -1848,9 +1980,11 @@
       "window_count": 7073,
       "observable_file": "runs/M6_d02_X_obs.npy",
       "idv_file": "runs/M6_d02_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M6_d03",
@@ -1926,9 +2060,11 @@
       "window_count": 7073,
       "observable_file": "runs/M6_d08_X_obs.npy",
       "idv_file": "runs/M6_d08_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M6_d09",
@@ -1965,9 +2101,11 @@
       "window_count": 7073,
       "observable_file": "runs/M6_d11_X_obs.npy",
       "idv_file": "runs/M6_d11_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M6_d12",
@@ -1978,9 +2116,11 @@
       "window_count": 7073,
       "observable_file": "runs/M6_d12_X_obs.npy",
       "idv_file": "runs/M6_d12_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M6_d13",
@@ -1991,9 +2131,11 @@
       "window_count": 7073,
       "observable_file": "runs/M6_d13_X_obs.npy",
       "idv_file": "runs/M6_d13_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Stripper",
+      "expected_units": [
+        "Stripper"
+      ]
     },
     {
       "run_key": "M6_d14",
@@ -2004,9 +2146,11 @@
       "window_count": 7073,
       "observable_file": "runs/M6_d14_X_obs.npy",
       "idv_file": "runs/M6_d14_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M6_d15",
@@ -2017,9 +2161,11 @@
       "window_count": 7073,
       "observable_file": "runs/M6_d15_X_obs.npy",
       "idv_file": "runs/M6_d15_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M6_d16",
@@ -2030,9 +2176,11 @@
       "window_count": 7073,
       "observable_file": "runs/M6_d16_X_obs.npy",
       "idv_file": "runs/M6_d16_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M6_d17",
@@ -2043,9 +2191,11 @@
       "window_count": 7073,
       "observable_file": "runs/M6_d17_X_obs.npy",
       "idv_file": "runs/M6_d17_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M6_d18",
@@ -2056,9 +2206,11 @@
       "window_count": 7073,
       "observable_file": "runs/M6_d18_X_obs.npy",
       "idv_file": "runs/M6_d18_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M6_d19",
@@ -2134,9 +2286,11 @@
       "window_count": 7073,
       "observable_file": "runs/M6_d24_X_obs.npy",
       "idv_file": "runs/M6_d24_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
     },
     {
       "run_key": "M6_d25",
@@ -2147,9 +2301,11 @@
       "window_count": 7073,
       "observable_file": "runs/M6_d25_X_obs.npy",
       "idv_file": "runs/M6_d25_X_idv.npy",
-      "included_in_main_eval": false,
-      "primary_unit": null,
-      "expected_units": []
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
     },
     {
       "run_key": "M6_d26",

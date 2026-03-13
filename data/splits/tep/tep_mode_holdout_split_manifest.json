@@ -2,7 +2,7 @@
   "dataset_name": "tep",
   "protocol_name": "tep_multimode_mode_holdout_v2",
   "split_protocol": "tep_multimode_mode_holdout_v2",
-  "generated_at": "2026-03-12T12:34:25.620723Z",
+  "generated_at": "2026-03-13T03:22:07.699024Z",
   "split_indices": {
     "train": [
       0,

@@ -1,8 +1,1179 @@
 {
   "dataset_name": "tep",
-  "generated_at": "2026-03-12T12:34:25.619591Z",
+  "generated_at": "2026-03-13T03:22:07.693600Z",
   "source": "fault_truth_table.included_in_main_eval",
-  "run_count": 0,
-  "runs": [],
+  "run_count": 78,
+  "runs": [
+    {
+      "run_key": "M1_d01",
+      "mode": "M1",
+      "scenario": "d01",
+      "idv": "idv28",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M1_d01_X_obs.npy",
+      "idv_file": "runs/M1_d01_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M1_d02",
+      "mode": "M1",
+      "scenario": "d02",
+      "idv": "idv27",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M1_d02_X_obs.npy",
+      "idv_file": "runs/M1_d02_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M1_d08",
+      "mode": "M1",
+      "scenario": "d08",
+      "idv": "idv21",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M1_d08_X_obs.npy",
+      "idv_file": "runs/M1_d08_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M1_d11",
+      "mode": "M1",
+      "scenario": "d11",
+      "idv": "idv18",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M1_d11_X_obs.npy",
+      "idv_file": "runs/M1_d11_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M1_d12",
+      "mode": "M1",
+      "scenario": "d12",
+      "idv": "idv17",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M1_d12_X_obs.npy",
+      "idv_file": "runs/M1_d12_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M1_d13",
+      "mode": "M1",
+      "scenario": "d13",
+      "idv": "idv16",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M1_d13_X_obs.npy",
+      "idv_file": "runs/M1_d13_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Stripper",
+      "expected_units": [
+        "Stripper"
+      ]
+    },
+    {
+      "run_key": "M1_d14",
+      "mode": "M1",
+      "scenario": "d14",
+      "idv": "idv15",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M1_d14_X_obs.npy",
+      "idv_file": "runs/M1_d14_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M1_d15",
+      "mode": "M1",
+      "scenario": "d15",
+      "idv": "idv14",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M1_d15_X_obs.npy",
+      "idv_file": "runs/M1_d15_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M1_d16",
+      "mode": "M1",
+      "scenario": "d16",
+      "idv": "idv13",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M1_d16_X_obs.npy",
+      "idv_file": "runs/M1_d16_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M1_d17",
+      "mode": "M1",
+      "scenario": "d17",
+      "idv": "idv12",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M1_d17_X_obs.npy",
+      "idv_file": "runs/M1_d17_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M1_d18",
+      "mode": "M1",
+      "scenario": "d18",
+      "idv": "idv11",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M1_d18_X_obs.npy",
+      "idv_file": "runs/M1_d18_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M1_d24",
+      "mode": "M1",
+      "scenario": "d24",
+      "idv": "idv05",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M1_d24_X_obs.npy",
+      "idv_file": "runs/M1_d24_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M1_d25",
+      "mode": "M1",
+      "scenario": "d25",
+      "idv": "idv04",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M1_d25_X_obs.npy",
+      "idv_file": "runs/M1_d25_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M2_d01",
+      "mode": "M2",
+      "scenario": "d01",
+      "idv": "idv28",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M2_d01_X_obs.npy",
+      "idv_file": "runs/M2_d01_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M2_d02",
+      "mode": "M2",
+      "scenario": "d02",
+      "idv": "idv27",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M2_d02_X_obs.npy",
+      "idv_file": "runs/M2_d02_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M2_d08",
+      "mode": "M2",
+      "scenario": "d08",
+      "idv": "idv21",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M2_d08_X_obs.npy",
+      "idv_file": "runs/M2_d08_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M2_d11",
+      "mode": "M2",
+      "scenario": "d11",
+      "idv": "idv18",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M2_d11_X_obs.npy",
+      "idv_file": "runs/M2_d11_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M2_d12",
+      "mode": "M2",
+      "scenario": "d12",
+      "idv": "idv17",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M2_d12_X_obs.npy",
+      "idv_file": "runs/M2_d12_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M2_d13",
+      "mode": "M2",
+      "scenario": "d13",
+      "idv": "idv16",
+      "n_steps": 5470,
+      "window_count": 5342,
+      "observable_file": "runs/M2_d13_X_obs.npy",
+      "idv_file": "runs/M2_d13_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Stripper",
+      "expected_units": [
+        "Stripper"
+      ]
+    },
+    {
+      "run_key": "M2_d14",
+      "mode": "M2",
+      "scenario": "d14",
+      "idv": "idv15",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M2_d14_X_obs.npy",
+      "idv_file": "runs/M2_d14_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M2_d15",
+      "mode": "M2",
+      "scenario": "d15",
+      "idv": "idv14",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M2_d15_X_obs.npy",
+      "idv_file": "runs/M2_d15_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M2_d16",
+      "mode": "M2",
+      "scenario": "d16",
+      "idv": "idv13",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M2_d16_X_obs.npy",
+      "idv_file": "runs/M2_d16_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M2_d17",
+      "mode": "M2",
+      "scenario": "d17",
+      "idv": "idv12",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M2_d17_X_obs.npy",
+      "idv_file": "runs/M2_d17_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M2_d18",
+      "mode": "M2",
+      "scenario": "d18",
+      "idv": "idv11",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M2_d18_X_obs.npy",
+      "idv_file": "runs/M2_d18_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M2_d24",
+      "mode": "M2",
+      "scenario": "d24",
+      "idv": "idv05",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M2_d24_X_obs.npy",
+      "idv_file": "runs/M2_d24_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M2_d25",
+      "mode": "M2",
+      "scenario": "d25",
+      "idv": "idv04",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M2_d25_X_obs.npy",
+      "idv_file": "runs/M2_d25_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M3_d01",
+      "mode": "M3",
+      "scenario": "d01",
+      "idv": "idv28",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M3_d01_X_obs.npy",
+      "idv_file": "runs/M3_d01_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M3_d02",
+      "mode": "M3",
+      "scenario": "d02",
+      "idv": "idv27",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M3_d02_X_obs.npy",
+      "idv_file": "runs/M3_d02_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M3_d08",
+      "mode": "M3",
+      "scenario": "d08",
+      "idv": "idv21",
+      "n_steps": 5682,
+      "window_count": 5554,
+      "observable_file": "runs/M3_d08_X_obs.npy",
+      "idv_file": "runs/M3_d08_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M3_d11",
+      "mode": "M3",
+      "scenario": "d11",
+      "idv": "idv18",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M3_d11_X_obs.npy",
+      "idv_file": "runs/M3_d11_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M3_d12",
+      "mode": "M3",
+      "scenario": "d12",
+      "idv": "idv17",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M3_d12_X_obs.npy",
+      "idv_file": "runs/M3_d12_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M3_d13",
+      "mode": "M3",
+      "scenario": "d13",
+      "idv": "idv16",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M3_d13_X_obs.npy",
+      "idv_file": "runs/M3_d13_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Stripper",
+      "expected_units": [
+        "Stripper"
+      ]
+    },
+    {
+      "run_key": "M3_d14",
+      "mode": "M3",
+      "scenario": "d14",
+      "idv": "idv15",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M3_d14_X_obs.npy",
+      "idv_file": "runs/M3_d14_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M3_d15",
+      "mode": "M3",
+      "scenario": "d15",
+      "idv": "idv14",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M3_d15_X_obs.npy",
+      "idv_file": "runs/M3_d15_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M3_d16",
+      "mode": "M3",
+      "scenario": "d16",
+      "idv": "idv13",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M3_d16_X_obs.npy",
+      "idv_file": "runs/M3_d16_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M3_d17",
+      "mode": "M3",
+      "scenario": "d17",
+      "idv": "idv12",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M3_d17_X_obs.npy",
+      "idv_file": "runs/M3_d17_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M3_d18",
+      "mode": "M3",
+      "scenario": "d18",
+      "idv": "idv11",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M3_d18_X_obs.npy",
+      "idv_file": "runs/M3_d18_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M3_d24",
+      "mode": "M3",
+      "scenario": "d24",
+      "idv": "idv05",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M3_d24_X_obs.npy",
+      "idv_file": "runs/M3_d24_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M3_d25",
+      "mode": "M3",
+      "scenario": "d25",
+      "idv": "idv04",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M3_d25_X_obs.npy",
+      "idv_file": "runs/M3_d25_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M4_d01",
+      "mode": "M4",
+      "scenario": "d01",
+      "idv": "idv28",
+      "n_steps": 631,
+      "window_count": 503,
+      "observable_file": "runs/M4_d01_X_obs.npy",
+      "idv_file": "runs/M4_d01_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M4_d02",
+      "mode": "M4",
+      "scenario": "d02",
+      "idv": "idv27",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M4_d02_X_obs.npy",
+      "idv_file": "runs/M4_d02_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M4_d08",
+      "mode": "M4",
+      "scenario": "d08",
+      "idv": "idv21",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M4_d08_X_obs.npy",
+      "idv_file": "runs/M4_d08_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M4_d11",
+      "mode": "M4",
+      "scenario": "d11",
+      "idv": "idv18",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M4_d11_X_obs.npy",
+      "idv_file": "runs/M4_d11_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M4_d12",
+      "mode": "M4",
+      "scenario": "d12",
+      "idv": "idv17",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M4_d12_X_obs.npy",
+      "idv_file": "runs/M4_d12_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M4_d13",
+      "mode": "M4",
+      "scenario": "d13",
+      "idv": "idv16",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M4_d13_X_obs.npy",
+      "idv_file": "runs/M4_d13_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Stripper",
+      "expected_units": [
+        "Stripper"
+      ]
+    },
+    {
+      "run_key": "M4_d14",
+      "mode": "M4",
+      "scenario": "d14",
+      "idv": "idv15",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M4_d14_X_obs.npy",
+      "idv_file": "runs/M4_d14_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M4_d15",
+      "mode": "M4",
+      "scenario": "d15",
+      "idv": "idv14",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M4_d15_X_obs.npy",
+      "idv_file": "runs/M4_d15_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M4_d16",
+      "mode": "M4",
+      "scenario": "d16",
+      "idv": "idv13",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M4_d16_X_obs.npy",
+      "idv_file": "runs/M4_d16_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M4_d17",
+      "mode": "M4",
+      "scenario": "d17",
+      "idv": "idv12",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M4_d17_X_obs.npy",
+      "idv_file": "runs/M4_d17_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M4_d18",
+      "mode": "M4",
+      "scenario": "d18",
+      "idv": "idv11",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M4_d18_X_obs.npy",
+      "idv_file": "runs/M4_d18_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M4_d24",
+      "mode": "M4",
+      "scenario": "d24",
+      "idv": "idv05",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M4_d24_X_obs.npy",
+      "idv_file": "runs/M4_d24_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M4_d25",
+      "mode": "M4",
+      "scenario": "d25",
+      "idv": "idv04",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M4_d25_X_obs.npy",
+      "idv_file": "runs/M4_d25_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M5_d01",
+      "mode": "M5",
+      "scenario": "d01",
+      "idv": "idv28",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M5_d01_X_obs.npy",
+      "idv_file": "runs/M5_d01_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M5_d02",
+      "mode": "M5",
+      "scenario": "d02",
+      "idv": "idv27",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M5_d02_X_obs.npy",
+      "idv_file": "runs/M5_d02_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M5_d08",
+      "mode": "M5",
+      "scenario": "d08",
+      "idv": "idv21",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M5_d08_X_obs.npy",
+      "idv_file": "runs/M5_d08_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M5_d11",
+      "mode": "M5",
+      "scenario": "d11",
+      "idv": "idv18",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M5_d11_X_obs.npy",
+      "idv_file": "runs/M5_d11_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M5_d12",
+      "mode": "M5",
+      "scenario": "d12",
+      "idv": "idv17",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M5_d12_X_obs.npy",
+      "idv_file": "runs/M5_d12_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M5_d13",
+      "mode": "M5",
+      "scenario": "d13",
+      "idv": "idv16",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M5_d13_X_obs.npy",
+      "idv_file": "runs/M5_d13_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Stripper",
+      "expected_units": [
+        "Stripper"
+      ]
+    },
+    {
+      "run_key": "M5_d14",
+      "mode": "M5",
+      "scenario": "d14",
+      "idv": "idv15",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M5_d14_X_obs.npy",
+      "idv_file": "runs/M5_d14_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M5_d15",
+      "mode": "M5",
+      "scenario": "d15",
+      "idv": "idv14",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M5_d15_X_obs.npy",
+      "idv_file": "runs/M5_d15_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M5_d16",
+      "mode": "M5",
+      "scenario": "d16",
+      "idv": "idv13",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M5_d16_X_obs.npy",
+      "idv_file": "runs/M5_d16_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M5_d17",
+      "mode": "M5",
+      "scenario": "d17",
+      "idv": "idv12",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M5_d17_X_obs.npy",
+      "idv_file": "runs/M5_d17_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M5_d18",
+      "mode": "M5",
+      "scenario": "d18",
+      "idv": "idv11",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M5_d18_X_obs.npy",
+      "idv_file": "runs/M5_d18_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M5_d24",
+      "mode": "M5",
+      "scenario": "d24",
+      "idv": "idv05",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M5_d24_X_obs.npy",
+      "idv_file": "runs/M5_d24_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M5_d25",
+      "mode": "M5",
+      "scenario": "d25",
+      "idv": "idv04",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M5_d25_X_obs.npy",
+      "idv_file": "runs/M5_d25_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M6_d01",
+      "mode": "M6",
+      "scenario": "d01",
+      "idv": "idv28",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M6_d01_X_obs.npy",
+      "idv_file": "runs/M6_d01_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M6_d02",
+      "mode": "M6",
+      "scenario": "d02",
+      "idv": "idv27",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M6_d02_X_obs.npy",
+      "idv_file": "runs/M6_d02_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M6_d08",
+      "mode": "M6",
+      "scenario": "d08",
+      "idv": "idv21",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M6_d08_X_obs.npy",
+      "idv_file": "runs/M6_d08_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M6_d11",
+      "mode": "M6",
+      "scenario": "d11",
+      "idv": "idv18",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M6_d11_X_obs.npy",
+      "idv_file": "runs/M6_d11_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M6_d12",
+      "mode": "M6",
+      "scenario": "d12",
+      "idv": "idv17",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M6_d12_X_obs.npy",
+      "idv_file": "runs/M6_d12_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M6_d13",
+      "mode": "M6",
+      "scenario": "d13",
+      "idv": "idv16",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M6_d13_X_obs.npy",
+      "idv_file": "runs/M6_d13_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Stripper",
+      "expected_units": [
+        "Stripper"
+      ]
+    },
+    {
+      "run_key": "M6_d14",
+      "mode": "M6",
+      "scenario": "d14",
+      "idv": "idv15",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M6_d14_X_obs.npy",
+      "idv_file": "runs/M6_d14_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M6_d15",
+      "mode": "M6",
+      "scenario": "d15",
+      "idv": "idv14",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M6_d15_X_obs.npy",
+      "idv_file": "runs/M6_d15_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M6_d16",
+      "mode": "M6",
+      "scenario": "d16",
+      "idv": "idv13",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M6_d16_X_obs.npy",
+      "idv_file": "runs/M6_d16_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M6_d17",
+      "mode": "M6",
+      "scenario": "d17",
+      "idv": "idv12",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M6_d17_X_obs.npy",
+      "idv_file": "runs/M6_d17_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M6_d18",
+      "mode": "M6",
+      "scenario": "d18",
+      "idv": "idv11",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M6_d18_X_obs.npy",
+      "idv_file": "runs/M6_d18_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    },
+    {
+      "run_key": "M6_d24",
+      "mode": "M6",
+      "scenario": "d24",
+      "idv": "idv05",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M6_d24_X_obs.npy",
+      "idv_file": "runs/M6_d24_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Condenser",
+      "expected_units": [
+        "Condenser"
+      ]
+    },
+    {
+      "run_key": "M6_d25",
+      "mode": "M6",
+      "scenario": "d25",
+      "idv": "idv04",
+      "n_steps": 7201,
+      "window_count": 7073,
+      "observable_file": "runs/M6_d25_X_obs.npy",
+      "idv_file": "runs/M6_d25_X_idv.npy",
+      "included_in_main_eval": true,
+      "primary_unit": "Reactor",
+      "expected_units": [
+        "Reactor"
+      ]
+    }
+  ],
   "notes": "This subset depends entirely on curated truth metadata."
 }
