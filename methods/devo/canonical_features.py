@@ -109,23 +109,36 @@ def infer_alignment_from_windowed_batch(
     horizon: int,
     alignment: Optional[Mapping[str, Any]] = None,
 ) -> dict[str, np.ndarray]:
+    sample_count = int(num_samples)
+    base = np.arange(sample_count, dtype=np.int64)
     if alignment:
         payload = {
-            key: np.asarray(value).reshape(-1)
+            key: np.asarray(value, dtype=np.int64).reshape(-1)
             for key, value in alignment.items()
             if value is not None and key in {"window_start", "window_end", "target_index", "horizon"}
         }
-        if not payload:
-            alignment = None
-    if not alignment:
-        base = np.arange(int(num_samples), dtype=np.int64)
-        payload = {
-            "window_start": base,
-            "window_end": base + int(window_length) - 1,
-            "target_index": base + int(window_length) - 1 + int(horizon),
-            "horizon": np.full(int(num_samples), int(horizon), dtype=np.int64),
-        }
-    return payload
+        if payload:
+            if "window_start" not in payload:
+                if "window_end" in payload:
+                    payload["window_start"] = payload["window_end"] - int(window_length) + 1
+                else:
+                    payload["window_start"] = base
+            if "window_end" not in payload:
+                payload["window_end"] = payload["window_start"] + int(window_length) - 1
+            if "target_index" not in payload:
+                payload["target_index"] = payload["window_end"] + int(horizon)
+            if "horizon" not in payload:
+                payload["horizon"] = np.full(sample_count, int(horizon), dtype=np.int64)
+            return {
+                key: np.asarray(value, dtype=np.int64).reshape(-1)
+                for key, value in payload.items()
+            }
+    return {
+        "window_start": base,
+        "window_end": base + int(window_length) - 1,
+        "target_index": base + int(window_length) - 1 + int(horizon),
+        "horizon": np.full(sample_count, int(horizon), dtype=np.int64),
+    }
 
 
 def validate_alignment(

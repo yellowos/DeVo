@@ -41,6 +41,20 @@ def load_json(path: Path) -> dict[str, Any]:
     return payload
 
 
+def to_jsonable(value: Any) -> Any:
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, Mapping):
+        return {str(key): to_jsonable(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [to_jsonable(item) for item in value]
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, np.generic):
+        return value.item()
+    return value
+
+
 def resolve_path(value: str | Path | None, *, base_dir: Path) -> Path | None:
     if value is None:
         return None
@@ -490,7 +504,7 @@ def run_analysis(
         "selected_runs": selected_runs,
     }
     with (raw_root / "selected_runs.json").open("w", encoding="utf-8") as handle:
-        json.dump(selected_runs_payload, handle, ensure_ascii=False, indent=2)
+        json.dump(to_jsonable(selected_runs_payload), handle, ensure_ascii=False, indent=2)
 
     manifest = {
         "experiment_name": config["experiment"]["name"],
@@ -518,7 +532,7 @@ def run_analysis(
         },
     }
     with (output_root / "analysis_manifest.json").open("w", encoding="utf-8") as handle:
-        json.dump(manifest, handle, ensure_ascii=False, indent=2)
+        json.dump(to_jsonable(manifest), handle, ensure_ascii=False, indent=2)
     return manifest
 
 

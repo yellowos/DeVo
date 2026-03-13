@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import numpy as np
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -14,6 +15,21 @@ if str(ROOT) not in sys.path:
 
 
 class TEPFaultPropagationAnalysisTest(unittest.TestCase):
+    def test_to_jsonable_handles_paths_and_numpy_values(self) -> None:
+        from experiments.tep.exp02_fault_propagation_analysis.run import to_jsonable
+
+        payload = to_jsonable(
+            {
+                "path": ROOT / "README.md",
+                "array": np.asarray([1, 2, 3], dtype=np.int64),
+                "scalar": np.float32(1.5),
+            }
+        )
+
+        self.assertEqual(payload["path"], str(ROOT / "README.md"))
+        self.assertEqual(payload["array"], [1, 2, 3])
+        self.assertEqual(payload["scalar"], 1.5)
+
     def test_modules_import(self) -> None:
         for name in (
             "experiments.tep.exp02_fault_propagation_analysis.run",

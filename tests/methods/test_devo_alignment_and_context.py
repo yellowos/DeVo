@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 from methods.devo import DeVoConfig, DeVoMethod
-from methods.devo.canonical_features import build_aligned_windows
+from methods.devo.canonical_features import build_aligned_windows, infer_alignment_from_windowed_batch, validate_alignment
 from methods.devo.trainer import DeVoTrainingError
 
 
@@ -59,6 +59,30 @@ def _make_bundle(*, with_nan: bool = False) -> dict[str, object]:
 
 
 class DeVoAlignmentAndContextTest(unittest.TestCase):
+    def test_partial_alignment_infers_window_start_from_window_end(self) -> None:
+        x = np.arange(6, dtype=np.float32).reshape(2, 3, 1)
+        y = np.arange(4, dtype=np.float32).reshape(2, 2, 1)
+        alignment = {"window_end": np.asarray([2, 5], dtype=np.int64)}
+
+        payload = infer_alignment_from_windowed_batch(
+            num_samples=2,
+            window_length=3,
+            horizon=2,
+            alignment=alignment,
+        )
+
+        np.testing.assert_array_equal(payload["window_start"], np.asarray([0, 3], dtype=np.int64))
+        np.testing.assert_array_equal(payload["target_index"], np.asarray([4, 7], dtype=np.int64))
+        validate_alignment(
+            x,
+            y,
+            window_length=3,
+            input_dim=1,
+            horizon=2,
+            output_dim=1,
+            alignment=alignment,
+        )
+
     def test_window_target_alignment_h1(self) -> None:
         payload = build_aligned_windows(np.arange(8, dtype=np.float64), window_length=3, horizon=1)
         np.testing.assert_array_equal(payload["X"][0].reshape(-1), np.array([0.0, 1.0, 2.0]))

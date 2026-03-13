@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import json
+import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 
@@ -44,6 +47,49 @@ def _bundle_payload() -> dict[str, object]:
 
 
 class IOSchemaAndMetricsTest(unittest.TestCase):
+    def test_schema_loads_legacy_object_extra_field_from_manifest(self) -> None:
+        meta = _bundle_payload()["meta"]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+
+            processed_files: dict[str, str] = {}
+            for split_name, run_id, offset in (
+                ("train", "train_run", 0),
+                ("val", "val_run", 10),
+                ("test", "test_run", 20),
+            ):
+                arrays = {
+                    "X": np.ones((2, 3, 1), dtype=np.float32),
+                    "Y": np.ones((2, 1, 1), dtype=np.float32),
+                    "sample_id": np.arange(offset, offset + 2, dtype=np.int64),
+                    "run_id": np.asarray([run_id, run_id], dtype=object),
+                    "timestamp": np.arange(offset, offset + 2, dtype=np.float64),
+                    "mode": np.asarray([f"{split_name}_mode", f"{split_name}_mode"], dtype=object),
+                }
+                for field_name, array in arrays.items():
+                    relative_path = f"{split_name}_{field_name}.npy"
+                    np.save(root / relative_path, array)
+                    processed_files[f"{split_name}_{field_name}"] = relative_path
+
+            manifest_path = root / "toy_processed_manifest.json"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "processed_files": processed_files,
+                        "bundle_meta": meta,
+                        "bundle_artifacts": {},
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            bundle = load_dataset_bundle(manifest_path)
+
+        np.testing.assert_array_equal(
+            bundle.train.extra_fields["mode"],
+            np.asarray(["train_mode", "train_mode"], dtype=object),
+        )
+
     def test_schema_rejects_overlapping_splits(self) -> None:
         payload = _bundle_payload()
         payload["val"] = {
